@@ -15,16 +15,16 @@ const Trade = () => {
                 {/* Column-2 */}
 
                 <div>
-                    <h3 className="text-3xl lg:text-5xl font-semibold text-offwhite mb-6 text-center sm:text-start">Trade Anywhere <br /> Any time</h3>
-                    <p className="lg:text-lg font-normal text-lightblue mb-16 text-center sm:text-start">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+                    <h3 className="text-3xl lg:text-5xl font-semibold text-offwhite mb-6 text-center sm:text-start">Join the Revolution <br /> Connect with Us</h3>
+                    <p className="lg:text-lg font-normal text-lightblue mb-16 text-center sm:text-start">Be part of the BITTYMESSIAH community. Follow for updates, join discussions, and stay connected in our hub.</p>
                     <div className="flex justify-between">
-                        <Image src={'/images/Trade/mac.svg'} alt="macOS-image" width={61} height={105} />
+                        <Image src={'/images/Trade/mac.svg'} alt="twitter-image" width={61} height={105} />
                         <div className="verticalLine"></div>
-                        <Image src={'/images/Trade/appstore.svg'} alt="appstore-image" width={80} height={105} />
+                        <Image src={'/images/Trade/appstore.svg'} alt="telegram-image" width={80} height={105} />
                         <div className="verticalLine"></div>
-                        <Image src={'/images/Trade/windows.svg'} alt="windows-image" width={80} height={105} />
+                        <Image src={'/images/Trade/windows.svg'} alt="discord-image" width={80} height={105} />
                         <div className="verticalLine"></div>
-                        <Image src={'/images/Trade/android.svg'} alt="android-image" width={71} height={105} />
+                        <Image src={'/images/Trade/android.svg'} alt="solana-image" width={71} height={105} />
                     </div>
                 </div>
             </div>

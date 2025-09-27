@@ -1,5 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import React from 'react';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import Drawer from "./Drawer";
@@ -14,8 +15,9 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
     { name: 'Home', href: '#home-section', current: false },
-    { name: 'Exchange', href: '#exchange-section', current: false },
-    { name: 'Features', href: '#features-section', current: false },
+    { name: 'Market', href: '#exchange-section', current: false },
+    { name: 'Tokenomics', href: '#features-section', current: false },
+    { name: 'Exchange', href: '/exchange', current: false },
     { name: 'FAQ', href: '#faq-section', current: false },
 ]
 
@@ -37,15 +39,21 @@ const Navbar = () => {
                             {/* LOGO */}
 
                             <div className="flex flex-shrink-0 items-center">
-                                <img
-                                    className="block h-10 w-20px lg:hidden"
-                                    src={'/images/Logo/logo.svg'}
-                                    alt="Crypto-Logo"
+                                <Image
+                                    className="block h-10 w-auto lg:hidden"
+                                    src={'/images/Logo/bitty-logo.svg'}
+                                    alt="BITTYMESSIAH logo"
+                                    width={120}
+                                    height={40}
+                                    priority
                                 />
-                                <img
-                                    className="hidden h-48px w-48px lg:block"
-                                    src={'/images/Logo/logo.svg'}
-                                    alt="Crypto-Logo"
+                                <Image
+                                    className="hidden h-12 w-auto lg:block"
+                                    src={'/images/Logo/bitty-logo.svg'}
+                                    alt="BITTYMESSIAH logo"
+                                    width={180}
+                                    height={60}
+                                    priority
                                 />
                             </div>
 
@@ -69,7 +77,7 @@ const Navbar = () => {
                                 </div>
 
                             </div>
-                            <button className='hidden lg:flex justify-end text-xl font-semibold py-4 px-6 lg:px-12 navbutton text-white'>Connect Wallet</button>
+                            <button className='hidden lg:flex justify-end text-xl font-semibold py-4 px-6 lg:px-12 navbutton text-white'>Buy BITTYMESSIAH</button>
                             {/* <Contactusform /> */}
                         </div>
 

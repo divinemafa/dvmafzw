@@ -1,5 +1,6 @@
 "use client"
 import React, { Component } from "react";
+import Image from "next/image";
 import Slider from "react-slick";
 
 // IMAGES DATA FOR CAROUSEL
@@ -80,8 +81,14 @@ export default class MultipleItems extends Component {
                     <div>
                         <Slider {...settings}>
                             {data.map((item, i) =>
-                                <div key={i}>
-                                    <img src={item.imgSrc} alt={item.imgSrc} />
+                                <div key={i} className="flex items-center justify-center">
+                                    <Image
+                                        src={item.imgSrc}
+                                        alt={`${item.imgSrc.split('/').pop()?.replace('.svg', '') ?? 'company'} logo`}
+                                        width={160}
+                                        height={60}
+                                        className="h-12 w-auto object-contain"
+                                    />
                                 </div>
                             )}
                         </Slider>

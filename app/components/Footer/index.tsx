@@ -17,15 +17,15 @@ const products: ProductType[] = [
   {
     id: 1,
     section: "Useful Links",
-    link: ['Home', 'Exchange', 'Features', 'FAQ'],
+    link: ['Home', 'Market', 'Tokenomics', 'FAQ'],
   }
 ]
 
 const socialLinks: Social[] = [
-  { imgsrc: '/images/Footer/insta.svg', href: "https://instagram.com/" },
-  { imgsrc: '/images/Footer/dribble.svg', href: "https://dribble.com/" },
   { imgsrc: '/images/Footer/twitter.svg', href: "https://twitter.com/" },
-  { imgsrc: '/images/Footer/youtube.svg', href: "https://youtube.com/" },
+  { imgsrc: '/images/Footer/dribble.svg', href: "https://telegram.org/" },
+  { imgsrc: '/images/Footer/insta.svg', href: "https://discord.com/" },
+  { imgsrc: '/images/Footer/youtube.svg', href: "https://solana.com/" },
 ]
 
 
@@ -39,15 +39,19 @@ const footer = () => {
           {/* COLUMN-1 */}
 
           <div className='col-span-6'>
-            <img
+            <Image
               className="block h-12 w-20px mb-4"
-              src={'/images/Logo/logo.svg'}
-              alt="Crypto-Logo"
+              src={'/images/Logo/bitty-logo.svg'}
+              alt="BITTYMESSIAH logo"
+              width={80}
+              height={48}
             />
-            <h3 className='text-lightblue text-sm font-normal leading-9 mb-4 lg:mb-16'> Cryptocurrency is a type of virtual currency that uses cryptography to secure transactions that are digitally recorded on a distributed ledger, such as a blockchain.</h3>
+            <h3 className='text-lightblue text-sm font-normal leading-9 mb-4 lg:mb-16'> BITTYMESSIAH is the Official Bitcoin Mascot Token on Solana, designed to reinvigorate the market and bring Bitcoin&rsquo;s spirit to everyone. Join the movement that&rsquo;s changing the game.</h3>
             <div className='flex gap-4'>
               {socialLinks.map((items, i) => (
-                <Link href={items.href} key={i}><img src={items.imgsrc} alt={items.imgsrc} className='footer-icons' /></Link>
+                <Link href={items.href} key={i}>
+                  <Image src={items.imgsrc} alt={`${items.imgsrc.split('/').pop()?.replace('.svg', '') ?? 'social'} icon`} className='footer-icons' width={24} height={24} />
+                </Link>
               ))}
             </div>
           </div>
@@ -68,10 +72,10 @@ const footer = () => {
           ))}
 
           <div className="col-span-4">
-            <h3 className="text-white text-xl font-medium mb-9">Contact Us</h3>
-            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/number.svg'} alt="number-icon" width={20} height={20} />(406) 555-012</h4>
-            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/email.svg'} alt="email-icon" width={20} height={20} />tim.jennings@example.com</h4>
-            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/address.svg'} alt="address-icon" width={20} height={20} />Elgin St. Celina, Delaware 10299</h4>
+            <h3 className="text-white text-xl font-medium mb-9">Contract Address</h3>
+            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/number.svg'} alt="contract-icon" width={20} height={20} style={{ width: 'auto', height: 'auto' }} />BXuvB1AQVFbgAzYY77HWsG35PcGKZNPjhHEwZ4nAQ47D</h4>
+            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/email.svg'} alt="solana-icon" width={20} height={20} style={{ width: 'auto', height: 'auto' }} />Solana Blockchain</h4>
+            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/address.svg'} alt="mascot-icon" width={20} height={20} style={{ width: 'auto', height: 'auto' }} />₿ Official Mascot</h4>
           </div>
 
         </div>
@@ -80,7 +84,7 @@ const footer = () => {
       {/* All Rights Reserved */}
 
       <div className='py-8 px-4 border-t border-t-lightblue'>
-        <h3 className='text-center text-offwhite'>@2023 - All Rights Reserved by <Link href="https://adminmart.com/" target="_blank"> Adminmart.com</Link></h3>
+        <h3 className='text-center text-offwhite'>© 2024 BITTYMESSIAH. All rights reserved. Cryptocurrency investments carry risk.</h3>
       </div>
 
     </div>

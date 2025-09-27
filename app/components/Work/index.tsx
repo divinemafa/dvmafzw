@@ -11,21 +11,21 @@ interface workdata {
 const workdata: workdata[] = [
     {
         imgSrc: '/images/Work/icon-one.svg',
-        heading: 'Create Account',
-        subheading: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry and this',
-        hiddenpara: 'standard dummy text ever since the 1500s, when an unknownprinter took a galley of type and scrambled it to make a type specimen book. It has survived...',
+        heading: 'Build DEX',
+        subheading: 'Developing a decentralized exchange for seamless trading on Solana.',
+        hiddenpara: 'Our DEX will provide fast, secure, and user-friendly trading experiences.',
     },
     {
         imgSrc: '/images/Work/icon-two.svg',
-        heading: 'Find your Credit',
-        subheading: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry and this',
-        hiddenpara: 'standard dummy text ever since the 1500s, when an unknownprinter took a galley of type and scrambled it to make a type specimen book. It has survived...',
+        heading: 'Create Swap',
+        subheading: 'Implementing a swap mechanism to facilitate easy token exchanges.',
+        hiddenpara: 'The swap will integrate with Solana ecosystem for optimal performance.',
     },
     {
         imgSrc: '/images/Work/icon-three.svg',
-        heading: 'Exchange Currency',
-        subheading: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry and this',
-        hiddenpara: 'standard dummy text ever since the 1500s, when an unknownprinter took a galley of type and scrambled it to make a type specimen book. It has survived...',
+        heading: 'Utility & Culture',
+        subheading: 'Building real utility and a cultural movement rooted in Bitcoin history.',
+        hiddenpara: 'Including education, entertainment, and community-driven initiatives.',
     },
 
 ]
@@ -36,8 +36,8 @@ const Work = () => {
             <div className='mx-auto max-w-7xl mt-16 px-6 mb-20 relative'>
                 <div className="radial-bgone hidden lg:block"></div>
                 <div className='text-center mb-14'>
-                    <h3 className='text-offwhite text-3xl md:text-5xl font-bold mb-3'>How it work</h3>
-                    <p className='text-bluish md:text-lg font-normal leading-8'>Lorem Ipsum is simply dummy text of the printing and typesetting industry. <br /> Lorem Ipsum has been the industry standard dummy text ever.</p>
+                    <h3 className='text-offwhite text-3xl md:text-5xl font-bold mb-3'>What We&rsquo;re Building</h3>
+                    <p className='text-bluish md:text-lg font-normal leading-8'>BITTYMESSIAH is focused on real development, not just hype. <br /> Here&rsquo;s what we&rsquo;re creating to serve the community.</p>
                 </div>
 
                 <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-y-20 gap-x-5 mt-32'>

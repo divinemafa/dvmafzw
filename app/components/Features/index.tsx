@@ -10,18 +10,18 @@ interface featuresdata {
 const featuresdata: featuresdata[] = [
     {
         imgSrc: '/images/Features/featureOne.svg',
-        heading: 'Secure storage',
-        subheading: 'We lake data security and privacy very seriously',
+        heading: 'Fixed Supply',
+        subheading: '756B total supply with no inflation',
     },
     {
         imgSrc: '/images/Features/featureTwo.svg',
-        heading: 'Free to use',
-        subheading: 'Top notch crypto portfolio traking at no cost',
+        heading: '0% Tax',
+        subheading: 'No buy or sell taxes for fair trading',
     },
     {
         imgSrc: '/images/Features/featureThree.svg',
-        heading: 'Real-time price data',
-        subheading: 'Updating 24/7 using price data form the biggest exchanges',
+        heading: 'Locked Liquidity',
+        subheading: 'LP tokens burned forever for security',
     },
 ]
 
@@ -32,9 +32,9 @@ const Features = () => {
             <div className="grid lg:grid-cols-2 gap-x-4 gap-y-4">
                 {/* Column-1 */}
                 <div>
-                    <h3 className="feature-font text-lg font-semibold mb-4 text-center md:text-start">FEATURES</h3>
-                    <h2 className="text-offwhite text-3xl lg:text-5xl font-semibold leading-snug mb-6 text-center md:text-start">The most trusted cryptocurrency platform</h2>
-                    <p className="lg:text-lg font-normal text-bluish text-center md:text-start">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry standard dummy text ever since the 1500s.</p>
+                    <h3 className="feature-font text-lg font-semibold mb-4 text-center md:text-start">TOKENOMICS</h3>
+                    <h2 className="text-offwhite text-3xl lg:text-5xl font-semibold leading-snug mb-6 text-center md:text-start">Designed for sustainability and community growth</h2>
+                    <p className="lg:text-lg font-normal text-bluish text-center md:text-start">BITTYMESSIAH features a fair launch, zero taxes, and locked liquidity to ensure long-term value and trust.</p>
                 </div>
                 {/* Column-2 */}
                 <div>
