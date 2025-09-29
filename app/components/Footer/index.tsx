@@ -42,11 +42,11 @@ const footer = () => {
             <Image
               className="block h-12 w-20px mb-4"
               src={'/images/Logo/bitty-logo.svg'}
-              alt="BITTYMESSIAH logo"
+              alt="BITCOIN MASCOT logo"
               width={80}
               height={48}
             />
-            <h3 className='text-lightblue text-sm font-normal leading-9 mb-4 lg:mb-16'> BITTYMESSIAH is the Official Bitcoin Mascot Token on Solana, designed to reinvigorate the market and bring Bitcoin&rsquo;s spirit to everyone. Join the movement that&rsquo;s changing the game.</h3>
+            <h3 className='text-lightblue text-sm font-normal leading-9 mb-4 lg:mb-16'> BITCOIN MASCOT is the Official Bitcoin Mascot Token on Solana, designed to reinvigorate the market and bring Bitcoin&rsquo;s spirit to everyone. Join the movement that&rsquo;s changing the game.</h3>
             <div className='flex gap-4'>
               {socialLinks.map((items, i) => (
                 <Link href={items.href} key={i}>
@@ -84,7 +84,7 @@ const footer = () => {
       {/* All Rights Reserved */}
 
       <div className='py-8 px-4 border-t border-t-lightblue'>
-        <h3 className='text-center text-offwhite'>© 2024 BITTYMESSIAH. All rights reserved. Cryptocurrency investments carry risk.</h3>
+        <h3 className='text-center text-offwhite'>© 2024 BITCOIN MASCOT. All rights reserved. Cryptocurrency investments carry risk.</h3>
       </div>
 
     </div>

@@ -5,7 +5,7 @@ import Footer from './components/Footer/index';
 
 
 export const metadata = {
-  title: 'BITTYMESSIAH - The Official Bitcoin Mascot Token',
+  title: 'BITCOIN MASCOT - The Official Bitcoin Mascot Token',
   description: 'A revolutionary Solana token designed to reinvigorate the market and bring Bitcoin\'s spirit to everyone.',
   icons: {
     icon: '/favicon.ico',

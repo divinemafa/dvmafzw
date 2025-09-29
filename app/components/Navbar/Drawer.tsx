@@ -34,7 +34,7 @@ const Drawer = ({ children, isOpen, setIsOpen }: DrawerProps) => {
                             <Image
                                 className="block h-10 w-auto lg:hidden"
                                 src={'/images/Logo/logo.svg'}
-                                alt="BITTYMESSIAH logo"
+                                alt="BITCOIN MASCOT logo"
                                 width={120}
                                 height={40}
                                 priority

@@ -17,11 +17,11 @@ const Banner = () => {
                         <div className='arrowTwo'></div>
                         <div className='col-span-7'>
                             <h1 className="text-4xl lg:text-7xl font-bold mb-5 text-white md:4px md:text-start text-center">
-                                BITTYMESSIAH <br /> The Official Bitcoin Mascot Token
+                                BITCOIN MASCOT <br /> The Official Bitcoin Mascot Token
                             </h1>
                             <p className='text-white md:text-lg font-normal mb-10 md:text-start text-center'>A revolutionary Solana token designed to reinvigorate the market and bring Bitcoin&rsquo;s spirit to everyone. Join the movement that&rsquo;s changing the game.</p>
                             <div className='flex align-middle justify-center md:justify-start'>
-                                <button className='text-xl font-semibold text-white py-4 px-6 lg:px-12 navbutton mr-6'>Buy BITTYMESSIAH</button>
+                                <button className='text-xl font-semibold text-white py-4 px-6 lg:px-12 navbutton mr-6'>Buy BITCOIN MASCOT</button>
                                 <button onClick={() => window.open('https://dexscreener.com/solana/BXuvB1AQVFbgAzYY77HWsG35PcGKZNPjhHEwZ4nAQ47D', '_blank')} className='bg-transparent flex justify-center items-center text-white'><Image src={'/images/Banner/playbutton.svg'} alt="button-image" className='mr-3' width={47} height={47} />View Chart</button>
                             </div>
                         </div>

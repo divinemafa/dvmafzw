@@ -42,7 +42,7 @@ const Navbar = () => {
                                 <Image
                                     className="block h-10 w-auto lg:hidden"
                                     src={'/images/Logo/bitty-logo.svg'}
-                                    alt="BITTYMESSIAH logo"
+                                    alt="BITCOIN MASCOT logo"
                                     width={120}
                                     height={40}
                                     priority
@@ -50,7 +50,7 @@ const Navbar = () => {
                                 <Image
                                     className="hidden h-12 w-auto lg:block"
                                     src={'/images/Logo/bitty-logo.svg'}
-                                    alt="BITTYMESSIAH logo"
+                                    alt="BITCOIN MASCOT logo"
                                     width={180}
                                     height={60}
                                     priority
@@ -77,7 +77,7 @@ const Navbar = () => {
                                 </div>
 
                             </div>
-                            <button className='hidden lg:flex justify-end text-xl font-semibold py-4 px-6 lg:px-12 navbutton text-white'>Buy BITTYMESSIAH</button>
+                            <button className='hidden lg:flex justify-end text-xl font-semibold py-4 px-6 lg:px-12 navbutton text-white'>Buy BITCOIN MASCOT</button>
                             {/* <Contactusform /> */}
                         </div>
 

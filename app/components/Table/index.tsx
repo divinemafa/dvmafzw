@@ -54,7 +54,7 @@ const Table = () => {
                     const pair = data.pairs[0];
                     const bitty: table = {
                         index: 1,
-                        name: "BITTYMESSIAH(BITTY)",
+                        name: "BITCOIN MASCOT(BITTY)",
                         imgSrc: '/images/Table/bitty-icon.svg',
                         price: parseFloat(pair.priceUsd),
                         change: parseFloat(pair.priceChange.h24),
@@ -64,7 +64,7 @@ const Table = () => {
                     setTableData([bitty, ...staticData]);
                 }
             } catch (error) {
-                console.error('Failed to fetch BITTYMESSIAH data:', error);
+                console.error('Failed to fetch BITCOIN MASCOT data:', error);
             }
         };
         fetchBittyData();

@@ -378,7 +378,7 @@ function TokenBadge({ symbol, name }: { symbol: string; name: string }) {
 // 1. Install Raydium dependencies: npm install @raydium-io/raydium-sdk @solana/web3.js @solana/wallet-adapter-react ✅ DONE
 // 2. Set up wallet adapter providers (Phantom, Solflare, etc.) ✅ DONE
 // 3. Implement Raydium swap widget component ✅ DONE (UI ready, SDK integration pending)
-// 4. Add token selection with BITTYMESSIAH as default ✅ DONE
+// 4. Add token selection with BITCOIN MASCOT as default ✅ DONE
 // 5. Fix Raydium SDK imports and implement proper swap logic ✅ DONE
 // 6. Implement slippage settings and transaction confirmation ✅ DONE
 // 7. Add real-time price updates ✅ DONE
@@ -467,7 +467,7 @@ function Exchange() {
   const tokenOptions = useMemo(
     () => [
       { symbol: 'SOL', mint: SOL_MINT, name: 'Solana', decimals: 9 },
-      { symbol: 'BITTY', mint: BITTY_MINT, name: 'BITTYMESSIAH', decimals: 6 },
+      { symbol: 'BITTY', mint: BITTY_MINT, name: 'BITCOIN MASCOT', decimals: 6 },
     ],
     [BITTY_MINT, SOL_MINT]
   );
@@ -681,7 +681,7 @@ function Exchange() {
         }
 
         if (!matchingPair) {
-          throw lastError ?? new Error('DexScreener did not return data for BITTYMESSIAH yet.');
+          throw lastError ?? new Error('DexScreener did not return data for BITCOIN MASCOT yet.');
         }
 
         const priceUsdRaw =
@@ -1306,7 +1306,7 @@ function Exchange() {
   <div className="flex h-screen w-screen flex-col overflow-hidden bg-navyblue">
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-700 p-4">
-          <h1 className="text-2xl font-bold text-white">BITTYMESSIAH Exchange</h1>
+          <h1 className="text-2xl font-bold text-white">BITCOIN MASCOT Exchange</h1>
           <WalletMultiButton className="ml-auto" />
         </header>
 
@@ -1697,7 +1697,7 @@ function Exchange() {
               {/* Token Info */}
               <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div className="rounded border border-slate-800/60 bg-slate-950/60 p-4 text-center text-slate-100">
-                  <p className="text-white font-semibold">BITTYMESSIAH</p>
+                  <p className="text-white font-semibold">BITCOIN MASCOT</p>
                   <p className="mt-1 break-all text-xs text-gray-400">{BITTY_MINT_STR}</p>
                 </div>
                 <div className="rounded border border-slate-800/60 bg-slate-950/60 p-4 text-center text-slate-100">
@@ -1799,7 +1799,7 @@ function Exchange() {
               </div>
               {!publicKey ? (
                 <p className="mt-4 text-sm text-gray-400">
-                  Connect a wallet to see your SOL and BITTYMESSIAH balances. Stored snapshot will reappear once connected.
+                  Connect a wallet to see your SOL and BITCOIN MASCOT balances. Stored snapshot will reappear once connected.
                 </p>
               ) : portfolioError ? (
                 <p className="mt-4 text-sm text-red-300">{portfolioError}</p>
@@ -1898,7 +1898,7 @@ function Exchange() {
 
           {/* Footer */}
           <footer className="flex h-10 items-center justify-center border-t border-slate-800 bg-[#050b14] text-[11px] text-slate-500">
-            <p>© 2024 BITTYMESSIAH · Built for the community</p>
+            <p>© 2024 BITCOIN MASCOT · Built for the community</p>
           </footer>
 
       {isConfirmOpen && (

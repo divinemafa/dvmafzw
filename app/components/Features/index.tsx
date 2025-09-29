@@ -34,7 +34,7 @@ const Features = () => {
                 <div>
                     <h3 className="feature-font text-lg font-semibold mb-4 text-center md:text-start">TOKENOMICS</h3>
                     <h2 className="text-offwhite text-3xl lg:text-5xl font-semibold leading-snug mb-6 text-center md:text-start">Designed for sustainability and community growth</h2>
-                    <p className="lg:text-lg font-normal text-bluish text-center md:text-start">BITTYMESSIAH features a fair launch, zero taxes, and locked liquidity to ensure long-term value and trust.</p>
+                    <p className="lg:text-lg font-normal text-bluish text-center md:text-start">BITCOIN MASCOT features a fair launch, zero taxes, and locked liquidity to ensure long-term value and trust.</p>
                 </div>
                 {/* Column-2 */}
                 <div>

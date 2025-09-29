@@ -37,7 +37,7 @@ const Work = () => {
                 <div className="radial-bgone hidden lg:block"></div>
                 <div className='text-center mb-14'>
                     <h3 className='text-offwhite text-3xl md:text-5xl font-bold mb-3'>What We&rsquo;re Building</h3>
-                    <p className='text-bluish md:text-lg font-normal leading-8'>BITTYMESSIAH is focused on real development, not just hype. <br /> Here&rsquo;s what we&rsquo;re creating to serve the community.</p>
+                    <p className='text-bluish md:text-lg font-normal leading-8'>BITCOIN MASCOT is focused on real development, not just hype. <br /> Here&rsquo;s what we&rsquo;re creating to serve the community.</p>
                 </div>
 
                 <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-y-20 gap-x-5 mt-32'>

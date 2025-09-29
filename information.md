@@ -1,9 +1,9 @@
-BITTYMESSIAH
+BITCOIN MASCOT
 The Official Bitcoin Mascot Token
 
 A revolutionary Solana token designed to reinvigorate the market and bring Bitcoin's spirit to everyone. Join the movement that's changing the game.
 
-Buy BITTYMESSIAH
+Buy BITCOIN MASCOT
 View Chart
 756B
 Total Supply
@@ -14,7 +14,7 @@ Blockchain
 ₿ Mascot
 Official Status
 
-About BITTYMESSIAH
+About BITCOIN MASCOT
 The revolutionary token that bridges Bitcoin's legacy with Solana's innovation
 
 ⸻
@@ -65,7 +65,7 @@ We build.
 
 And this is only the beginning.
 
-#BittyMessiah #BitcoinMascot #CryptoTruth #OGBitty
+# #BitcoinMascot #CryptoTruth #OGBitty
 
 Contract Address
 BXuvB1AQVFbgAzYY77HWsG35PcGKZNPjhHEwZ4nAQ47D
@@ -118,7 +118,7 @@ Global Expansion
 CEX listings, marketing campaigns, and mainstream adoption
 
 Join the Revolution
-Be part of the BITTYMESSIAH community and help us reinvigorate the crypto market
+Be part of the BITCOIN MASCOT community and help us reinvigorate the crypto market
 
 🐦
 Twitter
@@ -133,13 +133,13 @@ Discord
 Community hub
 
 Ready to Join the Revolution?
-Get BITTYMESSIAH tokens and be part of the movement that's changing crypto forever
+Get BITCOIN MASCOT tokens and be part of the movement that's changing crypto forever
 
-Buy BITTYMESSIAH Now
+Buy BITCOIN MASCOT Now
 ₿
-BITTYMESSIAH
+BITCOIN MASCOT
 The Official Bitcoin Mascot Token on Solana
 
 Contract: FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
 
-© 2024 BITTYMESSIAH. All rights reserved. Cryptocurrency investments carry risk.
+© 2024 BITCOIN MASCOT. All rights reserved. Cryptocurrency investments carry risk.
