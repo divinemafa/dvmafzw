@@ -8,11 +8,11 @@ interface NavigationItem {
 }
 
 const navigation: NavigationItem[] = [
-    { name: 'Home', href: '#home-section', current: false },
-    { name: 'Market', href: '#exchange-section', current: false },
-    { name: 'Tokenomics', href: '#features-section', current: false },
+    { name: 'Home', href: '/', current: false },
+    { name: 'Market', href: '/market', current: false },
+    { name: 'Tokenomics', href: '/#features-section', current: false },
     { name: 'Exchange', href: '/exchange', current: false },
-    { name: 'FAQ', href: '#faq-section', current: false },
+    { name: 'FAQ', href: '/#faq-section', current: false },
 ]
 
 function classNames(...classes: string[]) {
