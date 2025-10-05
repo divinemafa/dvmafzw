@@ -68,7 +68,7 @@ And this is only the beginning.
 # #BitcoinMascot #CryptoTruth #OGBitty
 
 Contract Address
-BXuvB1AQVFbgAzYY77HWsG35PcGKZNPjhHEwZ4nAQ47D
+FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
 
 Copy Contract
 Tokenomics

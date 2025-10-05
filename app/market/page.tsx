@@ -222,19 +222,19 @@ function MetricCard({
       : 'text-white/70';
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-4 shadow-xl backdrop-blur-2xl">
+    <article className="group relative overflow-hidden rounded-xl border border-white/15 bg-white/5 p-3 shadow-xl backdrop-blur-2xl">
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="relative z-10 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-white/60">{label}</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
-          <p className={`mt-2 text-sm font-medium ${trendColor}`}>{trend}</p>
+          <p className="text-[9px] font-medium uppercase tracking-widest text-white/60">{label}</p>
+          <p className="mt-1 text-lg font-semibold text-white">{value}</p>
+          <p className={`mt-1 text-[10px] font-medium ${trendColor}`}>{trend}</p>
         </div>
-        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-white">
-          <Icon className="h-6 w-6" aria-hidden="true" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
+          <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
       </div>
-      <p className="mt-4 text-xs text-white/70">{description}</p>
+      <p className="mt-2 text-[10px] text-white/70 leading-tight">{description}</p>
     </article>
   );
 }
@@ -251,23 +251,23 @@ function GlassSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
-      <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 text-white">
+    <section className="flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 text-white">
         <div>
-          <h2 className="text-lg font-semibold">{title}</h2>
-          {description ? <p className="text-sm text-white/70">{description}</p> : null}
+          <h2 className="text-sm font-semibold">{title}</h2>
+          {description ? <p className="text-[10px] text-white/70">{description}</p> : null}
         </div>
         {action ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
           >
             {action}
           </button>
         ) : null}
       </div>
       <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto px-5 py-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
+        <div className="h-full overflow-y-auto px-3 py-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
           {children}
         </div>
       </div>
@@ -292,214 +292,280 @@ function StatusBadge({ tone, label }: { tone: StatusTone; label: string }) {
 
 export default function MarketPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#050814] via-[#0a1532] to-[#120333] text-white">
+    <main className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#050814] via-[#0a1532] to-[#120333] text-white">
+      {/* Background ambience */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl" />
         <div className="absolute right-0 top-32 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col gap-6 px-4 py-8 lg:px-8">
-        <header className="rounded-3xl border border-white/10 bg-white/5 px-6 py-6 shadow-2xl backdrop-blur-2xl">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-3">
-              <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
-                <FireIcon className="h-4 w-4" aria-hidden="true" />
-                Utility Market Control Center
-              </p>
-              <h1 className="text-3xl font-semibold leading-tight lg:text-4xl">Oversee every listing, seller, and order from one glass dashboard.</h1>
-              <p className="max-w-2xl text-sm text-white/70">
-                This marketplace cockpit is wired for modular expansion. Swap in live metrics, hook inventory to on-chain or off-chain storage, and let creators spin up storefronts without losing governance over the experience.
-              </p>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-white/60">
-                <span className="inline-flex items-center gap-1">
-                  <MagnifyingGlassIcon className="h-4 w-4" aria-hidden="true" />
-                  Smart discovery filters
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <SparklesIcon className="h-4 w-4" aria-hidden="true" />
-                  Seller growth playbooks
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <ShieldCheckIcon className="h-4 w-4" aria-hidden="true" />
-                  Moderation ready
-                </span>
+      <div className="relative mx-auto flex w-full max-w-[1800px] gap-4 px-4 py-6">
+        {/* LEFT SIDEBAR - Filters & Categories */}
+        <aside className="hidden w-56 flex-shrink-0 lg:block">
+          <div className="sticky top-6 space-y-3">
+            {/* Hero CTA - Compact */}
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl">
+              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/60">Utility Market</p>
+              <h2 className="mb-3 text-base font-bold leading-tight">Discover & sell assets</h2>
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  className="w-full rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 via-indigo-500/80 to-purple-500/80 px-3 py-2 text-xs font-semibold text-white shadow-xl transition hover:from-blue-500 hover:to-purple-500"
+                >
+                  <SparklesIcon className="mr-1.5 inline-block h-3.5 w-3.5" aria-hidden="true" />
+                  List new item
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+                >
+                  Connect Wallet
+                </button>
               </div>
             </div>
-            <div className="flex flex-col gap-3 text-sm font-semibold text-white">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-gradient-to-r from-blue-500/80 via-indigo-500/80 to-purple-500/80 px-6 py-3 shadow-xl transition hover:from-blue-500 hover:to-purple-500"
-              >
-                <SparklesIcon className="h-5 w-5" aria-hidden="true" />
-                Launch new listing
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-6 py-3 text-white transition hover:bg-white/20"
-              >
-                <Bars3BottomRightIcon className="h-5 w-5" aria-hidden="true" />
-                Open order manager
-              </button>
-              <p className="text-xs text-white/60">
-                {/* TODO: Wire actions above to creation & fulfillment workflows once APIs are available. */}
-                TODO: Connect quick actions to server-side mutations and wizard flows.
-              </p>
+
+            {/* Categories - Compact */}
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+              <div className="border-b border-white/10 px-3 py-2">
+                <h3 className="text-xs font-semibold text-white">Categories</h3>
+              </div>
+              <nav className="p-2">
+                <ul className="space-y-1 text-xs">
+                  {['All Items', 'Creator Tools', 'Licenses & Keys', 'NFT Utilities', 'Games', 'Art & Media', 'Physical Goods'].map((cat, idx) => (
+                    <li key={cat}>
+                      <button
+                        type="button"
+                        className={`w-full rounded-lg px-2.5 py-1.5 text-left transition ${
+                          idx === 0
+                            ? 'bg-white/10 font-semibold text-white'
+                            : 'text-white/70 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            {/* Quick Stats - Compact */}
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+              {marketplaceMetrics.slice(0, 2).map((metric) => (
+                <div key={metric.label} className="rounded-lg border border-white/10 bg-white/5 p-2">
+                  <p className="text-[9px] uppercase tracking-widest text-white/60">{metric.label}</p>
+                  <p className="mt-0.5 text-sm font-bold text-white">{metric.value}</p>
+                  <p className={`mt-0.5 text-[9px] font-medium ${metric.tone === 'positive' ? 'text-emerald-300' : 'text-white/70'}`}>
+                    {metric.trend}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
-        </header>
+        </aside>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
-          {marketplaceMetrics.map((metric) => (
-            <MetricCard key={metric.label} {...metric} />
-          ))}
-        </section>
+        {/* CENTER - Main Content (Products) */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {/* Search & Filter Bar - Compact */}
+          <header className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 shadow-xl backdrop-blur-2xl">
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-1 items-center gap-2">
+                <div className="relative flex-1 max-w-xl">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" aria-hidden="true" />
+                  <input
+                    type="search"
+                    placeholder="Search assets, sellers, collections..."
+                    className="w-full rounded-lg border border-white/15 bg-white/10 py-2 pl-10 pr-3 text-xs text-white placeholder-white/50 transition focus:border-blue-400 focus:bg-white/15 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+                >
+                  Search
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+                >
+                  <TagIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                  Filter
+                </button>
+              </div>
+            </div>
+          </header>
 
-        <div className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-3">
-          <div className="flex flex-col gap-4 xl:col-span-2">
-            <GlassSection
-              title="Featured collections"
-              description="Curated bundles to surface across the hero rail."
-              action="Manage collections"
-            >
-              <div className="grid gap-4 md:grid-cols-3">
+          {/* Featured Collections - Compact */}
+          <section className="rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+            <div className="border-b border-white/10 px-3 py-2.5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-white">Featured Collections</h2>
+                <button className="text-xs font-semibold text-blue-200 hover:text-blue-100">See all</button>
+              </div>
+            </div>
+            <div className="p-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {featuredCollections.map((collection) => (
                   <article
                     key={collection.title}
-                    className={`relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-2xl`}
+                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition hover:border-white/20"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${collection.accent} opacity-70`} />
-                    <div className="relative z-10 space-y-4">
-                      <h3 className="text-lg font-semibold">{collection.title}</h3>
-                      <p className="text-sm text-white/80">{collection.items} live items</p>
-                      <p className="text-xs uppercase tracking-wider text-white/70">Last 7 days volume</p>
-                      <span className="text-xl font-semibold">{collection.volume}</span>
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-                      >
-                        {/* TODO: replace with deep link into CMS once available. */}
-                        Curate spotlight
-                      </button>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${collection.accent} opacity-60 transition group-hover:opacity-80`} />
+                    <div className="relative z-10 space-y-2">
+                      <h3 className="text-xs font-bold text-white">{collection.title}</h3>
+                      <p className="text-[10px] text-white/90">{collection.items} items</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-white">{collection.volume}</span>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white transition hover:bg-white/20"
+                        >
+                          Explore
+                        </button>
+                      </div>
                     </div>
                   </article>
                 ))}
               </div>
-            </GlassSection>
+            </div>
+          </section>
 
-            <GlassSection
-              title="Active listings"
-              description="Snapshot of top performing utility assets."
-              action="View all listings"
-            >
-              <div className="space-y-3">
-                {mockListings.map((listing) => (
-                  <div
-                    key={listing.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-inner backdrop-blur-xl"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-white">{listing.title}</p>
-                      <p className="text-xs text-white/60">
-                        By {listing.creator} · SKU {listing.id}
-                      </p>
-                      <p className="text-xs text-white/50">
-                        {/* TODO: Replace placeholder copy with dynamic attributes (tags, delivery info, etc.). */}
-                        TODO: Inject primary attributes once listing schema is finalized.
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 text-sm font-semibold text-white">
-                      <StatusBadge tone={listing.badgeTone} label={listing.status} />
-                      <span>{listing.price}</span>
-                      <span className="text-xs text-white/60">{listing.stock} available</span>
-                    </div>
-                  </div>
-                ))}
+          {/* Product Grid - Compact */}
+          <section className="flex-1 rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+            <div className="border-b border-white/10 px-3 py-2.5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-white">Explore Marketplace</h2>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-white/60">Sort:</span>
+                  <select className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-medium text-white transition focus:border-blue-400 focus:outline-none">
+                    <option>Trending</option>
+                    <option>Newest</option>
+                    <option>Price: Low to High</option>
+                    <option>Price: High to Low</option>
+                  </select>
+                </div>
               </div>
-            </GlassSection>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <GlassSection title="Seller tasks" description="Keep storefronts launch-ready." action="View checklist">
-              <ul className="space-y-3">
-                {sellerTasks.map((task) => (
-                  <li key={task.title} className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur-xl">
-                    <div className="flex items-start gap-3">
-                      <span className="mt-1 flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
-                        <task.icon className="h-5 w-5 text-white" aria-hidden="true" />
-                      </span>
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-white">{task.title}</p>
-                        <p className="text-xs text-white/70">{task.description}</p>
+            </div>
+            <div className="p-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {mockListings.map((listing) => (
+                  <article
+                    key={listing.id}
+                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
+                  >
+                    {/* Product Image Placeholder */}
+                    <div className="aspect-square overflow-hidden bg-gradient-to-br from-purple-500/20 via-indigo-500/20 to-blue-500/20">
+                      <div className="flex h-full items-center justify-center">
+                        <CubeTransparentIcon className="h-12 w-12 text-white/30" aria-hidden="true" />
+                      </div>
+                    </div>
+                    
+                    {/* Product Info - Compact */}
+                    <div className="p-2.5">
+                      <div className="mb-1.5 flex items-start justify-between gap-1.5">
+                        <h3 className="flex-1 text-xs font-semibold text-white line-clamp-2">{listing.title}</h3>
+                        <StatusBadge tone={listing.badgeTone} label={listing.status} />
+                      </div>
+                      
+                      <p className="mb-2 text-[9px] text-white/60">by {listing.creator}</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[9px] text-white/50">Current price</p>
+                          <p className="text-sm font-bold text-white">{listing.price}</p>
+                        </div>
                         <button
                           type="button"
-                          className="text-xs font-semibold text-blue-200 underline-offset-4 hover:underline"
+                          className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-3 py-1.5 text-[10px] font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
                         >
-                          {task.cta}
+                          Buy Now
                         </button>
                       </div>
+                      
+                      <p className="mt-1.5 text-[9px] text-white/50">{listing.stock} in stock</p>
                     </div>
-                  </li>
+                  </article>
                 ))}
-              </ul>
-            </GlassSection>
-
-            <GlassSection title="Marketplace activity" description="Live pulse across the utility market." action="Open timeline">
-              <ul className="space-y-3 text-sm text-white/80">
-                {activityFeed.map((entry) => (
-                  <li key={`${entry.actor}-${entry.subject}`} className="rounded-2xl border border-white/10 bg-white/5 p-3 shadow-inner backdrop-blur-xl">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p>
-                          <span className="font-semibold text-white">{entry.actor}</span> {entry.action}
-                        </p>
-                        <p className="text-xs text-white/60">{entry.subject}</p>
-                      </div>
-                      <span className="text-xs text-white/60">{entry.timestamp}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </GlassSection>
-
-            <GlassSection title="Moderation triage" description="Items waiting on human review." action="Open moderation">
-              <ul className="space-y-3 text-sm text-white/80">
-                {moderationQueue.map((entry) => (
-                  <li key={entry.title} className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur-xl">
-                    <p className="text-sm font-semibold text-white">{entry.title}</p>
-                    <p className="text-xs text-white/60">Seller: {entry.seller}</p>
-                    <p className="text-xs text-white/60">Submitted {entry.submitted}</p>
-                    <p className="mt-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70">
-                      {entry.flag}
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-3 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-                    >
-                      {/* TODO: route to moderation workspace */}
-                      Review submission
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </GlassSection>
-          </div>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <footer className="grid grid-cols-1 gap-4 rounded-3xl border border-white/10 bg-white/5 px-6 py-5 shadow-2xl backdrop-blur-2xl lg:grid-cols-2 xl:grid-cols-4">
-          {buyerInsights.map((insight) => (
-            <div key={insight.label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur-xl">
-              <div>
-                <p className="text-xs uppercase tracking-widest text-white/60">{insight.label}</p>
-                <p className="mt-2 text-xl font-semibold text-white">{insight.value}</p>
-                <p className="text-xs text-white/60">{/* TODO: replace static insight copy with analytics pipeline. */}TODO: Pull metric from analytics service.</p>
+        {/* RIGHT SIDEBAR - Compact */}
+        <aside className="hidden w-72 flex-shrink-0 xl:block">
+          <div className="sticky top-6 space-y-3">
+            {/* Top Creators - Compact */}
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+              <div className="border-b border-white/10 px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold text-white">Top Creators</h3>
+                  <button className="text-[10px] font-semibold text-blue-200 hover:text-blue-100">See all</button>
+                </div>
               </div>
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-white">
-                <insight.icon className="h-6 w-6" aria-hidden="true" />
-              </span>
+              <div className="p-3">
+                <ul className="space-y-2">
+                  {['Orbit Labs', 'Pixel Forge', 'Signal Boosters', 'ArenaX', 'Bitty Labs'].map((creator, idx) => (
+                    <li key={creator} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/60 to-blue-500/60 text-xs font-bold text-white">
+                          {creator.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-white">{creator}</p>
+                          <p className="text-[9px] text-white/60">{Math.floor(Math.random() * 50) + 10} SOL</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-semibold text-white/60">#{idx + 1}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          ))}
-        </footer>
+
+            {/* Recent Activity - Compact */}
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+              <div className="border-b border-white/10 px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold text-white">Recent Activity</h3>
+                  <button className="text-[10px] font-semibold text-blue-200 hover:text-blue-100">See more</button>
+                </div>
+              </div>
+              <div className="max-h-80 overflow-y-auto p-3">
+                <ul className="space-y-2">
+                  {activityFeed.map((entry) => (
+                    <li key={`${entry.actor}-${entry.subject}`} className="rounded-lg border border-white/10 bg-white/5 p-2">
+                      <div className="mb-1 flex items-start justify-between gap-1.5">
+                        <p className="text-[10px] text-white">
+                          <span className="font-semibold">{entry.actor}</span> {entry.action}
+                        </p>
+                        <span className="text-[9px] text-white/50 whitespace-nowrap">{entry.timestamp}</span>
+                      </div>
+                      <p className="text-[9px] text-white/60 line-clamp-1">{entry.subject}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Quick Metrics - Compact */}
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+              {buyerInsights.slice(0, 3).map((insight) => (
+                <div key={insight.label} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-2">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-wider text-white/60">{insight.label}</p>
+                    <p className="mt-0.5 text-sm font-bold text-white">{insight.value}</p>
+                  </div>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
+                    <insight.icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
     </main>
   );

@@ -395,6 +395,350 @@ function TokenBadge({ symbol, name }: { symbol: string; name: string }) {
 // 10. Integrate with DexScreener for price data
 // 11. Add transaction history and portfolio view
 
+// Sidebar content component for reuse in drawer and desktop
+function LeftSidebarContent({ 
+  networkStatusMessage, 
+  networkAlerts, 
+  BITTY_MINT_STR, 
+  dexData, 
+  dexLoading, 
+  dexUpdatedAt, 
+  dexError, 
+  handleRetryDex,
+  portfolioData,
+  portfolioLoading,
+  portfolioError,
+  handleRetryPortfolio,
+  formatCurrency,
+  formatAmount,
+  txHistory,
+  txLoading,
+  txError
+}: any) {
+  return (
+    <div className="space-y-3">
+      {/* Status Indicator */}
+      <div className="rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 p-3 shadow-xl backdrop-blur-2xl">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-500">
+            <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">Token Swap</h3>
+            <p className="text-[10px] text-white/60">Powered by Raydium</p>
+          </div>
+        </div>
+        
+        {networkStatusMessage && (
+          <div className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2 py-1.5 text-[10px] text-white">
+            <ArrowPathIcon className="h-2.5 w-2.5 animate-spin" aria-hidden="true" />
+            <span className="truncate">{networkStatusMessage}</span>
+          </div>
+        )}
+
+        {networkAlerts.length > 0 && (
+          <div className="mt-3 space-y-2" aria-live="assertive">
+            {networkAlerts.map((alert: any) => (
+              <div key={alert.id} className="rounded-xl bg-amber-500/10 p-3">
+                <div className="flex items-start gap-2">
+                  <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0 text-amber-300" aria-hidden="true" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-xs text-white">{alert.title}</p>
+                    <p className="text-white/80 text-[10px] mt-0.5">{alert.message}</p>
+                    {alert.onRetry && (
+                      <button
+                        type="button"
+                        onClick={alert.onRetry}
+                        className="mt-2 w-full rounded-lg bg-amber-500/20 px-3 py-1.5 text-[10px] font-medium text-white transition hover:bg-amber-500/30"
+                      >
+                        Retry
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Token Info */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl">
+        <h3 className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+          <span className="text-[10px]">🪙</span>
+          Token Info
+        </h3>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between rounded-lg bg-white/5 px-2 py-1.5">
+            <span className="text-[10px] text-white/60">Name</span>
+            <span className="text-[10px] font-semibold text-blue-300">BITCOIN MASCOT</span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-white/5 px-2 py-1.5">
+            <span className="text-[10px] text-white/60">Symbol</span>
+            <span className="text-[10px] font-semibold text-white">BITTY</span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-white/5 px-2 py-1.5">
+            <span className="text-[10px] text-white/60">Network</span>
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
+              <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
+              Solana
+            </span>
+          </div>
+          <div className="rounded-lg bg-white/5 px-2 py-1.5 group relative cursor-help" title={BITTY_MINT_STR}>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-white/60">Contract</span>
+              <svg className="h-3 w-3 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="truncate text-[9px] font-mono text-white/80 mt-0.5">{BITTY_MINT_STR.slice(0, 10)}...{BITTY_MINT_STR.slice(-8)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Portfolio Overview */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className="text-xs font-semibold text-white">Portfolio</h3>
+          {portfolioLoading && (
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-200/40 border-t-white" />
+          )}
+        </div>
+        {portfolioError ? (
+          <div className="space-y-2">
+            <p className="text-[10px] text-red-200">{portfolioError}</p>
+            <button
+              onClick={handleRetryPortfolio}
+              className="w-full rounded-lg bg-red-500/20 px-3 py-1.5 text-[10px] font-medium text-white transition hover:bg-red-500/30"
+            >
+              Retry
+            </button>
+          </div>
+        ) : portfolioData ? (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+              <p className="text-[9px] uppercase tracking-wide text-white/60">SOL Balance</p>
+              <p className="mt-0.5 text-sm font-semibold text-white">
+                {formatAmount(portfolioData.solBalance, 4)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+              <p className="text-[9px] uppercase tracking-wide text-white/60">BITTY Balance</p>
+              <p className="mt-0.5 text-sm font-semibold text-white">
+                {formatAmount(portfolioData.bittyBalance, 2)}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-[10px] text-white/60">Connect wallet to view balances</p>
+        )}
+      </div>
+
+      {/* Recent Activity */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className="text-xs font-semibold text-white">Recent Activity</h3>
+          {txLoading && (
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-200/40 border-t-white" />
+          )}
+        </div>
+        {txError ? (
+          <p className="text-[10px] text-red-200">{txError}</p>
+        ) : txHistory && txHistory.length > 0 ? (
+          <ul className="space-y-2">
+            {txHistory.slice(0, 5).map((tx: any) => (
+              <li key={tx.id} className="rounded-lg border border-white/10 bg-white/5 p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-white">{tx.label}</span>
+                  <span className="text-[9px] text-white/60">
+                    {tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString() : '—'}
+                  </span>
+                </div>
+                <p className="truncate text-[9px] font-mono text-blue-200 mt-1">
+                  {tx.detail}
+                </p>
+                <p className={`mt-1 text-[9px] ${
+                  tx.status === 'success' ? 'text-emerald-300' :
+                  tx.status === 'pending' ? 'text-amber-300' : 'text-red-300'
+                }`}>
+                  {tx.status === 'success' ? '✓ Success' :
+                   tx.status === 'pending' ? '⏳ Pending' : '✗ Failed'}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[10px] text-white/60">No activity yet</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RightSidebarContent({ 
+  publicKey, 
+  connect,
+  disconnect,
+  connecting, 
+  dexData, 
+  dexLoading,
+  dexUpdatedAt,
+  dexError, 
+  handleRetryDex,
+  formatCurrency,
+  formatAmount,
+  formatPercent,
+  portfolioData,
+  portfolioLoading
+}: any) {
+  return (
+    <div className="space-y-3 p-3">
+      {/* Wallet Manager */}
+      <div className="rounded-xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-pink-500/10 p-3 shadow-xl backdrop-blur-2xl">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-semibold text-white flex items-center gap-1.5">
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Wallet Manager
+          </h3>
+          {publicKey && (
+            <span className="flex h-2 w-2">
+              <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+            </span>
+          )}
+        </div>
+
+        {!publicKey ? (
+          <div className="space-y-2">
+            <p className="text-[10px] text-white/70">Connect to start trading</p>
+            
+            <button
+              onClick={connect}
+              disabled={connecting}
+              className="w-full flex items-center justify-center gap-2 rounded-lg border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-purple-600/20 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:from-purple-500/30 hover:to-purple-600/30 disabled:opacity-50"
+            >
+              {connecting ? 'Connecting...' : 'Connect Phantom'}
+            </button>
+
+            <button
+              onClick={() => window.open('https://phantom.app/download', '_blank')}
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/30 bg-white/5 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-white/10"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Wallet
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-2">
+              <p className="text-[10px] font-semibold text-green-200">✓ Connected</p>
+              <p className="text-[9px] text-green-200/70 font-mono truncate mt-0.5">
+                {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => navigator.clipboard.writeText(publicKey.toBase58())}
+                className="flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-[10px] font-semibold text-white transition hover:bg-white/10"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy
+              </button>
+              <button
+                onClick={disconnect}
+                className="flex flex-col items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-2 text-[10px] font-semibold text-red-200 transition hover:bg-red-500/20"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Disconnect
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Market Stats */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl">
+        <h3 className="text-xs font-semibold text-white mb-2">Market Overview</h3>
+        <div className="space-y-2">
+          <div className="rounded-lg border border-blue-500/30 bg-white/5 px-2 py-2">
+            <p className="text-[9px] uppercase tracking-wider text-blue-100/90 mb-0.5">USD Price</p>
+            <span className="text-sm font-bold text-white">
+              {dexData?.priceUsd != null ? formatCurrency(dexData.priceUsd, 4) : dexLoading ? 'Loading…' : '—'}
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-purple-500/30 bg-white/5 px-2 py-2">
+            <p className="text-[9px] uppercase tracking-wider text-purple-100/90 mb-0.5">SOL Price</p>
+            <p className="text-sm font-bold text-white">
+              {dexData?.priceNative != null ? `${formatAmount(dexData.priceNative, 6)} SOL` : dexLoading ? 'Loading…' : '—'}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-emerald-500/30 bg-white/5 px-2 py-2">
+            <p className="text-[9px] uppercase tracking-wider text-emerald-100/90 mb-0.5">24h Volume</p>
+            <p className="text-sm font-bold text-white">
+              {dexData?.volume24h != null ? formatCurrency(dexData.volume24h, 0) : dexLoading ? 'Loading…' : '—'}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-sky-500/30 bg-white/5 px-2 py-2">
+            <p className="text-[9px] uppercase tracking-wider text-sky-100/90 mb-0.5">Liquidity</p>
+            <p className="text-sm font-bold text-white">
+              {dexData?.liquidityUsd != null ? formatCurrency(dexData.liquidityUsd, 0) : dexLoading ? 'Loading…' : '—'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Wallet Balance */}
+      {publicKey && portfolioData && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+          <h3 className="text-xs font-semibold text-white mb-2">Balance</h3>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">
+              <span className="text-[10px] text-white/70">SOL</span>
+              <span className="text-[10px] font-bold text-white">{formatAmount(portfolioData.solBalance, 4)}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">
+              <span className="text-[10px] text-white/70">BITTY</span>
+              <span className="text-[10px] font-bold text-white">{formatAmount(portfolioData.bittyBalance, 2)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Network Status */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+        <h3 className="text-xs font-semibold text-white mb-2">Network</h3>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-white/60">Status</span>
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Solana Mainnet
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-white/60">DEX</span>
+            <span className="text-[10px] font-semibold text-white">Raydium</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ExchangePage() {
     return (
         <WalletContextProvider>
@@ -404,7 +748,7 @@ export default function ExchangePage() {
 }
 
 function Exchange() {
-  const { publicKey } = useWallet();
+  const { publicKey, connect, disconnect, connecting } = useWallet();
   const RPC_URL = 'https://api.mainnet-beta.solana.com';
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
@@ -450,16 +794,29 @@ function Exchange() {
   >([]);
   const [txLoading, setTxLoading] = useState(false);
   const [txError, setTxError] = useState<string | null>(null);
+  
+  // Mobile drawer states
+  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
+  
+  // Retry handlers for error states
+  const handleRetryDex = useCallback(() => {
+    setDexRetryToken(prev => prev + 1);
+  }, []);
+  
+  const handleRetryPortfolio = useCallback(() => {
+    setPortfolioRetryToken(prev => prev + 1);
+  }, []);
 
   const raydiumSwapRef = useRef<RaydiumSwap | null>(null);
   const poolKeysRef = useRef<LiquidityPoolKeys | null>(null);
   const quoteRequestId = useRef(0);
   const dexAbortRef = useRef<AbortController | null>(null);
 
-  const BITTY_MINT = useMemo(() => new PublicKey('BXuvB1AQVFbgAzYY77HWsG35PcGKZNPjhHEwZ4nAQ47D'), []);
+  const BITTY_MINT = useMemo(() => new PublicKey('FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg'), []);
   const SOL_MINT = useMemo(() => NATIVE_MINT, []);
     const BITTY_MINT_STR = useMemo(() => BITTY_MINT.toBase58(), [BITTY_MINT]);
-    const BITTY_DEX_PAIR = 'BXuvB1AQVFbgAzYY77HWsG35PcGKZNPjhHEwZ4nAQ47D';
+    const BITTY_DEX_PAIR = 'FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg';
   const connection = useMemo(() => new Connection(RPC_URL, { commitment: 'confirmed' }), [RPC_URL]);
   const walletAddress = useMemo(() => publicKey?.toBase58() ?? null, [publicKey]);
 
@@ -651,45 +1008,79 @@ function Exchange() {
       try {
         setDexLoading(true);
         setDexError(null);
-        const endpoints = [
-          `https://api.dexscreener.com/latest/dex/pairs/solana/${BITTY_DEX_PAIR}`,
-          `https://api.dexscreener.com/latest/dex/tokens/${BITTY_MINT_STR}`,
-        ];
-
+        
         let matchingPair: any | null = null;
-        let lastError: Error | null = null;
+        let dataSource = '';
 
-        for (const endpoint of endpoints) {
-          try {
-            const response = await fetch(endpoint, { signal: controller.signal });
-            if (!response.ok) {
-              throw new Error(`DexScreener responded with status ${response.status}`);
+        // ATTEMPT 1: Try CoinGecko first (primary source)
+        try {
+          const cgResponse = await fetch(
+            `https://api.coingecko.com/api/v3/simple/token_price/solana?contract_addresses=${BITTY_MINT_STR}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true`,
+            { signal: controller.signal }
+          );
+
+          if (cgResponse.ok) {
+            const cgData = await cgResponse.json();
+            const tokenData = cgData[BITTY_MINT_STR.toLowerCase()];
+
+            if (tokenData) {
+              // Convert CoinGecko format to match our interface
+              matchingPair = {
+                priceUsd: tokenData.usd,
+                priceNative: null, // CoinGecko doesn't provide native price
+                priceChange: { h24: tokenData.usd_24h_change || null },
+                volume: { h24: tokenData.usd_24h_vol || null },
+                liquidity: { usd: null },
+                baseToken: { symbol: 'BITTY', name: 'BITCOIN MASCOT', address: BITTY_MINT_STR },
+                quoteToken: { symbol: 'SOL', name: 'Solana' },
+                pairAddress: BITTY_DEX_PAIR,
+                url: `https://www.coingecko.com/en/coins/solana/contract/${BITTY_MINT_STR}`,
+                dexId: 'coingecko',
+              };
+              dataSource = 'CoinGecko';
             }
+          }
+        } catch (e) {
+          // CoinGecko failed, will try DexScreener
+        }
 
-            const payload = await response.json();
-            const pairs: any[] = payload?.pairs ?? [];
-            matchingPair =
-              pairs.find(
-                (pair) =>
-                  pair?.baseToken?.address === BITTY_MINT_STR ||
-                  pair?.quoteToken?.address === BITTY_MINT_STR
-              ) ?? pairs[0] ?? null;
+        // ATTEMPT 2: Fallback to DexScreener if CoinGecko doesn't have data
+        if (!matchingPair) {
+          const dexEndpoints = [
+            `https://api.dexscreener.com/latest/dex/pairs/solana/${BITTY_DEX_PAIR}`,
+            `https://api.dexscreener.com/latest/dex/tokens/${BITTY_MINT_STR}`,
+          ];
 
-            if (matchingPair) {
-              break;
+          for (const endpoint of dexEndpoints) {
+            try {
+              const response = await fetch(endpoint, { signal: controller.signal });
+              if (response.ok) {
+                const payload = await response.json();
+                const pairs: any[] = payload?.pairs ?? [];
+                matchingPair =
+                  pairs.find(
+                    (pair) =>
+                      pair?.baseToken?.address === BITTY_MINT_STR ||
+                      pair?.quoteToken?.address === BITTY_MINT_STR
+                  ) ?? pairs[0] ?? null;
+
+                if (matchingPair) {
+                  dataSource = 'DexScreener';
+                  break;
+                }
+              }
+            } catch (e) {
+              // Continue to next endpoint
             }
-
-            lastError = new Error('DexScreener returned no matching pairs.');
-          } catch (endpointError) {
-            if (controller.signal.aborted) {
-              return;
-            }
-            lastError = endpointError as Error;
           }
         }
 
+        // If no data from any source, set friendly message
         if (!matchingPair) {
-          throw lastError ?? new Error('DexScreener did not return data for BITCOIN MASCOT yet.');
+          setDexData(null);
+          setDexError('Price data not yet available. Swap functionality via Raydium is still active.');
+          setDexLoading(false);
+          return;
         }
 
         const priceUsdRaw =
@@ -720,10 +1111,14 @@ function Exchange() {
           quoteTokenSymbol: matchingPair?.quoteToken?.symbol ?? matchingPair?.quoteToken?.name ?? null,
         });
         setDexUpdatedAt(new Date());
+        // Log data source for debugging (optional)
+        if (dataSource) {
+          console.log(`Price data loaded from: ${dataSource}`);
+        }
       } catch (error) {
         if (!controller.signal.aborted && !cancelled) {
-          console.error('DexScreener fetch failed:', error);
-          setDexError((error as Error).message ?? 'Unable to load DexScreener data.');
+          console.warn('Price feed temporarily unavailable:', error);
+          setDexError('Price data temporarily unavailable. Swap functionality remains active.');
           setDexData(null);
         }
       } finally {
@@ -1300,244 +1695,250 @@ function Exchange() {
         </div>
       }
     >
-      <div className="relative min-h-screen flex flex-col">
+      <div className="relative flex min-h-screen flex-col overflow-hidden">
         {/* Main Page Background Theme */}
         <div className="arrowOne"></div>
         <div className='radial-banner hidden lg:block'></div>
         
-        {/* Main Content - Dashboard Grid */}
-        <main className="relative z-10 flex-1 overflow-auto pt-24">
-          <div className="max-w-7xl mx-auto px-3 py-3 text-white">
-            <div className='arrowThree'></div>
-            <div className='arrowFour'></div>
-            {networkStatusMessage ? (
-              <div className="flex items-center gap-2 rounded-xl border border-blue-500/30 bg-white/5 px-3 py-2 text-xs text-white shadow-lg backdrop-blur-xl mb-3">
-                <ArrowPathIcon className="h-3 w-3 animate-spin" aria-hidden="true" />
-                <span>{networkStatusMessage}</span>
-              </div>
-            ) : null}
+        {/* Mobile Drawer Toggle Buttons - Fixed positioned */}
+        <div className="fixed top-24 left-4 z-50 lg:hidden">
+          <button
+            onClick={() => setLeftDrawerOpen(true)}
+            className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 shadow-xl backdrop-blur-2xl transition hover:from-blue-500/30 hover:to-purple-500/30"
+            aria-label="Open token info"
+          >
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="fixed top-24 right-4 z-50 lg:hidden">
+          <button
+            onClick={() => setRightDrawerOpen(true)}
+            className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-xl backdrop-blur-2xl transition hover:from-emerald-500/30 hover:to-teal-500/30"
+            aria-label="Open market stats"
+          >
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </button>
+        </div>
 
-            {networkAlerts.length > 0 ? (
-              <div className="space-y-2 mb-3" aria-live="assertive">
-                {networkAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-300/30 bg-white/5 px-3 py-2 text-xs text-white shadow-lg backdrop-blur-xl"
-                  >
-                    <div className="flex items-center gap-2">
-                      <ExclamationTriangleIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
-                      <div>
-                        <p className="font-semibold text-xs">{alert.title}</p>
-                        <p className="text-amber-100/80 text-[10px]">{alert.message}</p>
+        {/* Left Drawer Overlay & Panel */}
+        {leftDrawerOpen && (
+          <>
+            <div 
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+              onClick={() => setLeftDrawerOpen(false)}
+            />
+            <div className="fixed inset-y-0 left-0 z-[70] w-80 overflow-y-auto bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] shadow-2xl lg:hidden">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 px-4 py-3 backdrop-blur-xl">
+                <h2 className="text-sm font-bold text-white">Token Info</h2>
+                <button
+                  onClick={() => setLeftDrawerOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/10 transition hover:bg-white/20"
+                  aria-label="Close drawer"
+                >
+                  <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <LeftSidebarContent 
+                networkStatusMessage={networkStatusMessage}
+                networkAlerts={networkAlerts}
+                BITTY_MINT_STR={BITTY_MINT_STR}
+                dexData={dexData}
+                dexLoading={dexLoading}
+                dexUpdatedAt={dexUpdatedAt}
+                dexError={dexError}
+                handleRetryDex={handleRetryDex}
+                portfolioData={portfolioData}
+                portfolioLoading={portfolioLoading}
+                portfolioError={portfolioError}
+                handleRetryPortfolio={handleRetryPortfolio}
+                formatCurrency={formatCurrency}
+                formatAmount={formatAmount}
+                txHistory={txHistory}
+                txLoading={txLoading}
+                txError={txError}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Right Drawer Overlay & Panel */}
+        {rightDrawerOpen && (
+          <>
+            <div 
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+              onClick={() => setRightDrawerOpen(false)}
+            />
+            <div className="fixed inset-y-0 right-0 z-[70] w-80 overflow-y-auto bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] shadow-2xl lg:hidden">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 px-4 py-3 backdrop-blur-xl">
+                <h2 className="text-sm font-bold text-white">Market Stats</h2>
+                <button
+                  onClick={() => setRightDrawerOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/10 transition hover:bg-white/20"
+                  aria-label="Close drawer"
+                >
+                  <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <RightSidebarContent
+                publicKey={publicKey}
+                connect={connect}
+                disconnect={disconnect}
+                connecting={connecting}
+                dexData={dexData}
+                dexLoading={dexLoading}
+                dexUpdatedAt={dexUpdatedAt}
+                dexError={dexError}
+                handleRetryDex={handleRetryDex}
+                formatCurrency={formatCurrency}
+                formatAmount={formatAmount}
+                formatPercent={formatPercent}
+                portfolioData={portfolioData}
+                portfolioLoading={portfolioLoading}
+              />
+            </div>
+          </>
+        )}
+        
+        {/* Main Content - Three Column Layout */}
+        <main className="relative z-10 mx-auto flex w-full max-w-[1800px] flex-1 gap-4 px-4 py-24 text-white">
+          <div className='arrowThree'></div>
+          <div className='arrowFour'></div>
+          
+          {/* LEFT SIDEBAR - Quick Info */}
+          <aside className="hidden w-64 flex-shrink-0 lg:block">
+            <div className="sticky top-24 space-y-3">
+
+              {/* Status Indicator - Compact */}
+              <div className="rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 p-3 shadow-xl backdrop-blur-2xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-500">
+                    <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Token Swap</h3>
+                    <p className="text-[10px] text-white/60">Powered by Raydium</p>
+                  </div>
+                </div>
+                
+                {networkStatusMessage ? (
+                  <div className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-2 py-1.5 text-[10px] text-white">
+                    <ArrowPathIcon className="h-2.5 w-2.5 animate-spin" aria-hidden="true" />
+                    <span className="truncate">{networkStatusMessage}</span>
+                  </div>
+                ) : null}
+
+                {networkAlerts.length > 0 ? (
+                  <div className="mt-3 space-y-2" aria-live="assertive">
+                    {networkAlerts.map((alert) => (
+                      <div key={alert.id} className="rounded-xl bg-amber-500/10 p-3">
+                        <div className="flex items-start gap-2">
+                          <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0 text-amber-300" aria-hidden="true" />
+                          <div className="flex-1">
+                            <p className="font-semibold text-xs text-white">{alert.title}</p>
+                            <p className="text-white/80 text-[10px] mt-0.5">{alert.message}</p>
+                            {alert.onRetry ? (
+                              <button
+                                type="button"
+                                onClick={alert.onRetry}
+                                className="mt-2 w-full rounded-lg bg-amber-500/20 px-3 py-1.5 text-[10px] font-medium text-white transition hover:bg-amber-500/30"
+                              >
+                                Retry
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    {alert.onRetry ? (
-                      <button
-                        type="button"
-                        onClick={alert.onRetry}
-                        className="rounded border border-amber-200/40 bg-amber-500/20 px-2 py-1 text-[10px] font-medium text-white transition hover:bg-amber-400/30 flex-shrink-0"
-                      >
-                        Retry
-                      </button>
-                    ) : null}
+                    ))}
                   </div>
-                ))}
+                ) : null}
               </div>
-            ) : null}
 
-            {/* Compact Market Stats */}
-            <section className="grid grid-cols-2 gap-2 lg:grid-cols-4 mb-3">
-              <div className="group relative overflow-hidden rounded-2xl border border-blue-500/30 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition-all duration-300 hover:border-blue-400/50">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <div className="w-5 h-5 rounded-md bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                      <span className="text-blue-300 text-xs">💰</span>
-                    </div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-blue-100/90">USD Price</p>
+              {/* Token Info - Compact */}
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl">
+                <h3 className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                  <span className="text-[10px]">🪙</span>
+                  Token Info
+                </h3>
+                <div className="space-y-1.5">
+                {/* Token Info Cards - Compact */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between rounded-lg bg-white/5 px-2 py-1.5">
+                    <span className="text-[10px] text-white/60">Name</span>
+                    <span className="text-[10px] font-semibold text-blue-300">BITCOIN MASCOT</span>
                   </div>
-                  <div className="flex items-baseline gap-2">
-                      <span className="text-lg lg:text-xl font-bold text-white">
-                      {dexData?.priceUsd != null
-                        ? formatCurrency(dexData.priceUsd, 4)
-                        : dexLoading
-                          ? 'Loading…'
-                          : '—'}
+                  <div className="flex items-center justify-between rounded-lg bg-white/5 px-2 py-1.5">
+                    <span className="text-[10px] text-white/60">Symbol</span>
+                    <span className="text-[10px] font-semibold text-white">BITTY</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-white/5 px-2 py-1.5">
+                    <span className="text-[10px] text-white/60">Network</span>
+                    <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
+                      <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
+                      Solana
                     </span>
-                    {dexData?.priceChange24h != null && (
-                      <span className={`inline-flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-full ${
-                        dexData.priceChange24h >= 0 
-                          ? 'text-emerald-200 bg-emerald-500/20' 
-                          : 'text-red-200 bg-red-500/20'
-                      }`}>
-                        <span className={dexData.priceChange24h >= 0 ? '↗' : '↘'} />
-                        {formatPercent(dexData.priceChange24h)}
-                      </span>
-                    )}
                   </div>
-                </div>
-              </div>
-              
-              <div className="group relative overflow-hidden rounded-2xl border border-purple-500/30 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition-all duration-300 hover:border-purple-400/50">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <div className="w-5 h-5 rounded-md bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                      <span className="text-purple-300 text-xs">⬡</span>
+                  <div className="rounded-lg bg-white/5 px-2 py-1.5 group relative cursor-help" title={BITTY_MINT_STR}>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-white/60">Contract</span>
+                      <svg className="h-3 w-3 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-purple-100/90">SOL Price</p>
-                  </div>
-                  <div className="text-lg lg:text-xl font-bold text-white">
-                    {dexData?.priceNative != null
-                      ? `${formatAmount(dexData.priceNative, 6)} SOL`
-                      : dexLoading
-                        ? 'Loading…'
-                        : '—'}
+                    <p className="truncate text-[9px] font-mono text-white/80 mt-0.5">{BITTY_MINT_STR.slice(0, 10)}...{BITTY_MINT_STR.slice(-8)}</p>
                   </div>
                 </div>
               </div>
-              
-              <div className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition-all duration-300 hover:border-emerald-400/50">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <div className="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                      <span className="text-emerald-300 text-xs">📊</span>
-                    </div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-emerald-100/90">24h Volume</p>
-                  </div>
-                  <div className="text-lg lg:text-xl font-bold text-white">
-                    {dexData?.volume24h != null
-                      ? formatCurrency(dexData.volume24h, 0)
-                      : dexLoading
-                        ? 'Loading…'
-                        : '—'}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="group relative overflow-hidden rounded-2xl border border-sky-500/30 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition-all duration-300 hover:border-sky-400/50">
-                <div className="absolute inset-0 bg-gradient-to-r from-sky-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <div className="w-5 h-5 rounded-md bg-sky-500/20 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sky-300 text-xs">💧</span>
-                    </div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-sky-100/90">Liquidity</p>
-                  </div>
-                  <div className="text-lg lg:text-xl font-bold text-white">
-                    {dexData?.liquidityUsd != null
-                      ? formatCurrency(dexData.liquidityUsd, 0)
-                      : dexLoading
-                        ? 'Loading…'
-                        : '—'}
-                  </div>
-                  {dexUpdatedAt && (
-                    <p className="mt-2 text-[10px] text-sky-100/70 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse" />
-                      {dexUpdatedAt.toLocaleTimeString()}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
 
-            {/* Dashboard Grid Layout - Sidebar Left, Content Right */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-              {/* Left Sidebar - Token Info, Wallet & Activity */}
-              <aside className="lg:col-span-3 space-y-3">
-                {/* Token Info Cards */}
-                <div className="space-y-2">
-                  <div className="rounded-2xl border border-white/20 bg-white/5 p-3 text-white shadow-xl backdrop-blur-2xl">
-                    <p className="text-white font-semibold text-sm mb-2">Token</p>
-                    <p className="text-blue-300 font-bold text-base">BITCOIN MASCOT</p>
-                    <p className="mt-1 break-all text-[10px] text-white/70">{BITTY_MINT_STR}</p>
-                  </div>
-                  
-                  <div className="rounded-2xl border border-white/20 bg-white/5 p-3 text-white shadow-xl backdrop-blur-2xl">
-                    <p className="text-white font-semibold text-sm mb-2">Network</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <p className="text-white/80 text-sm">Solana</p>
-                    </div>
-                  </div>
-                  
-                  <div className="rounded-2xl border border-white/20 bg-white/5 p-3 text-white shadow-xl backdrop-blur-2xl">
-                    <p className="text-white font-semibold text-sm mb-2">Status</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full" />
-                      <p className="text-emerald-300 text-sm font-semibold">Active</p>
-                    </div>
-                  </div>
-                  
-                  <div className="rounded-2xl border border-white/20 bg-white/5 p-3 text-white shadow-xl backdrop-blur-2xl">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-white font-semibold text-sm">DexScreener</p>
-                      {dexLoading && (
-                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-200/40 border-t-white" />
-                      )}
-                    </div>
-                    {dexError ? (
-                      <p className="text-[10px] text-red-200">{dexError}</p>
-                    ) : dexData ? (
-                      <dl className="space-y-1.5 text-[10px] text-white/80">
-                        {dexData.dexId && (
-                          <div className="flex justify-between">
-                            <dt className="text-white/60">DEX:</dt>
-                            <dd className="font-medium text-white">{dexData.dexId}</dd>
-                          </div>
-                        )}
-                        {dexData.baseTokenSymbol && dexData.quoteTokenSymbol && (
-                          <div className="flex justify-between">
-                            <dt className="text-white/60">Pair:</dt>
-                            <dd className="font-medium text-white">
-                              {dexData.baseTokenSymbol}/{dexData.quoteTokenSymbol}
-                            </dd>
-                          </div>
-                        )}
-                        {dexData.volume24h != null && (
-                          <div className="flex justify-between">
-                            <dt className="text-white/60">24h Vol:</dt>
-                            <dd className="font-medium text-white">{formatCurrency(dexData.volume24h, 0)}</dd>
-                          </div>
-                        )}
-                        {dexData.liquidityUsd != null && (
-                          <div className="flex justify-between">
-                            <dt className="text-white/60">Liquidity:</dt>
-                            <dd className="font-medium text-white">{formatCurrency(dexData.liquidityUsd, 0)}</dd>
-                          </div>
-                        )}
-                        {dexData.pairUrl ? (
-                          <div className="mt-2 pt-2 border-t border-gray-700/50">
-                            <a
-                              href={dexData.pairUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-blue-200 hover:text-blue-100 text-xs font-medium inline-flex items-center gap-1"
-                            >
-                              View on DexScreener
-                              <span className="text-[10px]">↗</span>
-                            </a>
-                          </div>
-                        ) : null}
-                        {dexUpdatedAt ? (
-                          <div className="mt-2 pt-2 border-t border-white/10">
-                            <p className="text-[9px] text-white/60">
-                              Updated {dexUpdatedAt.toLocaleTimeString()}
-                            </p>
-                          </div>
-                        ) : null}
-                      </dl>
-                    ) : (
-                      <p className="text-xs text-gray-300">Awaiting price feed…</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Wallet Portfolio */}
-                <div className="rounded-2xl border border-white/20 bg-white/5 p-3 shadow-2xl backdrop-blur-2xl">
+              {/* DexScreener Info - Compact */}
+              {dexData && (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-white">Wallet Portfolio</h3>
+                    <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-purple-500/20">
+                        <span className="text-xs">📊</span>
+                      </span>
+                      DexScreener
+                    </h3>
+                    {dexLoading && (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {dexData.pairUrl && (
+                      <a
+                        href={dexData.pairUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-between rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 p-3 transition hover:from-purple-500/20 hover:to-blue-500/20"
+                      >
+                        <span className="text-xs font-medium text-white">View on DexScreener</span>
+                        <span className="text-xs text-white/60">↗</span>
+                      </a>
+                    )}
+                    {dexUpdatedAt && (
+                      <p className="text-center text-[10px] text-white/40">
+                        Last updated {dexUpdatedAt.toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+                {/* Wallet Portfolio - Compact */}
+                <div className="rounded-xl border border-white/20 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="text-xs font-semibold text-white">Wallet</h3>
                     {portfolioLoading && (
                       <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-200/40 border-t-white" />
                     )}
@@ -1573,10 +1974,10 @@ function Exchange() {
                   )}
                 </div>
 
-                {/* Activity Feed */}
-                <div className="rounded-2xl border border-white/20 bg-white/5 p-3 shadow-2xl backdrop-blur-2xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-white">Activity</h3>
+                {/* Activity Feed - Compact */}
+                <div className="rounded-xl border border-white/20 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="text-xs font-semibold text-white">Activity</h3>
                     {txLoading && (
                       <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-200/40 border-t-white" />
                     )}
@@ -1638,10 +2039,13 @@ function Exchange() {
                     </ul>
                   )}
                 </div>
-              </aside>
+              </div>
+            </div>
+          </aside>
 
-              {/* Main Swap Widget - Right Side */}
-              <section className="lg:col-span-9 relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 backdrop-blur-3xl shadow-2xl" aria-live="polite">
+            {/* CENTER - Main Swap Widget */}
+            <div className="flex min-w-0 flex-1 flex-col">
+              <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 backdrop-blur-3xl shadow-2xl" aria-live="polite">
                 {/* Background decoration */}
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-transparent to-blue-500/20 pointer-events-none" />
                 
@@ -1950,18 +2354,231 @@ function Exchange() {
                         </button>
               </div>
               </section>
-
             </div>
-          </div>
-        </main>
 
-        {/* Footer */}
-  <footer className="relative z-10 flex h-16 items-center justify-center border-t border-white/10 text-xs text-white/70 backdrop-blur-xl bg-white/5 flex-shrink-0">
-          <p>© 2024 BITCOIN MASCOT · Built for the community</p>
-        </footer>
+            {/* RIGHT SIDEBAR - Market Stats & DexScreener */}
+            <aside className="hidden w-72 flex-shrink-0 xl:block">
+              <div className="sticky top-24 space-y-3">
+                {/* Wallet Management - Compact */}
+                <div className="rounded-xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-pink-500/10 p-3 shadow-xl backdrop-blur-2xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-semibold text-white flex items-center gap-1.5">
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Wallet Manager
+                    </h3>
+                    {publicKey && (
+                      <span className="flex h-2 w-2">
+                        <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                      </span>
+                    )}
+                  </div>
 
-        {/* Confirmation Modal */}
-        {isConfirmOpen && (
+                  {!publicKey ? (
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-white/70">Connect to start trading</p>
+                      
+                      {/* Phantom Wallet Connect */}
+                      <button
+                        onClick={connect}
+                        disabled={connecting}
+                        className="w-full flex items-center justify-center gap-2 rounded-lg border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-purple-600/20 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:from-purple-500/30 hover:to-purple-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="h-5 w-5" viewBox="0 0 128 128" fill="none">
+                          <path d="M105.5 8.5C93.5 -3.5 76.5 -2.5 64 10L10 64C-2.5 76.5 -3.5 93.5 8.5 105.5C20.5 117.5 37.5 116.5 50 104L104 50C116.5 37.5 117.5 20.5 105.5 8.5Z" fill="url(#phantom-gradient)"/>
+                          <defs>
+                            <linearGradient id="phantom-gradient" x1="0" y1="0" x2="128" y2="128">
+                              <stop stopColor="#AB9FF2"/>
+                              <stop offset="1" stopColor="#6A4DE1"/>
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        {connecting ? 'Connecting...' : 'Connect Phantom'}
+                      </button>
+
+                      {/* Divider */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-white/10"></div>
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="bg-transparent px-2 text-white/50">or</span>
+                        </div>
+                      </div>
+
+                      {/* Create New Phantom Wallet */}
+                      <button
+                        onClick={() => window.open('https://phantom.app/download', '_blank')}
+                        className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/30 bg-white/5 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-white/10"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create Phantom Wallet
+                      </button>
+
+                      {/* Help Text - Compact with Tooltip */}
+                      <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-2 group relative">
+                        <div className="flex items-center gap-1.5 text-[10px] text-blue-200/90">
+                          <span className="cursor-help" title="Download Phantom - it's free, secure, and takes less than 2 minutes to set up.">ℹ️</span>
+                          <p className="font-semibold">New? Get Phantom wallet</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Connected Status */}
+                      <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20">
+                            <svg className="h-5 w-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-green-200">Connected</p>
+                            <p className="text-xs text-green-200/70 font-mono truncate mt-1">
+                              {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Wallet Actions */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(publicKey.toBase58());
+                            // Could add a toast notification here
+                          }}
+                          className="flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </button>
+                        <button
+                          onClick={disconnect}
+                          className="flex flex-col items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          Disconnect
+                        </button>
+                      </div>
+
+                      {/* Wallet Info Link */}
+                      <button
+                        onClick={() => window.open(`https://solscan.io/account/${publicKey.toBase58()}`, '_blank')}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/90 transition hover:bg-white/10"
+                      >
+                        <span>View on Solscan</span>
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Market Stats - Compact */}
+                <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl">
+                  <h3 className="text-xs font-semibold text-white mb-2">Market Overview</h3>
+                  <div className="space-y-2">
+                    <div className="rounded-lg border border-blue-500/30 bg-white/5 px-2 py-2">
+                      <p className="text-[9px] uppercase tracking-wider text-blue-100/90 mb-0.5">USD Price</p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-sm font-bold text-white">
+                          {dexData?.priceUsd != null ? formatCurrency(dexData.priceUsd, 4) : dexLoading ? 'Loading…' : '—'}
+                        </span>
+                        {dexData?.priceChange24h != null && (
+                          <span className={`text-[9px] font-semibold ${dexData.priceChange24h >= 0 ? 'text-emerald-200' : 'text-red-200'}`}>
+                            {dexData.priceChange24h >= 0 ? '↗' : '↘'} {formatPercent(dexData.priceChange24h)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-purple-500/30 bg-white/5 px-2 py-2">
+                      <p className="text-[9px] uppercase tracking-wider text-purple-100/90 mb-0.5">SOL Price</p>
+                      <p className="text-sm font-bold text-white">
+                        {dexData?.priceNative != null ? `${formatAmount(dexData.priceNative, 6)} SOL` : dexLoading ? 'Loading…' : '—'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-emerald-500/30 bg-white/5 px-2 py-2">
+                      <p className="text-[9px] uppercase tracking-wider text-emerald-100/90 mb-0.5">24h Volume</p>
+                      <p className="text-sm font-bold text-white">
+                        {dexData?.volume24h != null ? formatCurrency(dexData.volume24h, 0) : dexLoading ? 'Loading…' : '—'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-sky-500/30 bg-white/5 px-2 py-2">
+                      <p className="text-[9px] uppercase tracking-wider text-sky-100/90 mb-0.5">Liquidity</p>
+                      <p className="text-sm font-bold text-white">
+                        {dexData?.liquidityUsd != null ? formatCurrency(dexData.liquidityUsd, 0) : dexLoading ? 'Loading…' : '—'}
+                      </p>
+                      {dexUpdatedAt && (
+                        <p className="mt-1 text-[9px] text-sky-100/70 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-sky-400 rounded-full animate-pulse" />
+                          {dexUpdatedAt.toLocaleTimeString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Wallet Quick View - Compact */}
+                {publicKey && portfolioSnapshot && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+                    <h3 className="text-xs font-semibold text-white mb-2">Balance</h3>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">
+                        <span className="text-[10px] text-white/70">SOL</span>
+                        <span className="text-[10px] font-bold text-white">{formatAmount(portfolioSnapshot.solBalance, 4)}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">
+                        <span className="text-[10px] text-white/70">BITTY</span>
+                        <span className="text-[10px] font-bold text-white">{formatAmount(portfolioSnapshot.bittyBalance, 2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Network Status - Compact */}
+                <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">
+                  <h3 className="text-xs font-semibold text-white mb-2">Network</h3>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-white/70">Status</span>
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                        Active
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-white/70">Chain</span>
+                      <span className="text-[10px] font-semibold text-white">Solana</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </main>
+
+          {/* Footer - Full Width at Bottom */}
+          <footer className="relative z-10 border-t border-white/10 bg-white/5 backdrop-blur-xl">
+            <div className="mx-auto max-w-7xl px-4 py-4">
+              <p className="text-center text-xs text-white/70">© 2024 BITCOIN MASCOT · Built for the community</p>
+            </div>
+          </footer>
+
+          {/* Confirmation Modal */}
+          {isConfirmOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-md rounded-2xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-2xl">
               <h3 className="text-xl font-semibold text-white mb-4">Confirm Swap</h3>
@@ -2013,7 +2630,7 @@ function Exchange() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </ErrorBoundary>
   );
