@@ -705,7 +705,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-medium">Show Online Status</h4>
-                        <p className="text-sm text-white/60">Let others see when you're online</p>
+                        <p className="text-sm text-white/60">Let others see when you&apos;re online</p>
                       </div>
                       <button className="relative h-6 w-11 rounded-full bg-blue-500 transition">
                         <span className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition" />

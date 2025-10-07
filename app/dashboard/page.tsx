@@ -441,7 +441,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-white/60">This Week's Earnings</span>
+                    <span className="text-xs text-white/60">This Week&apos;s Earnings</span>
                     <span className="text-sm font-bold text-emerald-300">R1,850</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -585,7 +585,7 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <h3 className="mb-2 text-base font-semibold text-white">AI Content Creation (Coming Soon)</h3>
                   <p className="text-sm text-white/70">
-                    Soon you'll be able to generate listing descriptions, images, and optimize your content using AI. 
+                    Soon you&apos;ll be able to generate listing descriptions, images, and optimize your content using AI. 
                     Create professional listings in seconds without needing photos or writing skills.
                   </p>
                   <button className="mt-3 rounded-lg border border-purple-300/30 bg-purple-500/20 px-4 py-2 text-xs font-semibold text-purple-200 transition hover:bg-purple-500/30">
