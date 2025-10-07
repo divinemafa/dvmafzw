@@ -13,13 +13,28 @@ interface Social {
   href: string,
 }
 
+interface LinkItem {
+  name: string;
+  href: string;
+}
+
 const products: ProductType[] = [
   {
     id: 1,
     section: "Useful Links",
-    link: ['Home', 'Market', 'Tokenomics', 'FAQ'],
+    link: ['Home', 'Market', 'Exchange', 'Dashboard', 'Profile', 'Tokenomics', 'FAQ'],
   }
 ]
+
+const linkHrefs: { [key: string]: string } = {
+  'Home': '/',
+  'Market': '/market',
+  'Exchange': '/exchange',
+  'Dashboard': '/dashboard',
+  'Profile': '/profile',
+  'Tokenomics': '/#features-section',
+  'FAQ': '/#faq-section',
+}
 
 const socialLinks: Social[] = [
   { imgsrc: '/images/Footer/twitter.svg', href: "https://twitter.com/" },
@@ -64,7 +79,7 @@ const footer = () => {
               <ul>
                 {product.link.map((link: string, index: number) => (
                   <li key={index} className='mb-5'>
-                    <Link href="/" className="text-offwhite  text-sm font-normal mb-6 space-links">{link}</Link>
+                    <Link href={linkHrefs[link] || '/'} className="text-offwhite  text-sm font-normal mb-6 space-links">{link}</Link>
                   </li>
                 ))}
               </ul>

@@ -18,6 +18,7 @@ const navigation: NavigationItem[] = [
     { name: 'Market', href: '/market', current: false },
     { name: 'Tokenomics', href: '/#features-section', current: false },
     { name: 'Exchange', href: '/exchange', current: false },
+    { name: 'Dashboard', href: '/dashboard', current: false },
     { name: 'FAQ', href: '/#faq-section', current: false },
 ]
 
@@ -77,7 +78,9 @@ const Navbar = () => {
                                 </div>
 
                             </div>
-                            <button className='hidden lg:flex justify-end text-xl font-semibold py-4 px-6 lg:px-12 navbutton text-white'>Buy BITCOIN MASCOT</button>
+                            <Link href="/profile" className='hidden lg:flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white font-bold text-lg hover:from-purple-600 hover:to-blue-600 transition ml-6'>
+                                DU
+                            </Link>
                             {/* <Contactusform /> */}
                         </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey, Transaction, VersionedTransaction, TransactionMessage, Keypair, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token';
 import Link from 'next/link';
@@ -581,7 +582,10 @@ function RightSidebarContent({
   publicKey, 
   connect,
   disconnect,
-  connecting, 
+  connecting,
+  wallet,
+  solanaWallets,
+  setVisible,
   dexData, 
   dexLoading,
   dexUpdatedAt,
@@ -593,6 +597,10 @@ function RightSidebarContent({
   portfolioData,
   portfolioLoading
 }: any) {
+  // Count detected Solana wallets only
+  const detectedWallets = solanaWallets.filter((w: any) => w.readyState === 'Installed');
+  const hasMultipleWallets = detectedWallets.length > 1;
+
   return (
     <div className="space-y-3 p-3">
       {/* Wallet Manager */}
@@ -614,16 +622,44 @@ function RightSidebarContent({
 
         {!publicKey ? (
           <div className="space-y-2">
+            {/* Show detected wallets count */}
+            {detectedWallets.length > 0 && (
+              <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 px-2 py-1.5">
+                <p className="text-[9px] text-blue-200 flex items-center gap-1">
+                  <span className="text-xs">🔍</span>
+                  <span className="font-semibold">{detectedWallets.length} wallet{detectedWallets.length > 1 ? 's' : ''} detected</span>
+                </p>
+                <p className="text-[9px] text-blue-200/70 mt-0.5">
+                  {detectedWallets.map((w: any) => w.adapter.name).join(', ')}
+                </p>
+              </div>
+            )}
+
             <p className="text-[10px] text-white/70">Connect to start trading</p>
             
+            {/* Select Wallet Button - opens modal with all options */}
             <button
-              onClick={connect}
+              onClick={() => setVisible(true)}
               disabled={connecting}
               className="w-full flex items-center justify-center gap-2 rounded-lg border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-purple-600/20 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:from-purple-500/30 hover:to-purple-600/30 disabled:opacity-50"
             >
-              {connecting ? 'Connecting...' : 'Connect Phantom'}
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              {connecting ? 'Connecting...' : hasMultipleWallets ? 'Select Wallet' : 'Connect Wallet'}
             </button>
 
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-transparent px-2 text-white/50">or</span>
+              </div>
+            </div>
+
+            {/* Create New Wallet */}
             <button
               onClick={() => window.open('https://phantom.app/download', '_blank')}
               className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/30 bg-white/5 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-white/10"
@@ -631,18 +667,34 @@ function RightSidebarContent({
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Create Wallet
+              Get Wallet
             </button>
+
+            {/* Help Text */}
+            <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-2">
+              <p className="text-[9px] text-blue-200/90">
+                <span className="font-semibold">💡 Tip:</span> We support Phantom, Solflare, and other Solana wallets
+              </p>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
+            {/* Connected Status with Wallet Name */}
             <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-2">
-              <p className="text-[10px] font-semibold text-green-200">✓ Connected</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold text-green-200">✓ Connected</p>
+                {wallet && (
+                  <span className="text-[9px] text-green-200/70 font-semibold">
+                    {wallet.adapter.name}
+                  </span>
+                )}
+              </div>
               <p className="text-[9px] text-green-200/70 font-mono truncate mt-0.5">
                 {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
               </p>
             </div>
 
+            {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => navigator.clipboard.writeText(publicKey.toBase58())}
@@ -663,6 +715,19 @@ function RightSidebarContent({
                 Disconnect
               </button>
             </div>
+
+            {/* Change Wallet Button */}
+            {hasMultipleWallets && (
+              <button
+                onClick={() => setVisible(true)}
+                className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-semibold text-white transition hover:bg-white/10"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Switch Wallet
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -748,7 +813,18 @@ export default function ExchangePage() {
 }
 
 function Exchange() {
-  const { publicKey, connect, disconnect, connecting } = useWallet();
+  const { publicKey, connect, disconnect, connecting, wallet, wallets } = useWallet();
+  const { setVisible } = useWalletModal();
+  
+  // Filter only Solana-compatible wallets (exclude Ethereum wallets like MetaMask)
+  const solanaWallets = useMemo(() => {
+    return wallets.filter((w: any) => {
+      // Only include known Solana wallets
+      const solanaWalletNames = ['Phantom', 'Solflare', 'Slope', 'Sollet', 'Backpack', 'Glow', 'Coinbase Wallet'];
+      return solanaWalletNames.some(name => w.adapter.name.includes(name));
+    });
+  }, [wallets]);
+  
   const RPC_URL = 'https://api.mainnet-beta.solana.com';
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
@@ -1793,6 +1869,9 @@ function Exchange() {
                 connect={connect}
                 disconnect={disconnect}
                 connecting={connecting}
+                wallet={wallet}
+                solanaWallets={solanaWallets}
+                setVisible={setVisible}
                 dexData={dexData}
                 dexLoading={dexLoading}
                 dexUpdatedAt={dexUpdatedAt}
@@ -2378,24 +2457,34 @@ function Exchange() {
 
                   {!publicKey ? (
                     <div className="space-y-2">
+                      {/* Show detected wallets count */}
+                      {solanaWallets.filter((w: any) => w.readyState === 'Installed').length > 0 && (
+                        <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 px-2 py-1.5">
+                          <p className="text-[9px] text-blue-200 flex items-center gap-1">
+                            <span className="text-xs">🔍</span>
+                            <span className="font-semibold">
+                              {solanaWallets.filter((w: any) => w.readyState === 'Installed').length} wallet
+                              {solanaWallets.filter((w: any) => w.readyState === 'Installed').length > 1 ? 's' : ''} detected
+                            </span>
+                          </p>
+                          <p className="text-[9px] text-blue-200/70 mt-0.5 truncate">
+                            {solanaWallets.filter((w: any) => w.readyState === 'Installed').map((w: any) => w.adapter.name).join(', ')}
+                          </p>
+                        </div>
+                      )}
+
                       <p className="text-[10px] text-white/70">Connect to start trading</p>
                       
-                      {/* Phantom Wallet Connect */}
+                      {/* Select Wallet Button */}
                       <button
-                        onClick={connect}
+                        onClick={() => setVisible(true)}
                         disabled={connecting}
                         className="w-full flex items-center justify-center gap-2 rounded-lg border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-purple-600/20 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:from-purple-500/30 hover:to-purple-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <svg className="h-5 w-5" viewBox="0 0 128 128" fill="none">
-                          <path d="M105.5 8.5C93.5 -3.5 76.5 -2.5 64 10L10 64C-2.5 76.5 -3.5 93.5 8.5 105.5C20.5 117.5 37.5 116.5 50 104L104 50C116.5 37.5 117.5 20.5 105.5 8.5Z" fill="url(#phantom-gradient)"/>
-                          <defs>
-                            <linearGradient id="phantom-gradient" x1="0" y1="0" x2="128" y2="128">
-                              <stop stopColor="#AB9FF2"/>
-                              <stop offset="1" stopColor="#6A4DE1"/>
-                            </linearGradient>
-                          </defs>
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
-                        {connecting ? 'Connecting...' : 'Connect Phantom'}
+                        {connecting ? 'Connecting...' : solanaWallets.filter((w: any) => w.readyState === 'Installed').length > 1 ? 'Select Wallet' : 'Connect Wallet'}
                       </button>
 
                       {/* Divider */}
@@ -2408,7 +2497,7 @@ function Exchange() {
                         </div>
                       </div>
 
-                      {/* Create New Phantom Wallet */}
+                      {/* Get Wallet */}
                       <button
                         onClick={() => window.open('https://phantom.app/download', '_blank')}
                         className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/30 bg-white/5 px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-white/10"
@@ -2416,20 +2505,19 @@ function Exchange() {
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        Create Phantom Wallet
+                        Get Wallet
                       </button>
 
-                      {/* Help Text - Compact with Tooltip */}
-                      <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-2 group relative">
-                        <div className="flex items-center gap-1.5 text-[10px] text-blue-200/90">
-                          <span className="cursor-help" title="Download Phantom - it's free, secure, and takes less than 2 minutes to set up.">ℹ️</span>
-                          <p className="font-semibold">New? Get Phantom wallet</p>
-                        </div>
+                      {/* Help Text */}
+                      <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-2">
+                        <p className="text-[9px] text-blue-200/90">
+                          <span className="font-semibold">💡 Tip:</span> We support Phantom, Solflare, and other Solana wallets
+                        </p>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {/* Connected Status */}
+                      {/* Connected Status with Wallet Name */}
                       <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-3">
                         <div className="flex items-start gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20">
@@ -2438,7 +2526,14 @@ function Exchange() {
                             </svg>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-green-200">Connected</p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-semibold text-green-200">Connected</p>
+                              {wallet && (
+                                <span className="text-[9px] text-green-200/70 font-semibold">
+                                  {wallet.adapter.name}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-green-200/70 font-mono truncate mt-1">
                               {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
                             </p>
@@ -2471,16 +2566,29 @@ function Exchange() {
                         </button>
                       </div>
 
-                      {/* Wallet Info Link */}
-                      <button
-                        onClick={() => window.open(`https://solscan.io/account/${publicKey.toBase58()}`, '_blank')}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/90 transition hover:bg-white/10"
-                      >
-                        <span>View on Solscan</span>
-                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </button>
+                      {/* Switch Wallet & View on Solscan */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {solanaWallets.filter((w: any) => w.readyState === 'Installed').length > 1 && (
+                          <button
+                            onClick={() => setVisible(true)}
+                            className="flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10"
+                          >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            Switch
+                          </button>
+                        )}
+                        <button
+                          onClick={() => window.open(`https://solscan.io/account/${publicKey.toBase58()}`, '_blank')}
+                          className={`flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10 ${solanaWallets.filter((w: any) => w.readyState === 'Installed').length > 1 ? '' : 'col-span-2'}`}
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Solscan
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

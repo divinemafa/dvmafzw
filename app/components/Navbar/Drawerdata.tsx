@@ -12,6 +12,8 @@ const navigation: NavigationItem[] = [
     { name: 'Market', href: '/market', current: false },
     { name: 'Tokenomics', href: '/#features-section', current: false },
     { name: 'Exchange', href: '/exchange', current: false },
+    { name: 'Dashboard', href: '/dashboard', current: false },
+    { name: 'Profile', href: '/profile', current: false },
     { name: 'FAQ', href: '/#faq-section', current: false },
 ]
 
