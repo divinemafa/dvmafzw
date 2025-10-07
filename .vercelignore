@@ -1,0 +1,23 @@
+# Development files
+.env.local
+.env*.local
+*.log
+
+# Documentation & Planning
+*.md
+!README.md
+
+# Config files
+.vscode/
+.specify/
+.github/
+
+# Database
+supabase/migrations/
+supabase/config.toml
+
+# Specs
+specs/
+
+# Build info
+tsconfig.tsbuildinfo
