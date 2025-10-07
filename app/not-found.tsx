@@ -46,7 +46,7 @@ export default function NotFound() {
           Page Not Found
         </h2>
         <p className="text-gray-400 mb-8 max-w-md mx-auto">
-          The page you're looking for doesn't exist or has been moved.
+          The page you're looking for doesn't exist or has been moved, thanx to **@spyware**.
         </p>
 
         {/* Action Buttons */}
@@ -73,7 +73,7 @@ export default function NotFound() {
 
         {/* Additional Help */}
         <div className="mt-12 text-sm text-gray-500">
-          <p>Need help? Contact support **@spyware** or check our documentation.</p>
+          <p>Need help? Contact support or check our documentation.</p>
         </div>
       </div>
     </div>
