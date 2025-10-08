@@ -1,0 +1,101 @@
+============================================================
+REGISTRATION DEBUG LOGGING - TEST GUIDE
+============================================================
+Date: October 8, 2025
+Purpose: Track registration flow with detailed console logs
+============================================================
+
+LOGGING ADDED TO:
+1. AuthProvider.tsx - signUp() function
+2. Register page - handleRegister() function
+3. Register page - validateForm() function
+
+============================================================
+WHAT TO DO:
+============================================================
+
+1. Open browser at http://localhost:3000/auth/register
+
+2. Open Developer Console (F12 → Console tab)
+
+3. Fill registration form:
+   - Select user type (Service/Business/Individual)
+   - Enter email
+   - Enter phone (optional, format: +27821234567)
+   - Enter password (8+ chars, 1 uppercase, 1 number)
+   - Confirm password
+
+4. Click "Create Account"
+
+5. Watch console output for detailed logs
+
+============================================================
+EXPECTED CONSOLE OUTPUT:
+============================================================
+
+📝 REGISTRATION: Form Submission
+  - Current form state (email, userType, phone)
+  🔍 Validating form...
+    - Checking email
+    ✅ Email valid
+    - Checking phone (if provided)
+    ✅ Phone valid
+    - Checking password
+    ✅ Password meets requirements
+    ✅ Passwords match
+  ✅ Form validation passed
+  ⏳ Starting registration process...
+  📞 Calling signUp function...
+  
+  🔐 AUTH: Sign Up Process
+    📧 Email: [user email]
+    👤 User Type: [service/business/individual]
+    📱 Phone: [phone or "Not provided"]
+    🔗 Redirect URL: http://localhost:3000/auth/callback
+    📤 Sending signup request to Supabase...
+    📦 Signup payload: [full payload object]
+    
+    IF SUCCESS:
+    ✅ Signup Success!
+    📊 Response Data: [user object, session info]
+    
+    IF ERROR:
+    ❌ Signup Error: [error details]
+    Error Code: [500, 400, etc]
+    Error Message: [full error message]
+    
+  📥 SignUp result received
+  
+  IF SUCCESS:
+  ✅ Registration successful! Moving to verification step...
+  
+  IF ERROR:
+  ❌ Registration failed with error: [error message]
+  
+  🏁 Registration process complete
+
+============================================================
+WHAT TO LOOK FOR:
+============================================================
+
+1. Check userType value - should be exactly:
+   "service" OR "business" OR "individual"
+
+2. Check payload sent to Supabase:
+   options: {
+     data: {
+       user_type: "service" (or business/individual),
+       phone_number: "+27..." (or undefined)
+     }
+   }
+
+3. If error occurs, note:
+   - Error Code (500 = server error, 400 = bad request)
+   - Error Message (database error, validation error, etc)
+   - Where it fails (validation, signup request, response)
+
+4. Check if error is BEFORE or AFTER Supabase request
+
+============================================================
+COPY FULL CONSOLE OUTPUT AND SHARE FOR ANALYSIS
+============================================================

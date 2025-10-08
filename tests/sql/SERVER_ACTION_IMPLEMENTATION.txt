@@ -1,0 +1,83 @@
+============================================================
+SERVER ACTION SIGNUP IMPLEMENTATION
+============================================================
+Date: October 8, 2025
+Issue: Rate limits and permissions with anon key
+Solution: Use server action with service role key
+============================================================
+
+CHANGES MADE:
+
+1. Created lib/supabase/admin.ts
+   - Admin Supabase client using service role key
+   - Only for server-side use
+   - Bypasses RLS and rate limits
+
+2. Created app/auth/actions.ts
+   - serverSignUp() server action
+   - Uses admin.createUser() instead of auth.signUp()
+   - Runs on server with elevated permissions
+   - Sends confirmation email
+
+3. Updated app/providers/AuthProvider.tsx
+   - signUp() now calls serverSignUp() server action
+   - Dynamically imports server action
+   - Maintains same interface for components
+
+4. Updated .env.local
+   - Added NEXT_PUBLIC_SITE_URL for email redirects
+
+============================================================
+WHY THIS FIXES THE ISSUE:
+============================================================
+
+BEFORE (Client-side with anon key):
+- Rate limited (requests per hour)
+- Limited permissions
+- Triggers might fail due to RLS policies
+- 500 errors from database constraints
+
+AFTER (Server-side with service role key):
+- No rate limits
+- Full admin permissions
+- Bypasses RLS (Row Level Security)
+- Triggers execute with proper permissions
+- Better error handling
+
+============================================================
+HOW IT WORKS:
+============================================================
+
+1. User fills registration form
+2. Form calls AuthProvider.signUp()
+3. signUp() imports and calls serverSignUp() server action
+4. Server action runs on server (not browser)
+5. Uses admin client with service role key
+6. Creates user with admin.createUser()
+7. Triggers fire with proper permissions
+8. Profile created in database
+9. Confirmation email sent
+10. Success returned to browser
+
+============================================================
+SECURITY:
+============================================================
+
+✅ Service role key NEVER exposed to browser
+✅ Only used in server actions (marked with 'use server')
+✅ Admin client can't be imported in client components
+✅ All privileged operations happen server-side
+
+============================================================
+TEST NOW:
+============================================================
+
+1. Restart dev server: Ctrl+C, then pnpm dev
+2. Go to http://localhost:3000/auth/register
+3. Open console (F12)
+4. Fill form and submit
+5. Should see "🔐 AUTH: Sign Up Process (Server Action)"
+6. Should see "🚀 Calling server action for signup..."
+7. Should succeed without 500 error
+
+============================================================

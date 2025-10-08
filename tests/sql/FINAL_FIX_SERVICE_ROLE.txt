@@ -1,0 +1,86 @@
+============================================================
+REGISTRATION FIX: Service Role Key Implementation
+============================================================
+Date: October 8, 2025 - FINAL FIX
+============================================================
+
+PROBLEM IDENTIFIED:
+You were right! The anon key has rate limits and permission
+restrictions. Using service role key bypasses these issues.
+
+============================================================
+SOLUTION IMPLEMENTED:
+============================================================
+
+✅ Created admin Supabase client (lib/supabase/admin.ts)
+   - Uses SUPABASE_SERVICE_ROLE_KEY
+   - Server-side only (never exposed to browser)
+
+✅ Created server action (app/auth/actions.ts)
+   - serverSignUp() function marked with 'use server'
+   - Uses admin.createUser() with full permissions
+   - Bypasses rate limits and RLS policies
+
+✅ Updated AuthProvider (app/providers/AuthProvider.tsx)
+   - signUp() now calls server action
+   - Maintains same interface for components
+   - Enhanced logging for debugging
+
+✅ Updated environment (.env.local)
+   - Added NEXT_PUBLIC_SITE_URL
+
+============================================================
+FILES CREATED:
+============================================================
+1. lib/supabase/admin.ts (Admin client)
+2. app/auth/actions.ts (Server action)
+3. tests/sql/SERVER_ACTION_IMPLEMENTATION.txt (Docs)
+4. tests/sql/debug_implementation.txt (Docs)
+5. tests/sql/DEBUG_REGISTRATION_GUIDE.txt (Test guide)
+
+FILES MODIFIED:
+1. app/providers/AuthProvider.tsx (Use server action)
+2. app/auth/register/page.tsx (Added logging)
+3. .env.local (Added NEXT_PUBLIC_SITE_URL)
+
+============================================================
+TEST NOW:
+============================================================
+
+Server is running at: http://localhost:3000
+
+1. Go to http://localhost:3000/auth/register
+2. Open Console (F12 → Console)
+3. Fill registration form:
+   - Select provider type (Service/Business/Individual)
+   - Enter email
+   - Enter phone (optional, format: +27821234567)
+   - Enter password (8+ chars, 1 uppercase, 1 number)
+   - Confirm password
+4. Click "Create Account"
+
+EXPECTED RESULT:
+✅ Console shows: "🚀 Calling server action for signup..."
+✅ Console shows: "✅ Signup Success!"
+✅ Page changes to "Check Your Email" screen
+✅ No 500 error
+✅ User created in database with profile
+
+============================================================
+WHY THIS WORKS:
+============================================================
+
+Service role key = Admin privileges
+- No rate limits (unlimited requests)
+- Bypasses RLS (Row Level Security)
+- Full database permissions
+- Triggers execute properly
+- Better for server-side operations
+
+Anon key = Public access
+- Rate limited (requests per hour limit)
+- Subject to RLS policies
+- Limited permissions
+- Better for client-side queries
+
+============================================================

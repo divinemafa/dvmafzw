@@ -1,0 +1,27 @@
+============================================================
+DEBUG LOGGING IMPLEMENTATION
+============================================================
+
+FILES MODIFIED:
+1. app/providers/AuthProvider.tsx (signUp function)
+2. app/auth/register/page.tsx (handleRegister + validateForm)
+
+LOGGING FEATURES:
+- Console groups for organized output
+- Step-by-step validation tracking
+- Full payload inspection before API call
+- Detailed error information (code, message, type)
+- Success/failure indicators with emojis
+- Timestamp tracking
+
+PURPOSE:
+Track exact point of failure in registration flow to identify
+if error occurs in:
+- Form validation
+- Data preparation
+- Supabase API call
+- Database trigger
+- Response handling
+
+TEST INSTRUCTIONS:
+See DEBUG_REGISTRATION_GUIDE.txt for full test procedure

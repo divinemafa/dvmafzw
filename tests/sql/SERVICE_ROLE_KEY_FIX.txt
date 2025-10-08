@@ -1,0 +1,61 @@
+============================================================
+SERVICE ROLE KEY FIX - Typo Corrected
+============================================================
+Date: October 8, 2025
+Issue: "Invalid API key" error
+Root Cause: Typo in service role key (started with 'yey' instead of 'ey')
+============================================================
+
+THE PROBLEM:
+Error: "Invalid API key" when calling /api/auth/signup
+Cause: SUPABASE_SERVICE_ROLE_KEY had incorrect prefix
+
+BEFORE (WRONG):
+SUPABASE_SERVICE_ROLE_KEY=yeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                          ^^ Extra 'y' at the start!
+
+AFTER (CORRECT):
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                          ^^ Correct JWT format
+
+============================================================
+JWT TOKEN FORMAT:
+============================================================
+
+All JWT tokens (JSON Web Tokens) must start with: eyJ
+- eyJ = Base64 encoded '{"'
+- This is the start of the JWT header
+- Format: header.payload.signature
+
+The service role key is a JWT token that must follow this format.
+
+============================================================
+FIX APPLIED:
+============================================================
+
+✅ Removed extra 'y' from beginning of service role key
+✅ Restarted dev server to load corrected environment variable
+✅ Server now running with valid service role key
+
+============================================================
+TEST NOW:
+============================================================
+
+Server restarted at: http://localhost:3000
+
+1. Go to http://localhost:3000/auth/register
+2. Fill registration form
+3. Click "Create Account"
+
+EXPECTED RESULT:
+✅ No "Invalid API key" error
+✅ User created successfully
+✅ Profile created in database
+✅ "Check Your Email" screen appears
+
+If you see "Invalid API key" error again:
+- Double-check the service role key in Supabase dashboard
+- Copy it fresh from: Settings > API > service_role key
+- Make sure there are no extra spaces or characters
+
+============================================================

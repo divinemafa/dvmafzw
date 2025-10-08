@@ -45,6 +45,17 @@ const nextConfig = {
   // Production optimizations
   reactStrictMode: true,
   swcMinify: true,
+
+  // Remote image configuration for Supabase storage assets
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'swemmmqiaieanqliagkd.supabase.co',
+        pathname: '/storage/v1/object/public/**'
+      }
+    ]
+  },
   
   // Trailing slash handling
   trailingSlash: false

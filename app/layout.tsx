@@ -2,6 +2,7 @@ import './globals.css';
 import '@/node_modules/react-modal-video/scss/modal-video.scss';
 import Navbar from './components/Navbar/index';
 import ConditionalFooter from './components/ConditionalFooter';
+import { AuthProvider } from './providers/AuthProvider';
 
 
 export const metadata = {
@@ -18,9 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        {children}
-        <ConditionalFooter />
+        <AuthProvider>
+          <Navbar />
+          {children}
+          <ConditionalFooter />
+        </AuthProvider>
       </body>
     </html>
   )

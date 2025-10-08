@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:create-user": "node tests/cjs/test-create-user.cjs",
+    "test:db": "node tests/test-database.js",
+    "test:signup": "node tests/test-signup-api.js"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
@@ -20,6 +23,9 @@
     "@solana/wallet-adapter-react-ui": "^0.9.39",
     "@solana/wallet-adapter-solflare": "^0.6.32",
     "@solana/web3.js": "^1.98.4",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.74.0",
     "@types/node": "22.7.4",
     "@types/react": "18.3.11",
     "@types/react-dom": "18.3.0",
@@ -40,6 +46,9 @@
   },
   "devDependencies": {
     "@types/react-modal-video": "^1.2.3",
-    "@types/react-slick": "^0.23.13"
+    "@types/react-slick": "^0.23.13",
+    "dotenv": "^17.2.3",
+    "node-fetch": "2",
+    "pg": "8.12.0"
   }
 }

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/providers/AuthProvider';
 
 // Components
 import { DashboardHeader } from './components/DashboardHeader';
 import { TabNavigation } from './components/TabNavigation';
-import { LoginScreen } from './components/LoginScreen';
 
 // Overview Tab Components
 import { StatsGrid } from './components/overview/StatsGrid';
@@ -46,21 +47,39 @@ import {
  * 2. Content Management - Listings and AI tools
  * 3. Finance - Balances, transactions, earning opportunities
  * 
- * Refactored from 830+ lines to ~150 lines with focused components
+ * Now uses REAL authentication (replaces demo LoginScreen)
  */
 export default function DashboardPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName] = useState('Demo User');
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
+  // Check authentication - redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/login');
+    }
+  }, [user, loading, router]);
 
-  // Login Screen
-  if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} />;
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#050814] via-[#0a1532] to-[#120333] text-white">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-blue-500" />
+          <p className="text-sm text-white/70">Loading dashboard...</p>
+        </div>
+      </main>
+    );
   }
+
+  // Don't render anything if not authenticated (redirect happening)
+  if (!user) {
+    return null;
+  }
+
+  // Get user's display name from profile or email
+  const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
 
   // Main Dashboard with Tabs
   return (

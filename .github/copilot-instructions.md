@@ -5,6 +5,13 @@ first read the constitution in `.specify/memory/constitution.md` for overall pro
 
 ## 🎯 Core Coding Principles
 - ✅ work on one feature at a time
+- ✅ **REMOVE ALL DEMO/PLACEHOLDER CODE when building real features** - Delete demo components, mock data, and placeholder logic when implementing production functionality
+- ✅ **DOCUMENTATION RULES**:
+  - All documentation files MUST be created in the `/docs` folder
+  - Maximum 300 words per documentation file
+  - Use clear headings and bullet points
+  - Focus on what changed, why, and next steps only
+  - No verbose explanations or lengthy examples
 - create a clipboard for instructions follow when starting a new feature
 - document any deviations from the standard practices
 - ask clarifying questions if unsure about requirements or implementation details

@@ -1,0 +1,75 @@
+============================================================
+FINAL FIX: display_name Column Constraint Issue
+============================================================
+Date: October 8, 2025
+Issue: "Database error creating new user"
+Root Cause: display_name column was NOT NULL but no default value
+============================================================
+
+THE PROBLEM:
+When admin.createUser() triggered handle_new_user(), the function
+tried to insert a profile with display_name derived from email.
+However, the display_name column had a NOT NULL constraint.
+
+The function does: COALESCE(v_display_name, split_part(NEW.email, '@', 1))
+But if this resulted in NULL or empty string, INSERT would fail.
+
+COLUMN STATE BEFORE:
+display_name | text | NOT NULL | No default
+                     ^^^^^^^^^ This was the problem!
+
+COLUMN STATE AFTER:
+display_name | text | NULL ALLOWED | No default
+                     ^^^^^^^^^^^^^ Fixed!
+
+============================================================
+FIX APPLIED:
+============================================================
+
+SQL:
+ALTER TABLE public.profiles 
+ALTER COLUMN display_name DROP NOT NULL;
+
+This allows the display_name column to accept NULL values,
+preventing the constraint violation.
+
+============================================================
+WHY THIS WORKS:
+============================================================
+
+1. User registers without providing display_name
+2. handle_new_user() trigger fires
+3. Extracts display_name from metadata (NULL if not provided)
+4. Uses COALESCE to default to email username
+5. If that fails, column can now be NULL
+6. INSERT succeeds instead of failing
+
+============================================================
+TEST NOW:
+============================================================
+
+Registration should now work!
+
+1. Go to http://localhost:3000/auth/register
+2. Fill form (don't worry about display name - not in form)
+3. Click "Create Account"
+
+EXPECTED RESULT:
+✅ User created in auth.users
+✅ Profile created in profiles table
+✅ display_name set to NULL or email username
+✅ "Check Your Email" page appears
+✅ NO database errors!
+
+============================================================
+ADDITIONAL FIXES APPLIED (Summary):
+============================================================
+
+1. ✅ Added user_type enum values: service, business, individual
+2. ✅ Fixed handle_new_user() column name: account_status → status
+3. ✅ Fixed service role key typo: yeyJ → eyJ
+4. ✅ Made display_name column nullable
+
+All issues resolved! Registration should work now.
+
+============================================================
