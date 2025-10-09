@@ -74,4 +74,76 @@ export interface PremiumFeature {
   color: string;
 }
 
-export type TabType = 'overview' | 'content' | 'finance';
+// Dashboard Navigation Types
+// Ordered by priority: Business-critical first, supporting tools last
+export type TabType = 
+  | 'overview'    // 1. Dashboard home
+  | 'content'     // 2. Products/Listings (MOST IMPORTANT)
+  | 'finance'     // 3. Money management
+  | 'bookings'    // 4. Active appointments
+  | 'reviews'     // 5. Customer feedback
+  | 'clients'     // 6. Customer management
+  | 'analytics'   // 7. Performance insights
+  | 'messages'    // 8. Communication (supporting)
+  | 'calendar'    // 9. Scheduling (supporting)
+  | 'settings';   // 10. Product/business settings (NOT profile settings)
+
+// Client/Customer Types
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  totalBookings: number;
+  totalSpent: number;
+  lastBooking: string;
+  rating: number;
+  joined: string;
+}
+
+// Message Types
+export interface Message {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientAvatar: string | null;
+  lastMessage: string;
+  timestamp: string;
+  unread: boolean;
+  bookingId?: string;
+}
+
+// Calendar/Schedule Types
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  type: 'booking' | 'blocked' | 'available';
+  clientName?: string;
+  status?: 'confirmed' | 'pending' | 'completed';
+}
+
+export interface TimeSlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
+// Analytics Types
+export interface AnalyticsData {
+  period: string;
+  revenue: number;
+  bookings: number;
+  views: number;
+  conversion: number;
+}
+
+export interface TrafficSource {
+  source: string;
+  visitors: number;
+  percentage: number;
+}
+
+export type TabType_OLD = 'overview' | 'content' | 'finance';

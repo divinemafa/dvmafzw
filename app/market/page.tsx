@@ -651,7 +651,7 @@ export default function MarketPage() {
                 <h2 className="text-sm font-semibold text-white">Explore Marketplace</h2>
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-white/60">Sort:</span>
-                  <select className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-medium text-white transition focus:border-blue-400 focus:outline-none">
+                  <select className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-medium text-white transition focus:border-blue-400 focus:outline-none [&>option]:bg-[#1a1a1a] [&>option]:text-white">
                     <option>Trending</option>
                     <option>Newest</option>
                     <option>Price: Low to High</option>

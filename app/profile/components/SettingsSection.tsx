@@ -133,7 +133,7 @@ export function SettingsSection({ settings, onUpdate }: SettingsSectionProps) {
             <select
               value={localSettings.preferred_language}
               onChange={(e) => handleSelectChange('preferred_language', e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="en">English</option>
               <option value="af">Afrikaans</option>
@@ -146,7 +146,7 @@ export function SettingsSection({ settings, onUpdate }: SettingsSectionProps) {
             <select
               value={localSettings.preferred_currency}
               onChange={(e) => handleSelectChange('preferred_currency', e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="ZAR">ZAR (South African Rand)</option>
               <option value="USD">USD (US Dollar)</option>
@@ -159,7 +159,7 @@ export function SettingsSection({ settings, onUpdate }: SettingsSectionProps) {
             <select
               value={localSettings.timezone}
               onChange={(e) => handleSelectChange('timezone', e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="Africa/Johannesburg">South Africa Standard Time (SAST)</option>
               <option value="UTC">UTC</option>
@@ -185,7 +185,7 @@ export function SettingsSection({ settings, onUpdate }: SettingsSectionProps) {
             <select
               value={localSettings.profile_visibility}
               onChange={(e) => handleSelectChange('profile_visibility', e.target.value)}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="public">Everyone</option>
               <option value="registered_only">Registered Users</option>

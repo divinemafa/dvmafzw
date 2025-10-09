@@ -26,10 +26,18 @@ export function EnhancedSettingsSection({
   const [localSettings, setLocalSettings] = useState<Partial<UserSettings>>({});
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // Initialize local settings
+  // Initialize local settings with safe defaults to prevent controlled/uncontrolled input warnings
   useEffect(() => {
     if (settings) {
-      setLocalSettings(settings);
+      // Ensure all values are defined to prevent undefined -> value transition
+      setLocalSettings({
+        ...settings,
+        // Ensure numeric fields have default values
+        minimum_booking_notice_hours: settings.minimum_booking_notice_hours ?? 0,
+        default_tip_percentage: settings.default_tip_percentage ?? 0,
+        max_advance_booking_days: settings.max_advance_booking_days ?? 0,
+        service_area_radius_km: settings.service_area_radius_km ?? 0,
+      });
     }
   }, [settings]);
 
@@ -46,7 +54,7 @@ export function EnhancedSettingsSection({
     if (result.success) {
       setSaveMessage('✓ Saved');
       setTimeout(() => setSaveMessage(null), 2000);
-      onUpdate?.();
+      // Don't call onUpdate - no need to refetch, settings already updated
     } else {
       setSaveMessage('✗ Failed to save');
       setTimeout(() => setSaveMessage(null), 3000);
@@ -64,7 +72,7 @@ export function EnhancedSettingsSection({
     if (result.success) {
       setSaveMessage('✓ Saved');
       setTimeout(() => setSaveMessage(null), 2000);
-      onUpdate?.();
+      // Don't call onUpdate - no need to refetch, settings already updated
     } else {
       setSaveMessage('✗ Failed to save');
       setTimeout(() => setSaveMessage(null), 3000);
@@ -139,9 +147,9 @@ export function EnhancedSettingsSection({
                 Email Frequency
               </label>
               <select
-                value={localSettings.email_notification_frequency || 'real_time'}
+                value={localSettings.email_notification_frequency ?? 'real_time'}
                 onChange={(e) => handleSelectChange('email_notification_frequency', e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none [&>option]:bg-[#1a1a1a] [&>option]:text-white"
               >
                 <option value="real_time">Real-time</option>
                 <option value="daily_digest">Daily Digest</option>
@@ -155,35 +163,48 @@ export function EnhancedSettingsSection({
 
       {/* SMS Notifications */}
       <SettingsCard title="SMS Notifications" description="Manage text message notifications">
-        <ToggleSetting
-          label="SMS Notifications"
-          description="Receive notifications via text message"
-          enabled={localSettings.sms_notifications_enabled ?? false}
-          onToggle={() => handleToggle('sms_notifications_enabled')}
-        />
-        
-        {localSettings.sms_notifications_enabled && (
-          <div className="ml-6 space-y-3 border-l-2 border-white/10 pl-4">
-            <ToggleSetting
-              label="Booking Alerts"
-              description="SMS for new bookings"
-              enabled={localSettings.sms_booking_notifications ?? false}
-              onToggle={() => handleToggle('sms_booking_notifications')}
-            />
-            <ToggleSetting
-              label="Payment Alerts"
-              description="SMS for payment confirmations"
-              enabled={localSettings.sms_payment_notifications ?? true}
-              onToggle={() => handleToggle('sms_payment_notifications')}
-            />
-            <ToggleSetting
-              label="Security Alerts"
-              description="SMS for security events"
-              enabled={localSettings.sms_security_alerts ?? true}
-              onToggle={() => handleToggle('sms_security_alerts')}
-            />
+        <div className="space-y-4">
+          {/* Coming Soon Notice */}
+          <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">📱</span>
+              <div>
+                <p className="text-sm font-medium text-yellow-300">SMS Integration Coming Soon</p>
+                <p className="text-xs text-yellow-300/70">SMS notifications will be available in a future update</p>
+              </div>
+            </div>
           </div>
-        )}
+
+          <ToggleSetting
+            label="SMS Notifications"
+            description="Receive notifications via text message (Feature coming soon)"
+            enabled={localSettings.sms_notifications_enabled ?? false}
+            onToggle={() => handleToggle('sms_notifications_enabled')}
+          />
+          
+          {localSettings.sms_notifications_enabled && (
+            <div className="ml-6 space-y-3 border-l-2 border-white/10 pl-4">
+              <ToggleSetting
+                label="Booking Alerts"
+                description="SMS for new bookings"
+                enabled={localSettings.sms_booking_notifications ?? false}
+                onToggle={() => handleToggle('sms_booking_notifications')}
+              />
+              <ToggleSetting
+                label="Payment Alerts"
+                description="SMS for payment confirmations"
+                enabled={localSettings.sms_payment_notifications ?? true}
+                onToggle={() => handleToggle('sms_payment_notifications')}
+              />
+              <ToggleSetting
+                label="Security Alerts"
+                description="SMS for security events"
+                enabled={localSettings.sms_security_alerts ?? true}
+                onToggle={() => handleToggle('sms_security_alerts')}
+              />
+            </div>
+          )}
+        </div>
       </SettingsCard>
 
       {/* Push Notifications */}
@@ -217,11 +238,27 @@ export function EnhancedSettingsSection({
       <SettingsCard title="Language & Region" description="Set your language and regional preferences">
         <div className="space-y-4">
           <div>
+            <label className="mb-2 block text-sm font-medium">Theme Preference</label>
+            <select
+              value={localSettings.theme_preference ?? 'dark'}
+              onChange={(e) => handleSelectChange('theme_preference', e.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
+            >
+              <option value="dark">🌙 Dark Mode</option>
+              <option value="light">☀️ Light Mode</option>
+              <option value="system">💻 System Default</option>
+            </select>
+            <p className="mt-1 text-xs text-white/50">
+              Theme will be applied in future update
+            </p>
+          </div>
+
+          <div>
             <label className="mb-2 block text-sm font-medium">Language</label>
             <select
-              value={localSettings.preferred_language}
+              value={localSettings.preferred_language ?? 'en'}
               onChange={(e) => handleSelectChange('preferred_language', e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="en">English</option>
               <option value="af">Afrikaans</option>
@@ -235,9 +272,9 @@ export function EnhancedSettingsSection({
           <div>
             <label className="mb-2 block text-sm font-medium">Currency</label>
             <select
-              value={localSettings.preferred_currency}
+              value={localSettings.preferred_currency ?? 'ZAR'}
               onChange={(e) => handleSelectChange('preferred_currency', e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="ZAR">ZAR (South African Rand)</option>
               <option value="USD">USD (US Dollar)</option>
@@ -251,9 +288,9 @@ export function EnhancedSettingsSection({
           <div>
             <label className="mb-2 block text-sm font-medium">Timezone</label>
             <select
-              value={localSettings.timezone}
+              value={localSettings.timezone ?? 'Africa/Johannesburg'}
               onChange={(e) => handleSelectChange('timezone', e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none focus:border-white/20 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="Africa/Johannesburg">South Africa (SAST)</option>
               <option value="Africa/Lagos">Nigeria (WAT)</option>
@@ -268,9 +305,9 @@ export function EnhancedSettingsSection({
             <div>
               <label className="mb-2 block text-sm font-medium">Date Format</label>
               <select
-                value={localSettings.date_format}
+                value={localSettings.date_format ?? 'YYYY-MM-DD'}
                 onChange={(e) => handleSelectChange('date_format', e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none"
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none [&>option]:bg-[#1a1a1a] [&>option]:text-white"
               >
                 <option value="YYYY-MM-DD">YYYY-MM-DD (2025-10-08)</option>
                 <option value="DD/MM/YYYY">DD/MM/YYYY (08/10/2025)</option>
@@ -281,9 +318,9 @@ export function EnhancedSettingsSection({
             <div>
               <label className="mb-2 block text-sm font-medium">Time Format</label>
               <select
-                value={localSettings.time_format}
+                value={localSettings.time_format ?? '24h'}
                 onChange={(e) => handleSelectChange('time_format', e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none"
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none [&>option]:bg-[#1a1a1a] [&>option]:text-white"
               >
                 <option value="24h">24-hour (14:30)</option>
                 <option value="12h">12-hour (2:30 PM)</option>
@@ -353,9 +390,9 @@ export function EnhancedSettingsSection({
           <div>
             <label className="mb-2 block text-sm font-medium">Preferred Payout Currency</label>
             <select
-              value={localSettings.preferred_payout_currency}
+              value={localSettings.preferred_payout_currency ?? 'USD'}
               onChange={(e) => handleSelectChange('preferred_payout_currency', e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="USD">USD (US Dollar)</option>
               <option value="ZAR">ZAR (South African Rand)</option>
@@ -380,8 +417,8 @@ export function EnhancedSettingsSection({
             <input
               type="number"
               min="0"
-              value={localSettings.minimum_booking_notice_hours}
-              onChange={(e) => handleSelectChange('minimum_booking_notice_hours', parseInt(e.target.value))}
+              value={localSettings.minimum_booking_notice_hours ?? 0}
+              onChange={(e) => handleSelectChange('minimum_booking_notice_hours', parseInt(e.target.value) || 0)}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none"
             />
             <p className="mt-1 text-xs text-white/50">
@@ -404,11 +441,33 @@ export function EnhancedSettingsSection({
               type="number"
               min="0"
               max="25"
-              value={localSettings.default_tip_percentage}
-              onChange={(e) => handleSelectChange('default_tip_percentage', parseInt(e.target.value))}
+              value={localSettings.default_tip_percentage ?? 0}
+              onChange={(e) => handleSelectChange('default_tip_percentage', parseInt(e.target.value) || 0)}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none"
             />
             <p className="mt-1 text-xs text-white/50">0-25%</p>
+          </div>
+
+          {/* Payment Methods Manager - Coming Soon */}
+          <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-white">Payment Methods</h4>
+                <p className="text-sm text-white/60">Manage your saved payment methods</p>
+              </div>
+              <span className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-300">
+                Coming Soon
+              </span>
+            </div>
+            <button
+              disabled
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/40 cursor-not-allowed"
+            >
+              💳 Manage Payment Methods
+            </button>
+            <p className="mt-2 text-xs text-white/40">
+              Credit cards, debit cards, and crypto wallets will be manageable here
+            </p>
           </div>
         </div>
       </SettingsCard>
@@ -437,8 +496,8 @@ export function EnhancedSettingsSection({
             <input
               type="number"
               min="0"
-              value={localSettings.max_advance_booking_days}
-              onChange={(e) => handleSelectChange('max_advance_booking_days', parseInt(e.target.value))}
+              value={localSettings.max_advance_booking_days ?? 0}
+              onChange={(e) => handleSelectChange('max_advance_booking_days', parseInt(e.target.value) || 0)}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none"
             />
             <p className="mt-1 text-xs text-white/50">0 = unlimited</p>
@@ -451,8 +510,8 @@ export function EnhancedSettingsSection({
             <input
               type="number"
               min="0"
-              value={localSettings.service_area_radius_km}
-              onChange={(e) => handleSelectChange('service_area_radius_km', parseInt(e.target.value))}
+              value={localSettings.service_area_radius_km ?? 0}
+              onChange={(e) => handleSelectChange('service_area_radius_km', parseInt(e.target.value) || 0)}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white outline-none"
             />
             <p className="mt-1 text-xs text-white/50">

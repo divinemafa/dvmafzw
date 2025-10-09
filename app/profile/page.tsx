@@ -107,16 +107,16 @@ export default function ProfilePage() {
         <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-[1800px] px-4 py-6">
-        {/* Header */}
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold">My Profile</h1>
-          <p className="text-sm text-white/60">
+      <div className="relative mx-auto w-full max-w-[1800px] px-3 py-4">
+        {/* Header - More compact */}
+        <header className="mb-4">
+          <h1 className="text-xl font-bold">My Profile</h1>
+          <p className="text-xs text-white/60">
             Manage your account, settings, and communications
           </p>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-12">
+        <div className="grid gap-4 lg:grid-cols-12">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-3">
             <ProfileSidebar
@@ -138,7 +138,10 @@ export default function ProfilePage() {
                   verification={verification} 
                   onEditProfile={() => setIsEditProfileOpen(true)}
                 />
-                <ProfileInfoSection profile={profile} />
+                <ProfileInfoSection 
+                  profile={profile} 
+                  onUpdate={handleProfileUpdated}
+                />
               </div>
             )}
 

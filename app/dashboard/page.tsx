@@ -26,6 +26,15 @@ import { PremiumFeatures } from './components/finance/PremiumFeatures';
 import { EarnOpportunities } from './components/finance/EarnOpportunities';
 import { FinanceSidebar } from './components/finance/FinanceSidebar';
 
+// New Tab Components
+import { BookingsTab } from './components/bookings/BookingsTab';
+import { MessagesTab } from './components/messages/MessagesTab';
+import { CalendarTab } from './components/calendar/CalendarTab';
+import { ReviewsTab } from './components/reviews/ReviewsTab';
+import { ClientsTab } from './components/clients/ClientsTab';
+import { AnalyticsTab } from './components/analytics/AnalyticsTab';
+import { SettingsTab } from './components/settings/SettingsTab';
+
 // Types and Data
 import type { TabType } from './types';
 import {
@@ -81,7 +90,7 @@ export default function DashboardPage() {
   // Get user's display name from profile or email
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
 
-  // Main Dashboard with Tabs
+  // Main Dashboard with ALL 10 Tabs
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#050814] via-[#0a1532] to-[#120333] text-white">
       {/* Background ambience */}
@@ -95,7 +104,7 @@ export default function DashboardPage() {
         {/* Header */}
         <DashboardHeader userName={userName} />
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation - Horizontal Scroll on Mobile */}
         <TabNavigation 
           activeTab={activeTab} 
           onTabChange={setActiveTab} 
@@ -119,6 +128,42 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* BOOKINGS TAB */}
+        {activeTab === 'bookings' && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <BookingsTab bookings={mockBookings} />
+            </div>
+            <div className="space-y-4 lg:col-span-4">
+              <QuickActions />
+            </div>
+          </div>
+        )}
+
+        {/* MESSAGES TAB */}
+        {activeTab === 'messages' && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <MessagesTab messages={[]} />
+            </div>
+            <div className="space-y-4 lg:col-span-4">
+              <QuickActions />
+            </div>
+          </div>
+        )}
+
+        {/* CALENDAR TAB */}
+        {activeTab === 'calendar' && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <CalendarTab events={[]} timeSlots={[]} />
+            </div>
+            <div className="space-y-4 lg:col-span-4">
+              <QuickActions />
+            </div>
+          </div>
+        )}
+
         {/* CONTENT MANAGEMENT TAB */}
         {activeTab === 'content' && (
           <div className="space-y-6">
@@ -132,16 +177,9 @@ export default function DashboardPage() {
           <div className="grid gap-4 lg:grid-cols-12">
             {/* Main Content - Left Column */}
             <div className="space-y-6 lg:col-span-8">
-              {/* Balance Cards */}
               <BalanceCards userData={mockUserData} />
-
-              {/* Finance Stats */}
               <FinanceStats userData={mockUserData} />
-
-              {/* Transaction List */}
               <TransactionList activities={mockActivity} />
-
-              {/* Premium Features */}
               <PremiumFeatures features={mockPremiumFeatures} />
             </div>
 
@@ -149,6 +187,54 @@ export default function DashboardPage() {
             <div className="space-y-4 lg:col-span-4">
               <EarnOpportunities opportunities={mockEarnOpportunities} />
               <FinanceSidebar />
+            </div>
+          </div>
+        )}
+
+        {/* REVIEWS TAB */}
+        {activeTab === 'reviews' && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <ReviewsTab reviews={mockReviews} />
+            </div>
+            <div className="space-y-4 lg:col-span-4">
+              <QuickActions />
+            </div>
+          </div>
+        )}
+
+        {/* CLIENTS TAB */}
+        {activeTab === 'clients' && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <ClientsTab clients={[]} />
+            </div>
+            <div className="space-y-4 lg:col-span-4">
+              <QuickActions />
+            </div>
+          </div>
+        )}
+
+        {/* ANALYTICS TAB */}
+        {activeTab === 'analytics' && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <AnalyticsTab />
+            </div>
+            <div className="space-y-4 lg:col-span-4">
+              <QuickActions />
+            </div>
+          </div>
+        )}
+
+        {/* SETTINGS TAB */}
+        {activeTab === 'settings' && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <SettingsTab />
+            </div>
+            <div className="space-y-4 lg:col-span-4">
+              <QuickActions />
             </div>
           </div>
         )}

@@ -397,3 +397,13 @@ th:last-child {
   top: 0%;
   z-index: -1;
 }
+
+/* Hide scrollbar for horizontal scroll tabs */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}

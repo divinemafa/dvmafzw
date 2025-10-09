@@ -4,6 +4,20 @@
  * Maps to database schema: profiles, user_verification, user_settings
  */
 
+// Social Media Links
+export interface SocialLinks {
+  facebook?: string;
+  twitter?: string;
+  instagram?: string;
+  linkedin?: string;
+  youtube?: string;
+  tiktok?: string;
+  github?: string;
+  website?: string;
+  whatsapp?: string;
+  telegram?: string;
+}
+
 // Database mapped types
 export interface UserProfile {
   id: string;
@@ -29,6 +43,33 @@ export interface UserProfile {
   
   // Blockchain
   primary_wallet_address: string | null;
+  
+  // Financial & Banking Information
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_routing_number: string | null;
+  bank_swift_code: string | null;
+  preferred_currency: string | null;
+  preferred_payout_currency: string | null;
+  
+  // Service Provider Settings
+  service_area_radius_km: number | null;
+  instant_booking_enabled: boolean | null;
+  allow_same_day_bookings: boolean | null;
+  max_advance_booking_days: number | null;
+  minimum_booking_notice_hours: number | null;
+  
+  // Business Information
+  business_name: string | null;
+  business_registration_number: string | null;
+  tax_id: string | null;
+  business_type: string | null;
+  
+  // Spoken Languages (array of language names)
+  spoken_languages: string[] | null;
+  
+  // Social Media Links (JSON object with platform: url pairs)
+  social_links: SocialLinks | null;
   
   // Reputation
   rating: number;

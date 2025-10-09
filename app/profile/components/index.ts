@@ -11,3 +11,4 @@ export { VerificationSection } from './VerificationSection';
 export { SettingsSection } from './SettingsSection';
 export { SecuritySection } from './SecuritySection';
 export { MessagesSection } from './MessagesSection';
+export { ImageCropperModal } from './ImageCropperModal';
