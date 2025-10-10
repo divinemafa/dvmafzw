@@ -93,7 +93,7 @@ export const marketplaceListings: MarketplaceListing[] = [
     shortDescription: 'On-demand diagnostics, roadside fixes, and preventative servicing.',
     longDescription:
       'QuickFix Auto dispatches certified mechanics with full diagnostic tooling to your driveway or roadside location. Services include full vehicle diagnostics, brake and suspension repairs, oil changes, and battery replacements. All work logged to a digital maintenance record accessible via your dashboard.',
-    image: 'https://images.unsplash.com/photo-1515920030412-2b98fed1f515?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=80',
     features: [
       'Includes mobile diagnostic scan',
       'OEM parts sourced within 24h',

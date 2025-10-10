@@ -436,6 +436,8 @@ export default function MarketPage() {
   const [previewListing, setPreviewListing] = useState<MarketplaceListing | null>(null);
   const [bookingListing, setBookingListing] = useState<MarketplaceListing | null>(null);
   const exploreScrollRef = useRef<HTMLDivElement | null>(null);
+  const featuredSectionRef = useRef<HTMLDivElement | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
 
   useEffect(() => {
     const node = exploreScrollRef.current;
@@ -459,6 +461,46 @@ export default function MarketPage() {
     if (showFeaturedCollections) {
       exploreScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
     }
+  }, [showFeaturedCollections]);
+
+  useEffect(() => {
+    const node = featuredSectionRef.current;
+    if (!node) {
+      return undefined;
+    }
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaY > 0) {
+        setShowFeaturedCollections(false);
+      }
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      const firstTouch = event.touches[0];
+      touchStartYRef.current = firstTouch ? firstTouch.clientY : null;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const startY = touchStartYRef.current;
+      const currentY = event.touches[0]?.clientY ?? null;
+
+      if (startY !== null && currentY !== null) {
+        if (startY - currentY > 12) {
+          setShowFeaturedCollections(false);
+          touchStartYRef.current = null;
+        }
+      }
+    };
+
+    node.addEventListener('wheel', handleWheel, { passive: true });
+    node.addEventListener('touchstart', handleTouchStart, { passive: true });
+    node.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    return () => {
+      node.removeEventListener('wheel', handleWheel);
+      node.removeEventListener('touchstart', handleTouchStart);
+      node.removeEventListener('touchmove', handleTouchMove);
+    };
   }, [showFeaturedCollections]);
 
   const handleHideFeatured = () => setShowFeaturedCollections(false);
@@ -537,7 +579,7 @@ export default function MarketPage() {
   const renderListingGridCard = (listing: MarketplaceListing) => (
     <article
       key={listing.id}
-      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
+      className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
     >
       <button
         type="button"
@@ -570,7 +612,7 @@ export default function MarketPage() {
         <HeartIcon className="h-4 w-4" />
       </button>
 
-      <div className="p-2.5">
+      <div className="flex flex-1 flex-col p-2.5">
         <div className="mb-2 flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <Link
@@ -600,29 +642,31 @@ export default function MarketPage() {
 
         <p className="mb-2 text-[9px] text-white/50">📍 {listing.location}</p>
 
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-[9px] text-white/50">Price</p>
-            <p className="text-sm font-bold text-white">{listing.price}</p>
+        <div className="mt-auto space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[9px] text-white/50">Price</p>
+              <p className="text-sm font-bold text-white">{listing.price}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/market/${listing.slug}`}
+                className="rounded-lg border border-white/20 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 transition hover:border-white/30 hover:text-white"
+              >
+                View details
+              </Link>
+              <button
+                type="button"
+                onClick={() => handleOpenBooking(listing)}
+                className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-3 py-1.5 text-[10px] font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
+              >
+                Book Now
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/market/${listing.slug}`}
-              className="rounded-lg border border-white/20 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 transition hover:border-white/30 hover:text-white"
-            >
-              View details
-            </Link>
-            <button
-              type="button"
-              onClick={() => handleOpenBooking(listing)}
-              className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-3 py-1.5 text-[10px] font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
-            >
-              Book Now
-            </button>
-          </div>
-        </div>
 
-        {renderTagPills(listing)}
+          {renderTagPills(listing)}
+        </div>
       </div>
     </article>
   );
@@ -973,7 +1017,10 @@ export default function MarketPage() {
 
           {/* Featured Collections - Compact */}
           {showFeaturedCollections ? (
-            <section className="shrink-0 rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+            <section
+              ref={featuredSectionRef}
+              className="shrink-0 rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl"
+            >
               <div className="border-b border-white/10 px-3 py-2.5">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-white">Featured Collections</h2>
@@ -1050,7 +1097,7 @@ export default function MarketPage() {
                 {marketplaceListings.map((listing) => (
                   <article
                     key={listing.id}
-                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
+                    className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
                   >
                     <button
                       type="button"
@@ -1068,7 +1115,7 @@ export default function MarketPage() {
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100" />
                     </button>
 
-                    <div className="p-2.5">
+                    <div className="flex flex-1 flex-col p-2.5">
                       <div className="mb-1.5 flex items-start justify-between gap-1.5">
                         <div className="min-w-0 flex-1">
                           <Link
@@ -1093,29 +1140,31 @@ export default function MarketPage() {
                       </div>
                       
                       <p className="mb-2 text-[9px] text-white/50">📍 {listing.location}</p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[9px] text-white/50">Price</p>
-                          <p className="text-sm font-bold text-white">{listing.price}</p>
+
+                      <div className="mt-auto space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[9px] text-white/50">Price</p>
+                            <p className="text-sm font-bold text-white">{listing.price}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenBooking(listing)}
+                            className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-3 py-1.5 text-[10px] font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
+                          >
+                            Book Now
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenBooking(listing)}
-                          className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-3 py-1.5 text-[10px] font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
-                        >
-                          Book Now
-                        </button>
-                      </div>
-                      
-                      <div className="mt-1.5 flex items-center justify-between text-[8px] text-white/50">
-                        <span>Category: {listing.category}</span>
-                        <Link
-                          href={`/market/${listing.slug}`}
-                          className="text-[9px] font-semibold uppercase tracking-[0.2em] text-blue-200 transition hover:text-blue-100"
-                        >
-                          View details
-                        </Link>
+
+                        <div className="flex items-center justify-between text-[8px] text-white/50">
+                          <span>Category: {listing.category}</span>
+                          <Link
+                            href={`/market/${listing.slug}`}
+                            className="text-[9px] font-semibold uppercase tracking-[0.2em] text-blue-200 transition hover:text-blue-100"
+                          >
+                            View details
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </article>

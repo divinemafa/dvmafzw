@@ -413,86 +413,51 @@ export default function DashboardPage() {
     }
   };
 
-  // Main Dashboard with ALL 10 Tabs - Full Screen Layout
-  return (
-    <main className="relative flex min-h-screen">
-      {/* Collapsible Sidebar Navigation */}
-      <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+  const quickActionsAside = (
+    <div className="space-y-4">
+      <QuickActions />
+    </div>
+  );
 
-      {/* Main Content Area - adjusts based on sidebar state */}
-      <div className="flex-1 overflow-y-auto transition-all lg:ml-20">
-        {/* Background ambience */}
-        <div className="pointer-events-none absolute inset-0 opacity-60">
-          <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl" />
-          <div className="absolute right-0 top-32 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-          <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
-        </div>
+  const renderStandardTab = (
+    main: React.ReactNode,
+    aside: React.ReactNode = quickActionsAside,
+  ) => (
+    <div className="grid gap-4 lg:grid-cols-12" aria-live="polite">
+      <div className="space-y-4 lg:col-span-8" role="region" aria-label="Primary content">
+        {main}
+      </div>
+      <aside className="space-y-4 lg:col-span-4" aria-label="Secondary actions">
+        {aside}
+      </aside>
+    </div>
+  );
 
-        <div className="relative mx-auto flex w-full max-w-[1800px] flex-col px-1 py-1">
-          {/* Header - Compact */}
-          <div className="shrink-0">
-            <DashboardHeader userName={userName} />
-          </div>
-
-          {/* Tab Content - Scrollable */}
-          <div className="flex-1 px-4 py-4">
-            {/* OVERVIEW TAB */}
-            {activeTab === 'overview' && (
-              <CompactTileGrid 
-                stats={mockMarketplaceStats} 
-                bookings={mockBookings}
-                reviews={mockReviews}
-              />
-            )}
-
-        {/* BOOKINGS TAB */}
-        {activeTab === 'bookings' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-8">
-              <BookingsTab bookings={mockBookings} />
-            </div>
-            <div className="space-y-4 lg:col-span-4">
-              <QuickActions />
-            </div>
-          </div>
-        )}
-
-        {/* MESSAGES TAB */}
-        {activeTab === 'messages' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-8">
-              <MessagesTab messages={[]} />
-            </div>
-            <div className="space-y-4 lg:col-span-4">
-              <QuickActions />
-            </div>
-          </div>
-        )}
-
-        {/* CALENDAR TAB */}
-        {activeTab === 'calendar' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-8">
-              <CalendarTab events={[]} timeSlots={[]} />
-            </div>
-            <div className="space-y-4 lg:col-span-4">
-              <QuickActions />
-            </div>
-          </div>
-        )}
-
-        {/* CONTENT MANAGEMENT TAB */}
-        {activeTab === 'content' && (
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <CompactTileGrid
+            stats={mockMarketplaceStats}
+            bookings={mockBookings}
+            reviews={mockReviews}
+          />
+        );
+      case 'content':
+        return (
           <div className="space-y-6">
             <AIContentBanner />
+            {/* TODO: Replace mockListings with live marketplace listings once marketplace API is available. */}
             <ListingsGrid listings={mockListings} />
           </div>
-        )}
-
-        {/* FINANCE TAB */}
-        {activeTab === 'finance' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <nav className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-4 shadow-xl backdrop-blur-2xl lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto">
+        );
+      case 'finance':
+        return (
+          <div className="grid gap-4 lg:grid-cols-12" aria-live="polite">
+            <nav
+              className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-4 shadow-xl backdrop-blur-2xl lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto"
+              aria-label="Finance modules"
+            >
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-white">Finance Modules</h2>
                 <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/50">
@@ -536,63 +501,78 @@ export default function DashboardPage() {
               </div>
             </nav>
 
-            <section className="flex flex-col gap-4 lg:col-span-6 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto">
+            <section
+              className="flex flex-col gap-4 lg:col-span-6 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto"
+              aria-label="Finance detail"
+            >
               {renderFinanceModuleContent()}
             </section>
 
-            <aside className="flex flex-col gap-4 lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto">
+            <aside
+              className="flex flex-col gap-4 lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto"
+              aria-label="Finance insights"
+            >
               {renderFinanceModuleAside()}
             </aside>
           </div>
-        )}
+        );
+      case 'bookings':
+        return renderStandardTab(
+          <BookingsTab bookings={mockBookings} />
+        ); // TODO: Wire bookings to scheduling service once backend endpoints are ready.
+      case 'messages':
+        return renderStandardTab(
+          <MessagesTab messages={[]} />
+        ); // TODO: Inject real-time threads from messaging API.
+      case 'calendar':
+        return renderStandardTab(
+          <CalendarTab events={[]} timeSlots={[]} />
+        ); // TODO: Feed availability slots from calendar integration.
+      case 'reviews':
+        return renderStandardTab(
+          <ReviewsTab reviews={mockReviews} />
+        ); // TODO: Source reviews from marketplace feedback service.
+      case 'clients':
+        return renderStandardTab(
+          <ClientsTab clients={[]} />
+        ); // TODO: Populate with CRM customer data.
+      case 'analytics':
+        return renderStandardTab(
+          <AnalyticsTab />
+        ); // TODO: Connect to analytics pipeline for traffic and conversion data.
+      case 'settings':
+        return renderStandardTab(
+          <SettingsTab />
+        ); // TODO: Replace with authenticated account settings payload.
+      default:
+        return null;
+    }
+  };
 
-        {/* REVIEWS TAB */}
-        {activeTab === 'reviews' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-8">
-              <ReviewsTab reviews={mockReviews} />
-            </div>
-            <div className="space-y-4 lg:col-span-4">
-              <QuickActions />
-            </div>
-          </div>
-        )}
+  // Main Dashboard with ALL 10 Tabs - Full Screen Layout
+  return (
+    <main className="relative flex min-h-screen">
+      {/* Collapsible Sidebar Navigation */}
+      <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* CLIENTS TAB */}
-        {activeTab === 'clients' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-8">
-              <ClientsTab clients={[]} />
-            </div>
-            <div className="space-y-4 lg:col-span-4">
-              <QuickActions />
-            </div>
-          </div>
-        )}
+      {/* Main Content Area - adjusts based on sidebar state */}
+      <div className="flex-1 overflow-y-auto transition-all lg:ml-20">
+        {/* Background ambience */}
+        <div className="pointer-events-none absolute inset-0 opacity-60" aria-hidden="true">
+          <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl" />
+          <div className="absolute right-0 top-32 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
+        </div>
 
-        {/* ANALYTICS TAB */}
-        {activeTab === 'analytics' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-8">
-              <AnalyticsTab />
-            </div>
-            <div className="space-y-4 lg:col-span-4">
-              <QuickActions />
-            </div>
+        <div className="relative mx-auto flex w-full max-w-[1800px] flex-col px-1 py-1">
+          {/* Header - Compact */}
+          <div className="shrink-0">
+            <DashboardHeader userName={userName} />
           </div>
-        )}
 
-        {/* SETTINGS TAB */}
-        {activeTab === 'settings' && (
-          <div className="grid gap-4 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-8">
-              <SettingsTab />
-            </div>
-            <div className="space-y-4 lg:col-span-4">
-              <QuickActions />
-            </div>
-          </div>
-        )}
+          {/* Tab Content - Scrollable */}
+          <div className="flex-1 px-4 py-4" role="region" aria-live="polite">
+            {renderActiveTab()}
           </div>
         </div>
       </div>
