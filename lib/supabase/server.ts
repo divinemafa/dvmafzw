@@ -1,5 +1,32 @@
 import { cookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+const missingEnvMessage = 'Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY before using Supabase features.'
+
+const createMissingEnvProxy = (): SupabaseClient<any> => {
+  const createMethodProxy = (path: string[]): any =>
+    new Proxy(() => undefined, {
+      apply() {
+        throw new Error(`${missingEnvMessage} Attempted to call supabase.${path.join('.')}`)
+      },
+      get(_target, property) {
+        if (property === 'then') {
+          return undefined
+        }
+        return createMethodProxy([...path, String(property)])
+      },
+    })
+
+  return new Proxy({}, {
+    get(_target, property) {
+      if (property === 'then') {
+        return undefined
+      }
+      return createMethodProxy([String(property)])
+    },
+  }) as SupabaseClient<any>
+}
 
 /**
  * Server-side Supabase client for Server Components and API routes
@@ -36,9 +63,10 @@ export function createClient() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error(
-      'Missing Supabase environment variables. Please create a .env.local file with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(missingEnvMessage)
+    }
+    return createMissingEnvProxy()
   }
 
   return createServerClient(
