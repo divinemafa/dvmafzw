@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { User, Session, AuthError, AuthApiError } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { SUPABASE_CONFIG_MISSING_MESSAGE, getSupabaseConfigMessage, isSupabaseConfigured } from '@/lib/supabase/env';
 
 /**
  * Provider/Seller Types
@@ -76,9 +77,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClient();
+  const supabaseReady = isSupabaseConfigured;
+  const supabase = useMemo(() => (supabaseReady ? createClient() : null), [supabaseReady]);
+
+  const buildConfigError = (action: string): AuthError =>
+    new AuthApiError(getSupabaseConfigMessage(action), 503, 'config_missing');
 
   useEffect(() => {
+    if (!supabaseReady || !supabase) {
+      setLoading(false);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(SUPABASE_CONFIG_MISSING_MESSAGE);
+      }
+      return;
+    }
+
     // Get initial session
     const getSession = async () => {
       try {
@@ -112,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, router]);
+  }, [supabase, supabaseReady, router]);
 
   /**
    * Sign up a new provider/seller with email
@@ -180,6 +193,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     userType: ProviderType
   ) => {
+    if (!supabase) {
+      console.warn(getSupabaseConfigMessage('Unable to sign up with phone.'));
+      return { error: buildConfigError('Unable to sign up with phone.') };
+    }
     try {
       const { error } = await supabase.auth.signUp({
         phone,
@@ -205,6 +222,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * @param password User's password
    */
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      console.warn(getSupabaseConfigMessage('Unable to sign in.'));
+      return { error: buildConfigError('Unable to sign in.') };
+    }
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -225,6 +246,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * @param password User's password
    */
   const signInWithPhone = async (phone: string, password: string) => {
+    if (!supabase) {
+      console.warn(getSupabaseConfigMessage('Unable to sign in with phone.'));
+      return { error: buildConfigError('Unable to sign in with phone.') };
+    }
     try {
       const { error } = await supabase.auth.signInWithPassword({
         phone,
@@ -245,6 +270,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * @param token OTP code received via SMS
    */
   const verifyOTP = async (phone: string, token: string) => {
+    if (!supabase) {
+      console.warn(getSupabaseConfigMessage('Unable to verify OTP.'));
+      return { error: buildConfigError('Unable to verify OTP.') };
+    }
     try {
       const { error } = await supabase.auth.verifyOtp({
         phone,
@@ -263,6 +292,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Sign out the current user
    */
   const signOut = async () => {
+    if (!supabase) {
+      console.warn(getSupabaseConfigMessage('Unable to sign out.'));
+      return;
+    }
     try {
       await supabase.auth.signOut();
       router.push('/');
@@ -278,6 +311,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * @param email User's email
    */
   const resetPassword = async (email: string) => {
+    if (!supabase) {
+      console.warn(getSupabaseConfigMessage('Unable to send password reset email.'));
+      return { error: buildConfigError('Unable to send password reset email.') };
+    }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,

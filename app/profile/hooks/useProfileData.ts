@@ -7,14 +7,16 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { createClient } from '@/lib/supabase/client';
+import { SUPABASE_CONFIG_MISSING_MESSAGE, isSupabaseConfigured } from '@/lib/supabase/env';
 import type { ProfileData, UserProfile, UserVerification, UserSettings } from '../types';
 
 export function useProfileData(): ProfileData & { refetch: () => void } {
   const { user } = useAuth();
-  const supabase = createClient();
+  const supabaseReady = isSupabaseConfigured;
+  const supabase = useMemo(() => (supabaseReady ? createClient() : null), [supabaseReady]);
   
   const [data, setData] = useState<ProfileData>({
     profile: null,
@@ -33,6 +35,17 @@ export function useProfileData(): ProfileData & { refetch: () => void } {
         settings: null,
         loading: false,
         error: 'Not authenticated',
+      });
+      return;
+    }
+
+    if (!supabase) {
+      setData({
+        profile: null,
+        verification: null,
+        settings: null,
+        loading: false,
+        error: SUPABASE_CONFIG_MISSING_MESSAGE,
       });
       return;
     }

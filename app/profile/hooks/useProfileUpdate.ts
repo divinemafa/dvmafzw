@@ -6,8 +6,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { SUPABASE_CONFIG_MISSING_MESSAGE, isSupabaseConfigured } from '@/lib/supabase/env';
 import type { UserProfile, UserSettings } from '../types';
 
 interface UpdateResult {
@@ -16,7 +17,8 @@ interface UpdateResult {
 }
 
 export function useProfileUpdate() {
-  const supabase = createClient();
+  const supabaseReady = isSupabaseConfigured;
+  const supabase = useMemo(() => (supabaseReady ? createClient() : null), [supabaseReady]);
   const [updating, setUpdating] = useState(false);
 
   /**
@@ -26,6 +28,13 @@ export function useProfileUpdate() {
     userId: string,
     updates: Partial<UserProfile>
   ): Promise<UpdateResult> => {
+    if (!supabase) {
+      return {
+        success: false,
+        error: SUPABASE_CONFIG_MISSING_MESSAGE,
+      };
+    }
+
     setUpdating(true);
     try {
       const { error } = await supabase
@@ -54,6 +63,13 @@ export function useProfileUpdate() {
     userId: string,
     updates: Partial<UserSettings>
   ): Promise<UpdateResult> => {
+    if (!supabase) {
+      return {
+        success: false,
+        error: SUPABASE_CONFIG_MISSING_MESSAGE,
+      };
+    }
+
     setUpdating(true);
     try {
       const { error } = await supabase
@@ -83,6 +99,10 @@ export function useProfileUpdate() {
     file: File
   ): Promise<{ url: string | null; error: string | null }> => {
     try {
+      if (!supabase) {
+        return { url: null, error: SUPABASE_CONFIG_MISSING_MESSAGE };
+      }
+
       // Validate file
       if (!file.type.startsWith('image/')) {
         return { url: null, error: 'File must be an image' };
@@ -137,6 +157,10 @@ export function useProfileUpdate() {
     file: File
   ): Promise<{ url: string | null; error: string | null }> => {
     try {
+      if (!supabase) {
+        return { url: null, error: SUPABASE_CONFIG_MISSING_MESSAGE };
+      }
+
       // Validate file
       if (!file.type.startsWith('image/')) {
         return { url: null, error: 'File must be an image' };
@@ -187,6 +211,13 @@ export function useProfileUpdate() {
    * Update password
    */
   const updatePassword = async (newPassword: string): Promise<UpdateResult> => {
+    if (!supabase) {
+      return {
+        success: false,
+        error: SUPABASE_CONFIG_MISSING_MESSAGE,
+      };
+    }
+
     setUpdating(true);
     try {
       const { error } = await supabase.auth.updateUser({

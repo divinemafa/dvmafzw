@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { 
   KeyIcon, 
   ShieldCheckIcon,
@@ -18,6 +18,7 @@ import type { UserSettings } from '../types';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { createClient } from '@/lib/supabase/client';
+import { SUPABASE_CONFIG_MISSING_MESSAGE, isSupabaseConfigured } from '@/lib/supabase/env';
 
 interface SecuritySectionProps {
   settings: UserSettings | null;
@@ -25,7 +26,8 @@ interface SecuritySectionProps {
 
 export function SecuritySection({ settings }: SecuritySectionProps) {
   const { signOut } = useAuth();
-  const supabase = createClient();
+  const supabaseReady = isSupabaseConfigured;
+  const supabase = useMemo(() => (supabaseReady ? createClient() : null), [supabaseReady]);
   
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isEnabling2FA, setIsEnabling2FA] = useState(false);
@@ -55,6 +57,10 @@ export function SecuritySection({ settings }: SecuritySectionProps) {
 
     setIsProcessing(true);
     try {
+      if (!supabase) {
+        alert(SUPABASE_CONFIG_MISSING_MESSAGE);
+        return;
+      }
       // Update account status to suspended
       const { error } = await supabase
         .from('profiles')
@@ -92,6 +98,10 @@ export function SecuritySection({ settings }: SecuritySectionProps) {
 
     setIsProcessing(true);
     try {
+      if (!supabase) {
+        alert(SUPABASE_CONFIG_MISSING_MESSAGE);
+        return;
+      }
       // Soft delete - mark as deleted
       const { error } = await supabase
         .from('profiles')
@@ -118,6 +128,10 @@ export function SecuritySection({ settings }: SecuritySectionProps) {
   // Sign out all other sessions
   const handleSignOutAll = async () => {
     try {
+      if (!supabase) {
+        alert(SUPABASE_CONFIG_MISSING_MESSAGE);
+        return;
+      }
       await supabase.auth.signOut({ scope: 'global' });
       alert('Signed out from all devices. You will need to log in again.');
       window.location.href = '/auth/login';
