@@ -1,20 +1,32 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   Bars3BottomRightIcon,
+  Bars4Icon,
   BoltIcon,
+  CalendarDaysIcon,
   ChartBarIcon,
+  CheckCircleIcon,
   ClockIcon,
   CubeTransparentIcon,
-  FireIcon,
   FolderOpenIcon,
   GiftIcon,
+  HeartIcon,
   MagnifyingGlassIcon,
   ShieldCheckIcon,
   SparklesIcon,
+  Squares2X2Icon,
   TagIcon,
   UsersIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { BookmarkIcon } from '@heroicons/react/24/solid';
+import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
+import type { MarketplaceListing, StatusTone } from './data/listings';
+import { marketplaceListings } from './data/listings';
 
 const marketplaceMetrics = [
   {
@@ -188,108 +200,51 @@ const featuredCollections = [
   },
 ];
 
-type StatusTone = 'emerald' | 'sky' | 'amber' | 'violet';
+const quickFilterOptions = [
+  { label: 'All services', value: 'all' },
+  { label: 'Verified only', value: 'verified' },
+  { label: 'Remote capable', value: 'remote' },
+  { label: 'Top rated', value: 'topRated' },
+  { label: 'Quick turnaround', value: 'quickTurnaround' },
+  { label: 'In-person', value: 'inPerson' },
+] as const;
 
-const mockListings: Array<{
-  id: string;
-  title: string;
-  creator: string;
-  price: string;
-  location: string;
-  verified: boolean;
-  status: string;
-  badgeTone: StatusTone;
-  category: string;
-}> = [
-  {
-    id: 'LIST-001',
-    title: 'Professional Home Cleaning Service',
-    creator: 'Sparkle Clean Co.',
-    price: '500 ZAR',
-    location: 'Centurion, Gauteng',
-    verified: true,
-    status: 'Verified',
-    badgeTone: 'emerald',
-    category: 'Home & Property',
-  },
-  {
-    id: 'LIST-002',
-    title: 'Garden Design & Landscaping',
-    creator: 'Green Thumb Gardens',
-    price: '1,200 ZAR',
-    location: 'Sandton, Johannesburg',
-    verified: true,
-    status: 'Popular',
-    badgeTone: 'sky',
-    category: 'Home & Property',
-  },
-  {
-    id: 'LIST-003',
-    title: 'Mobile Auto Mechanic',
-    creator: 'QuickFix Auto',
-    price: '350 ZAR/hr',
-    location: 'Pretoria East',
-    verified: true,
-    status: 'Available',
-    badgeTone: 'emerald',
-    category: 'Skilled Trades',
-  },
-  {
-    id: 'LIST-004',
-    title: 'Professional Photography Services',
-    creator: 'Lens Masters',
-    price: '2,500 ZAR',
-    location: 'Cape Town',
-    verified: true,
-    status: 'Trending',
-    badgeTone: 'violet',
-    category: 'Creative',
-  },
-  {
-    id: 'LIST-005',
-    title: 'Private Mathematics Tutoring',
-    creator: 'EduSmart Tutors',
-    price: '300 ZAR/hr',
-    location: 'Durban North',
-    verified: true,
-    status: 'Verified',
-    badgeTone: 'emerald',
-    category: 'Education',
-  },
-  {
-    id: 'LIST-006',
-    title: 'Electrician - Solar & Home Wiring',
-    creator: 'PowerPro Electrical',
-    price: '450 ZAR/hr',
-    location: 'Johannesburg CBD',
-    verified: true,
-    status: 'Licensed',
-    badgeTone: 'emerald',
-    category: 'Skilled Trades',
-  },
-  {
-    id: 'LIST-007',
-    title: 'Event Planning & Coordination',
-    creator: 'Perfect Day Events',
-    price: '5,000 ZAR',
-    location: 'Stellenbosch',
-    verified: true,
-    status: 'Popular',
-    badgeTone: 'sky',
-    category: 'Events',
-  },
-  {
-    id: 'LIST-008',
-    title: 'Web Development Services',
-    creator: 'CodeCraft Studios',
-    price: '8,000 ZAR',
-    location: 'Remote',
-    verified: true,
-    status: 'Trending',
-    badgeTone: 'violet',
-    category: 'Creative',
-  },
-];
+type QuickFilterValue = (typeof quickFilterOptions)[number]['value'];
+
+const parseResponseTimeToMinutes = (raw: string): number | null => {
+  const match = raw.toLowerCase().match(/(\d+(?:\.\d+)?)\s*(minute|hour)/);
+  if (!match) {
+    return null;
+  }
+
+  const value = Number(match[1]);
+  if (Number.isNaN(value)) {
+    return null;
+  }
+
+  const unit = match[2];
+  if (unit.startsWith('hour')) {
+    return Math.round(value * 60);
+  }
+
+  return Math.round(value);
+};
+
+const isRemoteListing = (listing: MarketplaceListing) =>
+  listing.tags.includes('remote') || listing.location.toLowerCase().includes('remote');
+
+const isQuickTurnaroundListing = (listing: MarketplaceListing) => {
+  if (listing.tags.includes('instant')) {
+    return true;
+  }
+
+  const minutes = parseResponseTimeToMinutes(listing.responseTime);
+  if (minutes === null) {
+    return false;
+  }
+
+  return minutes <= 120;
+};
 
 const sellerTasks = [
   {
@@ -473,8 +428,282 @@ function StatusBadge({ tone, label }: { tone: StatusTone; label: string }) {
 }
 
 export default function MarketPage() {
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState<'trending' | 'priceLow' | 'priceHigh'>('trending');
+  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterValue>('all');
+  const [showFeaturedCollections, setShowFeaturedCollections] = useState(true);
+  const [previewListing, setPreviewListing] = useState<MarketplaceListing | null>(null);
+  const [bookingListing, setBookingListing] = useState<MarketplaceListing | null>(null);
+  const exploreScrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const node = exploreScrollRef.current;
+    if (!node) {
+      return;
+    }
+
+    const handleScroll = () => {
+      if (node.scrollTop > 12 && showFeaturedCollections) {
+        setShowFeaturedCollections(false);
+      }
+    };
+
+    node.addEventListener('scroll', handleScroll);
+    return () => {
+      node.removeEventListener('scroll', handleScroll);
+    };
+  }, [showFeaturedCollections]);
+
+  useEffect(() => {
+    if (showFeaturedCollections) {
+      exploreScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [showFeaturedCollections]);
+
+  const handleHideFeatured = () => setShowFeaturedCollections(false);
+  const handleShowFeatured = () => setShowFeaturedCollections(true);
+  const handleOpenPreview = (listing: MarketplaceListing) => setPreviewListing(listing);
+  const handleClosePreview = () => setPreviewListing(null);
+  const handleOpenBooking = (listing: MarketplaceListing) => setBookingListing(listing);
+  const handleCloseBooking = () => setBookingListing(null);
+
+  useEffect(() => {
+    const hasOverlay = Boolean(previewListing || bookingListing);
+    if (hasOverlay) {
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = previousOverflow;
+      };
+    }
+  }, [previewListing, bookingListing]);
+
+  const filteredListings = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return marketplaceListings.filter((listing) => {
+      const searchable = `${listing.title} ${listing.category} ${listing.shortDescription} ${listing.creator}`.toLowerCase();
+      const matchesSearch =
+        query.length === 0 ||
+        searchable.includes(query) ||
+        listing.tags.some((tag) => tag.toLowerCase().includes(query));
+      const matchesFilter = activeQuickFilter === 'all' || listing.tags.includes(activeQuickFilter);
+      return matchesSearch && matchesFilter;
+    });
+  }, [searchTerm, activeQuickFilter]);
+
+  const sortedListings = useMemo(() => {
+    if (sortOption === 'trending') {
+      return filteredListings;
+    }
+
+    const sorted = [...filteredListings];
+    if (sortOption === 'priceLow') {
+      sorted.sort((a, b) => a.priceValue - b.priceValue);
+    } else {
+      sorted.sort((a, b) => b.priceValue - a.priceValue);
+    }
+    return sorted;
+  }, [filteredListings, sortOption]);
+
+  const resultsCount = sortedListings.length;
+  const hasActiveFilters = activeQuickFilter !== 'all' || searchTerm.trim().length > 0;
+  const hasModifiedSort = sortOption !== 'trending';
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
+
+  const handleResetExploration = () => {
+    setActiveQuickFilter('all');
+    setSortOption('trending');
+    setSearchTerm('');
+  };
+
+  const renderTagPills = (listing: MarketplaceListing) => (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {listing.tags.slice(0, 4).map((tag) => (
+        <span
+          key={`${listing.id}-${tag}`}
+          className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60"
+        >
+          #{tag}
+        </span>
+      ))}
+    </div>
+  );
+
+  const renderListingGridCard = (listing: MarketplaceListing) => (
+    <article
+      key={listing.id}
+      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
+    >
+      <button
+        type="button"
+        onClick={() => handleOpenPreview(listing)}
+        className="relative block aspect-square w-full overflow-hidden"
+      >
+        <span className="sr-only">View photo for {listing.title}</span>
+        <Image
+          src={listing.image}
+          alt={listing.title}
+          fill
+          sizes="(min-width: 1280px) 250px, (min-width: 1024px) 220px, 100vw"
+          className="object-cover transition duration-500 group-hover:scale-105"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 px-3 pb-3 text-xs text-white opacity-0 transition group-hover:opacity-100">
+          <span className="inline-flex items-center gap-1 rounded-full border border-yellow-400/30 bg-yellow-400/20 px-2 py-0.5 font-semibold text-yellow-100">
+            <StarSolidIcon className="h-3.5 w-3.5" />
+            {listing.rating.toFixed(1)}
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/70">{listing.reviews.toLocaleString()} reviews</span>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        aria-label="Save to favorites"
+        className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white transition hover:border-white/40 hover:bg-black/50"
+      >
+        <HeartIcon className="h-4 w-4" />
+      </button>
+
+      <div className="p-2.5">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <Link
+              href={`/market/${listing.slug}`}
+              className="block text-xs font-semibold text-white transition hover:text-blue-200 line-clamp-2"
+            >
+              {listing.title}
+            </Link>
+            <p className="mt-1 text-[9px] text-white/60 line-clamp-2">{listing.shortDescription}</p>
+          </div>
+          <StatusBadge tone={listing.badgeTone} label={listing.status} />
+        </div>
+
+        <div className="mb-2 flex items-center justify-between gap-2 text-[9px] text-white/60">
+          <p className="flex items-center gap-1">
+            <span className="text-white/50">by</span>
+            <span className="font-semibold text-white/80">{listing.creator}</span>
+            {listing.verified && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[8px] font-semibold text-emerald-200">
+                <ShieldCheckIcon className="h-2.5 w-2.5" aria-hidden="true" />
+                Verified
+              </span>
+            )}
+          </p>
+          <span className="text-white/40">Responds in {listing.responseTime}</span>
+        </div>
+
+        <p className="mb-2 text-[9px] text-white/50">📍 {listing.location}</p>
+
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-[9px] text-white/50">Price</p>
+            <p className="text-sm font-bold text-white">{listing.price}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/market/${listing.slug}`}
+              className="rounded-lg border border-white/20 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 transition hover:border-white/30 hover:text-white"
+            >
+              View details
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleOpenBooking(listing)}
+              className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-3 py-1.5 text-[10px] font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
+            >
+              Book Now
+            </button>
+          </div>
+        </div>
+
+        {renderTagPills(listing)}
+      </div>
+    </article>
+  );
+
+  const renderListingListItem = (listing: MarketplaceListing) => (
+    <article
+      key={listing.id}
+      className="group flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl md:flex-row md:items-stretch"
+    >
+      <button
+        type="button"
+        onClick={() => handleOpenPreview(listing)}
+        className="relative aspect-video w-full overflow-hidden rounded-xl md:w-64"
+      >
+        <Image
+          src={listing.image}
+          alt={listing.title}
+          fill
+          sizes="(min-width: 1024px) 256px, 100vw"
+          className="object-cover transition duration-500 group-hover:scale-105"
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-3 pb-2">
+          <div className="flex items-center gap-2 text-xs text-white">
+            <span className="inline-flex items-center gap-1 rounded-full border border-yellow-400/30 bg-yellow-400/20 px-2 py-0.5 font-semibold text-yellow-100">
+              <StarSolidIcon className="h-3.5 w-3.5" />
+              {listing.rating.toFixed(1)}
+            </span>
+            <span className="text-white/70">{listing.reviews.toLocaleString()} reviews</span>
+          </div>
+        </div>
+      </button>
+
+      <div className="flex flex-1 flex-col justify-between gap-3">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge tone={listing.badgeTone} label={listing.status} />
+            <h3 className="text-base font-semibold text-white">{listing.title}</h3>
+          </div>
+          <p className="text-sm text-white/70 line-clamp-2">{listing.longDescription}</p>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
+            <span className="font-semibold text-white">{listing.creator}</span>
+            {listing.verified && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-emerald-200">
+                <ShieldCheckIcon className="h-3 w-3" />
+                Verified
+              </span>
+            )}
+            <span>|</span>
+            <span>Responds in {listing.responseTime}</span>
+            <span>|</span>
+            <span>📍 {listing.location}</span>
+          </div>
+          {renderTagPills(listing)}
+        </div>
+        <div className="flex flex-col gap-2 border-t border-white/10 pt-3 text-sm text-white/80 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-white/50">Starting at</span>
+            <span className="text-lg font-semibold text-white">{listing.price}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/market/${listing.slug}`}
+              className="rounded-lg border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/70 transition hover:border-white/30 hover:text-white"
+            >
+              View details
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleOpenBooking(listing)}
+              className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-4 py-2 text-xs font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
+            >
+              Book now
+            </button>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#050814] via-[#0a1532] to-[#120333] text-white">
+    <main className="relative flex h-screen overflow-hidden bg-gradient-to-br from-[#050814] via-[#0a1532] to-[#120333] text-white">
       {/* Background ambience */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl" />
@@ -482,7 +711,7 @@ export default function MarketPage() {
         <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-[1800px] gap-4 px-4 py-6">
+  <div className="relative mx-auto flex h-full w-full max-w-[1800px] gap-4 px-4 py-6">
         {/* LEFT SIDEBAR - Filters & Categories */}
         <aside className="hidden w-56 flex-shrink-0 lg:block">
           <div className="sticky top-6 space-y-3">
@@ -527,6 +756,140 @@ export default function MarketPage() {
                     
                     {/* Grouped Categories */}
                     {categoryGroups.map((group) => {
+
+                    {previewListing ? (
+                      <div
+                        role="dialog"
+                        aria-modal="true"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8 backdrop-blur-sm"
+                        onClick={handleClosePreview}
+                      >
+                        <div
+                          className="relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-[#151932] via-[#0f1730] to-[#0b1024] shadow-2xl"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={handleClosePreview}
+                            className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white transition hover:border-white/40 hover:bg-black/40"
+                            aria-label="Close preview"
+                          >
+                            <XMarkIcon className="h-5 w-5" />
+                          </button>
+                          <div className="relative h-64 w-full sm:h-96">
+                            <Image
+                              src={previewListing.image}
+                              alt={previewListing.title}
+                              fill
+                              sizes="(min-width: 768px) 768px, 100vw"
+                              className="object-cover"
+                              priority
+                            />
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent px-6 py-4">
+                              <h3 className="text-lg font-semibold text-white">{previewListing.title}</h3>
+                              <p className="text-sm text-white/70">{previewListing.shortDescription}</p>
+                            </div>
+                          </div>
+                          <div className="grid gap-6 px-6 py-5 sm:grid-cols-2">
+                            <div className="space-y-3 text-sm text-white/70">
+                              <p><span className="font-semibold text-white">Provider:</span> {previewListing.creator}</p>
+                              <p><span className="font-semibold text-white">Location:</span> {previewListing.location}</p>
+                              <p><span className="font-semibold text-white">Price:</span> {previewListing.price}</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleClosePreview();
+                                  handleOpenBooking(previewListing);
+                                }}
+                                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-4 py-2 text-sm font-semibold text-white transition hover:from-blue-500 hover:to-purple-500"
+                              >
+                                Book this service
+                              </button>
+                            </div>
+                            <div className="space-y-2 text-sm text-white/70">
+                              <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">Included Features</h4>
+                              <ul className="space-y-2">
+                                {previewListing.features.map((feature) => (
+                                  <li key={feature} className="flex items-start gap-2">
+                                    <CheckCircleIcon className="mt-0.5 h-4 w-4 text-emerald-300" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {bookingListing ? (
+                      <div
+                        role="dialog"
+                        aria-modal="true"
+                        className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 py-6 backdrop-blur-sm"
+                        onClick={handleCloseBooking}
+                      >
+                        <div
+                          className="w-full max-w-xl rounded-2xl border border-white/15 bg-gradient-to-br from-[#141b33] via-[#0d152d] to-[#080d1d] p-6 text-white shadow-2xl"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Booking</p>
+                              <h3 className="text-lg font-semibold">{bookingListing.title}</h3>
+                              <p className="text-sm text-white/70">by {bookingListing.creator}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleCloseBooking}
+                              aria-label="Close booking"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white transition hover:border-white/40 hover:bg-white/10"
+                            >
+                              <XMarkIcon className="h-5 w-5" />
+                            </button>
+                          </div>
+                          <div className="space-y-3 text-sm text-white/70">
+                            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                              <span>Selected package</span>
+                              <span className="font-semibold text-white">{bookingListing.price}</span>
+                            </div>
+                            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                              <div className="flex items-center gap-2 text-white">
+                                <CalendarDaysIcon className="h-4 w-4" />
+                                <p className="text-sm font-semibold">Availability</p>
+                              </div>
+                              <p className="mt-1 text-xs text-white/60">{bookingListing.availability}</p>
+                            </div>
+                            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Included highlights</p>
+                              <ul className="mt-2 space-y-1.5">
+                                {bookingListing.features.slice(0, 3).map((feature) => (
+                                  <li key={feature} className="flex items-center gap-2">
+                                    <CheckCircleIcon className="h-4 w-4 text-emerald-300" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                            <button
+                              type="button"
+                              onClick={handleCloseBooking}
+                              className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-white/40 hover:text-white"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-lg border border-white/20 bg-gradient-to-r from-emerald-500/80 to-blue-500/80 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:from-emerald-500 hover:to-blue-500"
+                            >
+                              Confirm booking request
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
                       const groupCategories = allCategories.filter(cat => cat.parent === group.id);
                       return (
                         <li key={group.id} className="space-y-1">
@@ -576,7 +939,7 @@ export default function MarketPage() {
         </aside>
 
         {/* CENTER - Main Content (Products) */}
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
+  <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
           {/* Search & Filter Bar - Compact */}
           <header className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 shadow-xl backdrop-blur-2xl">
             <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
@@ -609,43 +972,62 @@ export default function MarketPage() {
           </header>
 
           {/* Featured Collections - Compact */}
-          <section className="rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
-            <div className="border-b border-white/10 px-3 py-2.5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-white">Featured Collections</h2>
-                <button className="text-xs font-semibold text-blue-200 hover:text-blue-100">See all</button>
+          {showFeaturedCollections ? (
+            <section className="shrink-0 rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+              <div className="border-b border-white/10 px-3 py-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-white">Featured Collections</h2>
+                  <div className="flex items-center gap-2">
+                    <button className="text-xs font-semibold text-blue-200 hover:text-blue-100">See all</button>
+                    <button
+                      type="button"
+                      onClick={handleHideFeatured}
+                      className="text-xs font-semibold text-white/60 transition hover:text-white"
+                    >
+                      Hide
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="p-3">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {featuredCollections.map((collection) => (
-                  <article
-                    key={collection.title}
-                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition hover:border-white/20"
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${collection.accent} opacity-60 transition group-hover:opacity-80`} />
-                    <div className="relative z-10 space-y-2">
-                      <h3 className="text-xs font-bold text-white">{collection.title}</h3>
-                      <p className="text-[9px] text-white/80 line-clamp-1">{collection.description}</p>
-                      <p className="text-[10px] text-white/90">{collection.items} listings</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-white">{collection.volume}</span>
-                        <button
-                          type="button"
-                          className="rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white transition hover:bg-white/20"
-                        >
-                          Explore
-                        </button>
+              <div className="p-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {featuredCollections.map((collection) => (
+                    <article
+                      key={collection.title}
+                      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition hover:border-white/20"
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${collection.accent} opacity-60 transition group-hover:opacity-80`} />
+                      <div className="relative z-10 space-y-2">
+                        <h3 className="text-xs font-bold text-white">{collection.title}</h3>
+                        <p className="text-[9px] text-white/80 line-clamp-1">{collection.description}</p>
+                        <p className="text-[10px] text-white/90">{collection.items} listings</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-white">{collection.volume}</span>
+                          <button
+                            type="button"
+                            className="rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white transition hover:bg-white/20"
+                          >
+                            Explore
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : (
+            <button
+              type="button"
+              onClick={handleShowFeatured}
+              className="inline-flex shrink-0 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/60 transition hover:border-white/40 hover:text-white"
+            >
+              Show featured collections
+            </button>
+          )}
 
           {/* Product Grid - Compact */}
-          <section className="flex-1 rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
             <div className="border-b border-white/10 px-3 py-2.5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-white">Explore Marketplace</h2>
@@ -660,24 +1042,43 @@ export default function MarketPage() {
                 </div>
               </div>
             </div>
-            <div className="p-3">
+            <div
+              ref={exploreScrollRef}
+              className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10"
+            >
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {mockListings.map((listing) => (
+                {marketplaceListings.map((listing) => (
                   <article
                     key={listing.id}
                     className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
                   >
-                    {/* Service Image Placeholder */}
-                    <div className="aspect-square overflow-hidden bg-gradient-to-br from-purple-500/20 via-indigo-500/20 to-blue-500/20">
-                      <div className="flex h-full items-center justify-center">
-                        <CubeTransparentIcon className="h-12 w-12 text-white/30" aria-hidden="true" />
-                      </div>
-                    </div>
-                    
-                    {/* Service Info - Compact */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenPreview(listing)}
+                      className="relative block aspect-square w-full overflow-hidden"
+                    >
+                      <span className="sr-only">View photo for {listing.title}</span>
+                      <Image
+                        src={listing.image}
+                        alt={listing.title}
+                        fill
+                        sizes="(min-width: 1280px) 250px, (min-width: 1024px) 220px, 100vw"
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                      />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100" />
+                    </button>
+
                     <div className="p-2.5">
                       <div className="mb-1.5 flex items-start justify-between gap-1.5">
-                        <h3 className="flex-1 text-xs font-semibold text-white line-clamp-2">{listing.title}</h3>
+                        <div className="min-w-0 flex-1">
+                          <Link
+                            href={`/market/${listing.slug}`}
+                            className="block text-xs font-semibold text-white transition hover:text-blue-200 line-clamp-2"
+                          >
+                            {listing.title}
+                          </Link>
+                          <p className="mt-1 text-[9px] text-white/60 line-clamp-2">{listing.shortDescription}</p>
+                        </div>
                         <StatusBadge tone={listing.badgeTone} label={listing.status} />
                       </div>
                       
@@ -700,13 +1101,22 @@ export default function MarketPage() {
                         </div>
                         <button
                           type="button"
+                          onClick={() => handleOpenBooking(listing)}
                           className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-3 py-1.5 text-[10px] font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
                         >
                           Book Now
                         </button>
                       </div>
                       
-                      <p className="mt-1.5 text-[8px] text-white/40">Category: {listing.category}</p>
+                      <div className="mt-1.5 flex items-center justify-between text-[8px] text-white/50">
+                        <span>Category: {listing.category}</span>
+                        <Link
+                          href={`/market/${listing.slug}`}
+                          className="text-[9px] font-semibold uppercase tracking-[0.2em] text-blue-200 transition hover:text-blue-100"
+                        >
+                          View details
+                        </Link>
+                      </div>
                     </div>
                   </article>
                 ))}

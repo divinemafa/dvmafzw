@@ -6,10 +6,10 @@ import Footer from './Footer/index';
 export default function ConditionalFooter() {
   const pathname = usePathname();
   
-  // Hide footer on Exchange and Market pages (they have their own custom footers)
-  const hideFooterPages = ['/exchange', '/market'];
+  // Hide footer on Exchange, Market, and Dashboard pages
+  const hideFooterPages = ['/exchange', '/market', '/dashboard'];
   
-  if (hideFooterPages.includes(pathname)) {
+  if (hideFooterPages.includes(pathname) || pathname?.startsWith('/dashboard')) {
     return null;
   }
   

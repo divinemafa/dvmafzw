@@ -21,25 +21,35 @@ export interface Listing {
   status: 'active' | 'paused' | 'draft';
   featured: boolean;
   rating: number;
+  imageUrl?: string | null;
 }
 
 export interface Booking {
-  id: number;
-  service: string;
-  client: string;
-  date: string;
-  time: string;
-  amount: number;
-  status: 'confirmed' | 'pending' | 'completed';
+  id: string | number;
+  // primary display fields (legacy)
+  service?: string;
+  client?: string;
+  date?: string;
+  time?: string;
+  amount?: number;
+  // fields used by dashboard components
+  listingTitle?: string;
+  startDate?: string; // ISO
+  endDate?: string; // ISO
+  // include cancelled for broader status handling
+  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
 }
 
 export interface Review {
-  id: number;
-  service: string;
-  client: string;
+  id: number | string;
+  service?: string;
+  client?: string;
   rating: number;
   comment: string;
-  date: string;
+  // UI-friendly fields
+  reviewerName?: string;
+  createdAt?: string;
+  date?: string;
 }
 
 export interface UserData {
@@ -93,33 +103,53 @@ export interface Client {
   id: string;
   name: string;
   email: string;
-  avatar: string | null;
+  // both aliases supported
+  avatar?: string | null;
+  avatarUrl?: string | null;
   totalBookings: number;
   totalSpent: number;
-  lastBooking: string;
-  rating: number;
-  joined: string;
+  lastBooking?: string;
+  rating?: number;
+  // createdAt used in components
+  createdAt?: string;
+  joined?: string;
+  // UI convenience
+  isActive?: boolean;
 }
 
 // Message Types
 export interface Message {
   id: string;
-  clientId: string;
-  clientName: string;
-  clientAvatar: string | null;
-  lastMessage: string;
-  timestamp: string;
-  unread: boolean;
+  // legacy / server-side shape
+  clientId?: string;
+  clientName?: string;
+  clientAvatar?: string | null;
+  lastMessage?: string;
+  timestamp?: string;
+  unread?: boolean;
   bookingId?: string;
+
+  // dashboard / UI-friendly fields
+  senderName?: string;
+  sentAt?: string;
+  subject?: string;
+  preview?: string;
+  isRead?: boolean;
 }
 
 // Calendar/Schedule Types
 export interface CalendarEvent {
   id: string;
   title: string;
-  start: string;
-  end: string;
-  type: 'booking' | 'blocked' | 'available';
+  // canonical timestamps
+  start?: string; // ISO
+  end?: string; // ISO
+  // UI-friendly aliases
+  startTime?: string;
+  endTime?: string;
+  description?: string;
+  // allow meeting type used by components
+  type: 'booking' | 'blocked' | 'available' | 'meeting';
   clientName?: string;
   status?: 'confirmed' | 'pending' | 'completed';
 }
@@ -133,11 +163,20 @@ export interface TimeSlot {
 
 // Analytics Types
 export interface AnalyticsData {
-  period: string;
-  revenue: number;
-  bookings: number;
-  views: number;
-  conversion: number;
+  // canonical fields
+  period?: string;
+  revenue?: number;
+  bookings?: number;
+  views?: number;
+  conversion?: number;
+
+  // UI/more detailed metrics used in components
+  totalViews?: number;
+  totalClicks?: number;
+  conversionRate?: number; // percent
+  averageSessionDuration?: number; // seconds
+  bounceRate?: number; // percent
+  revenueGrowth?: number; // percent
 }
 
 export interface TrafficSource {

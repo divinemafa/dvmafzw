@@ -6,47 +6,76 @@ interface StatsGridProps {
 }
 
 export const StatsGrid = ({ stats }: StatsGridProps) => {
+  const statCards = [
+    {
+      label: 'Active Listings',
+      value: stats.activeListings,
+      subtext: `${stats.totalViews.toLocaleString()} views`,
+      icon: DocumentTextIcon,
+      bgGradient: 'from-blue-600 to-blue-500',
+      trend: null,
+    },
+    {
+      label: 'Bookings',
+      value: stats.pendingBookings,
+      subtext: `${stats.completedBookings} completed`,
+      icon: CalendarIcon,
+      bgGradient: 'from-emerald-600 to-emerald-500',
+      trend: '+12%',
+    },
+    {
+      label: 'Rating',
+      value: stats.averageRating,
+      subtext: `${stats.totalReviews} reviews`,
+      icon: StarIcon,
+      bgGradient: 'from-yellow-600 to-yellow-500',
+      trend: null,
+    },
+    {
+      label: 'Response Rate',
+      value: `${stats.responseRate}%`,
+      subtext: `Avg ${stats.responseTime}`,
+      icon: ChatBubbleLeftRightIcon,
+      bgGradient: 'from-purple-600 to-purple-500',
+      trend: null,
+    },
+  ];
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {/* Active Listings */}
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-2xl">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs uppercase tracking-wider text-white/60">Active Listings</span>
-          <DocumentTextIcon className="h-5 w-5 text-blue-400" />
-        </div>
-        <p className="text-2xl font-bold text-white">{stats.activeListings}</p>
-        <p className="mt-1 text-xs text-white/50">{stats.totalViews.toLocaleString()} total views</p>
-      </div>
+    <div className="grid grid-cols-4 gap-0">
+      {statCards.map((card, index) => (
+        <div
+          key={index}
+          className={`group relative overflow-hidden bg-gradient-to-br ${card.bgGradient} p-3 backdrop-blur-xl transition-all duration-300 hover:brightness-110`}
+        >
+          <div className="relative">
+            {/* Icon and Trend */}
+            <div className="mb-2 flex items-start justify-between">
+              <card.icon className="h-5 w-5 text-white/90" />
+              {card.trend && (
+                <span className="bg-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {card.trend}
+                </span>
+              )}
+            </div>
 
-      {/* Bookings */}
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-2xl">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs uppercase tracking-wider text-white/60">Bookings</span>
-          <CalendarIcon className="h-5 w-5 text-emerald-400" />
-        </div>
-        <p className="text-2xl font-bold text-white">{stats.pendingBookings}</p>
-        <p className="mt-1 text-xs text-emerald-300">{stats.completedBookings} completed</p>
-      </div>
+            {/* Value */}
+            <p className="mb-0.5 text-2xl font-bold text-white">
+              {card.value}
+            </p>
 
-      {/* Rating */}
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-2xl">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs uppercase tracking-wider text-white/60">Rating</span>
-          <StarIcon className="h-5 w-5 text-yellow-400" />
-        </div>
-        <p className="text-2xl font-bold text-white">{stats.averageRating}</p>
-        <p className="mt-1 text-xs text-white/50">{stats.totalReviews} reviews</p>
-      </div>
+            {/* Label */}
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/80">
+              {card.label}
+            </p>
 
-      {/* Response Rate */}
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-2xl">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs uppercase tracking-wider text-white/60">Response Rate</span>
-          <ChatBubbleLeftRightIcon className="h-5 w-5 text-purple-400" />
+            {/* Subtext */}
+            <p className="text-[10px] text-white/70">
+              {card.subtext}
+            </p>
+          </div>
         </div>
-        <p className="text-2xl font-bold text-white">{stats.responseRate}%</p>
-        <p className="mt-1 text-xs text-white/50">Avg {stats.responseTime}</p>
-      </div>
+      ))}
     </div>
   );
 };

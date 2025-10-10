@@ -3,47 +3,47 @@ import type { EarnOpportunity } from '../../types';
 
 interface EarnOpportunitiesProps {
   opportunities: EarnOpportunity[];
+  className?: string;
 }
 
-export const EarnOpportunities = ({ opportunities }: EarnOpportunitiesProps) => {
+export const EarnOpportunities = ({ opportunities, className }: EarnOpportunitiesProps) => {
+  const containerClasses = [
+    'flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent shadow-xl backdrop-blur-2xl',
+    className || '',
+  ].join(' ').trim();
+
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
+    <div className={containerClasses}>
       <div className="border-b border-white/10 px-4 py-3">
         <h2 className="text-sm font-semibold text-white">Earn More Credits</h2>
-        <p className="text-xs text-white/60">Complete tasks to earn BMC</p>
+        <p className="text-[11px] text-white/50">Complete quick tasks to top up BMC</p>
       </div>
-      <div className="p-4">
-        <div className="space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 pt-3">
+        <div className="space-y-2">
           {opportunities.map((opportunity, idx) => (
             <button
               key={idx}
               disabled={opportunity.status === 'locked'}
-              className={`w-full rounded-lg border p-3 text-left transition ${
+              className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${
                 opportunity.status === 'available'
-                  ? 'border-white/15 bg-white/10 hover:bg-white/20'
-                  : 'border-white/5 bg-white/5 cursor-not-allowed opacity-50'
+                  ? 'border-white/15 bg-white/10 text-white hover:border-white/25 hover:bg-white/15'
+                  : 'cursor-not-allowed border-white/5 bg-white/5 text-white/40'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    className={`flex h-9 w-9 items-center justify-center rounded-full ${
                       opportunity.status === 'available'
-                        ? 'bg-purple-500/20'
-                        : 'bg-white/5'
+                        ? 'bg-purple-500/20 text-purple-200'
+                        : 'bg-white/10 text-white/40'
                     }`}
                   >
-                    <opportunity.icon
-                      className={`h-5 w-5 ${
-                        opportunity.status === 'available'
-                          ? 'text-purple-300'
-                          : 'text-white/30'
-                      }`}
-                    />
+                    <opportunity.icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">{opportunity.title}</p>
-                    <p className="text-xs text-emerald-300">+{opportunity.reward} BMC</p>
+                    <p className="font-semibold leading-tight">{opportunity.title}</p>
+                    <p className="text-[11px] text-emerald-300">+{opportunity.reward} BMC</p>
                   </div>
                 </div>
                 {opportunity.status === 'locked' ? (
