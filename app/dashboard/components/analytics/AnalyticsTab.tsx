@@ -11,6 +11,31 @@ import {
 } from '@heroicons/react/24/outline';
 import type { AnalyticsData, TrafficSource } from '../../types';
 
+const primaryFrameClass = [
+  'relative isolate overflow-hidden rounded-[32px]',
+  'border border-white/10 bg-gradient-to-br from-slate-950/85 via-slate-900/70 to-slate-950/60',
+  'p-5 md:p-6 xl:p-8 shadow-[0_50px_160px_-80px_rgba(76,29,149,0.55)]',
+].join(' ');
+
+const frameOverlayClass =
+  'pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(129,140,248,0.22),transparent_60%)]';
+
+const microCardBaseClass = [
+  'relative isolate flex flex-col justify-between overflow-hidden rounded-[24px]',
+  'border border-white/10 bg-white/5 p-4 backdrop-blur-2xl',
+].join(' ');
+
+const microCardOverlayClass =
+  'pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_70%)]';
+
+const insightCardClass = [
+  'relative isolate overflow-hidden rounded-[28px]',
+  'border border-white/10 bg-white/5 p-5 backdrop-blur-2xl',
+].join(' ');
+
+const insightOverlayClass =
+  'pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.18),transparent_65%)]';
+
 interface TrendPoint {
   label: string;
   views: number;
@@ -71,7 +96,10 @@ const defaultSources: TrafficSource[] = [
   { source: 'Referral', visitors: 2350, percentage: 18.9 },
 ];
 
-export function AnalyticsTab({ analytics, trafficSources = [] }: AnalyticsTabProps) {
+const useAnalyticsViewModel = (
+  analytics?: ExtendedAnalytics,
+  trafficSources: TrafficSource[] = [],
+) => {
   const metrics = useMemo(
     () => ({
       totalViews: analytics?.totalViews ?? 12450,
@@ -104,9 +132,16 @@ export function AnalyticsTab({ analytics, trafficSources = [] }: AnalyticsTabPro
     return trafficSources.length > 0 ? trafficSources : defaultSources;
   }, [trafficSources]);
 
+  return { metrics, trend, retention, funnel, sources };
+};
+
+export function AnalyticsTab({ analytics, trafficSources = [] }: AnalyticsTabProps) {
+  const { metrics, trend, retention, funnel, sources } = useAnalyticsViewModel(analytics, trafficSources);
+
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-2xl">
+      <section className={primaryFrameClass}>
+        <span className={frameOverlayClass} />
         <header className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">Performance Overview</h2>
@@ -121,10 +156,10 @@ export function AnalyticsTab({ analytics, trafficSources = [] }: AnalyticsTabPro
             </span>
           </div>
         </header>
-        <div className="mt-4 rounded-xl border border-white/5 bg-black/10 p-4">
+        <div className="mt-4 rounded-3xl border border-white/5 bg-gradient-to-br from-white/5 via-transparent to-black/20 p-4">
           <PerformanceChart data={trend} totalViews={metrics.totalViews} totalClicks={metrics.totalClicks} />
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <TinyMetric label="Total Views" value={metrics.totalViews.toLocaleString()} change={12.5} positive />
           <TinyMetric label="Total Clicks" value={metrics.totalClicks.toLocaleString()} change={8.3} positive />
           <TinyMetric label="Conversion" value={`${metrics.conversionRate.toFixed(1)}%`} change={2.1} positive />
@@ -279,7 +314,8 @@ interface TinyMetricProps {
 
 const TinyMetric = ({ label, value, change, positive = true }: TinyMetricProps) => {
   return (
-    <div className="rounded-lg border border-white/8 bg-white/5 p-3">
+    <div className={microCardBaseClass}>
+      <span className={microCardOverlayClass} />
       <p className="text-[11px] uppercase tracking-[0.25em] text-white/45">{label}</p>
       <div className="mt-1 flex items-end justify-between text-white">
         <span className="text-lg font-semibold">{value}</span>
@@ -310,7 +346,8 @@ const SparkCard = ({ metric }: { metric: SparkMetric }) => {
     .join(' ');
 
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-white/8 bg-white/5 p-3">
+    <div className={microCardBaseClass}>
+      <span className={microCardOverlayClass} />
       <div>
         <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">{metric.label}</p>
         <div className="mt-1 flex items-baseline gap-2">
@@ -346,7 +383,8 @@ const RadialSessionCard = ({
   const averageRemainingSeconds = averageSeconds % 60;
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/5 p-3">
+    <div className={microCardBaseClass}>
+      <span className={microCardOverlayClass} />
       <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Session Health</p>
       <div className="mt-3 flex items-center gap-3">
         <svg width="80" height="80" viewBox="0 0 80 80" className="shrink-0">
@@ -390,7 +428,8 @@ const RadialSessionCard = ({
 
 const MiniFunnelCard = ({ stages }: { stages: FunnelStage[] }) => {
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
+    <div className={microCardBaseClass}>
+      <span className={microCardOverlayClass} />
       <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Conversion Funnel</p>
       <div className="mt-4 space-y-3">
         {stages.map((stage, index) => (
@@ -420,7 +459,8 @@ const CompactBarCard = ({ data }: { data: TrendPoint[] }) => {
   const maxClicks = Math.max(...data.map((point) => point.clicks), 1);
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
+    <div className={microCardBaseClass}>
+      <span className={microCardOverlayClass} />
       <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Click Density</p>
   <div className="mt-3 flex h-32 items-end gap-2">
         {data.map((point) => (
@@ -439,7 +479,8 @@ const CompactBarCard = ({ data }: { data: TrendPoint[] }) => {
 
 const TrafficSourcesCard = ({ sources }: { sources: TrafficSource[] }) => {
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
+    <div className={microCardBaseClass}>
+      <span className={microCardOverlayClass} />
       <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Traffic Mix</p>
       <div className="mt-3 space-y-3">
         {sources.map((source) => (
@@ -463,3 +504,106 @@ const TrafficSourcesCard = ({ sources }: { sources: TrafficSource[] }) => {
     </div>
   );
 };
+
+interface AnalyticsInsightsProps {
+  analytics?: ExtendedAnalytics;
+  trafficSources?: TrafficSource[];
+}
+
+export function AnalyticsInsights({ analytics, trafficSources }: AnalyticsInsightsProps) {
+  const { metrics, trend, sources } = useAnalyticsViewModel(analytics, trafficSources);
+  const latestPoint = trend[trend.length - 1] ?? defaultTrend[defaultTrend.length - 1];
+  const previousPoint = trend[trend.length - 2] ?? defaultTrend[defaultTrend.length - 2];
+  const conversionDelta = latestPoint && previousPoint
+    ? latestPoint.conversionRate - previousPoint.conversionRate
+    : 0;
+  const viewDelta = latestPoint && previousPoint ? latestPoint.views - previousPoint.views : 0;
+
+  const sortedSources = [...sources].sort((a, b) => b.visitors - a.visitors).slice(0, 3);
+
+  const aiObservations = [
+    `Conversion rate ${conversionDelta >= 0 ? 'up' : 'down'} ${Math.abs(conversionDelta).toFixed(1)} pts vs last touchpoint.`,
+    `Views moved ${viewDelta >= 0 ? 'up' : 'down'} by ${Math.abs(viewDelta).toLocaleString()} since yesterday.`,
+    metrics.bounceRate < 40
+      ? 'Bounce rate trending healthy; maintain campaign cadence.'
+      : 'Bounce rate elevated; tighten landing copy and test faster CTAs.',
+  ];
+
+  const experimentIdeas = [
+    {
+      title: 'Search channel surge',
+      detail: 'Allocate 20% more budget to search creatives while momentum holds.',
+    },
+    {
+      title: 'Retarget engaged cohort',
+      detail: 'Deploy nurture flow for returning visitors to lift bookings by 5%.',
+    },
+    {
+      title: 'Session depth pilot',
+      detail: 'Prototype interactive walkthrough to extend session duration past 5m.',
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <section className={insightCardClass}>
+        <span className={insightOverlayClass} />
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-white/45">AI Performance Coach</p>
+            <h3 className="text-base font-semibold text-white">Focus for this week</h3>
+          </div>
+          <span className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200">
+            Live
+          </span>
+        </header>
+  <ul className="mt-4 space-y-3 text-xs text-white/70">
+          {aiObservations.map((item) => (
+            <li key={item} className="flex items-start gap-2">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-tr from-purple-400 to-blue-400" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className={insightCardClass}>
+        <span className={insightOverlayClass} />
+        <p className="text-[11px] uppercase tracking-[0.25em] text-white/45">Channel Momentum</p>
+  <div className="mt-4 space-y-3 text-xs text-white/70">
+          {sortedSources.map((source) => (
+            <div key={source.source} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <div className="flex items-center justify-between text-white">
+                <span className="text-sm font-semibold">{source.source}</span>
+                <span>{source.visitors.toLocaleString()} visits</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[11px] text-white/45">
+                <span>Share</span>
+                <span>{source.percentage}%</span>
+              </div>
+              <div className="mt-1 h-1.5 rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400"
+                  style={{ width: `${source.percentage}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={insightCardClass}>
+        <span className={insightOverlayClass} />
+        <p className="text-[11px] uppercase tracking-[0.25em] text-white/45">Experiment Ideas</p>
+        <ul className="mt-4 space-y-3 text-xs text-white/70">
+          {experimentIdeas.map((idea) => (
+            <li key={idea.title} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <p className="text-sm font-semibold text-white">{idea.title}</p>
+              <p className="mt-1 text-white/60">{idea.detail}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}

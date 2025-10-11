@@ -179,7 +179,7 @@ export interface CalendarEvent {
   endTime?: string;
   description?: string;
   // allow meeting type used by components
-  type: 'booking' | 'blocked' | 'available' | 'meeting';
+  type: 'booking' | 'blocked' | 'available' | 'meeting' | 'automation';
   clientName?: string;
   status?: 'confirmed' | 'pending' | 'completed';
 }

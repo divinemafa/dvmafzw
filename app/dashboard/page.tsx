@@ -33,12 +33,12 @@ import { FinancePayoutPlanner } from './components/finance/FinancePayoutPlanner'
 
 // New Tab Components
 import { BookingsTab } from './components/bookings/BookingsTab';
-import { MessagesTab } from './components/messages/MessagesTab';
+import { MessagesTab, MessagesInsights } from './components/messages/MessagesTab';
 import { CalendarTab } from './components/calendar/CalendarTab';
 import { ReviewsTab, ReviewsInsights } from './components/reviews/ReviewsTab';
 import { ClientsTab, ClientsInsights } from './components/clients/ClientsTab';
-import { AnalyticsTab } from './components/analytics/AnalyticsTab';
-import { SettingsTab } from './components/settings/SettingsTab';
+import { AnalyticsTab, AnalyticsInsights } from './components/analytics/AnalyticsTab';
+import { SettingsTab, SettingsSidebar } from './components/settings/SettingsTab';
 
 // Types and Data
 import type { TabType } from './types';
@@ -542,11 +542,13 @@ export default function DashboardPage() {
         ); // TODO: Wire bookings to scheduling service once backend endpoints are ready.
       case 'messages':
         return renderStandardTab(
-          <MessagesTab messages={[]} />
+          <MessagesTab messages={[]} />,
+          <MessagesInsights messages={[]} />
         ); // TODO: Inject real-time threads from messaging API.
       case 'calendar':
         return renderStandardTab(
-          <CalendarTab events={[]} timeSlots={[]} />
+          <CalendarTab events={[]} timeSlots={[]} />,
+          null,
         ); // TODO: Feed availability slots from calendar integration.
       case 'reviews':
         return renderStandardTab(
@@ -570,11 +572,13 @@ export default function DashboardPage() {
         ); // TODO: Populate with CRM customer data.
       case 'analytics':
         return renderStandardTab(
-          <AnalyticsTab />
+          <AnalyticsTab />,
+          <AnalyticsInsights />
         ); // TODO: Connect to analytics pipeline for traffic and conversion data.
       case 'settings':
         return renderStandardTab(
-          <SettingsTab />
+          <SettingsTab />,
+          <SettingsSidebar />
         ); // TODO: Replace with authenticated account settings payload.
       default:
         return null;
