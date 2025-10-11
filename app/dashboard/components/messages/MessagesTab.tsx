@@ -640,7 +640,7 @@ export function MessagesTab({ messages = [] }: MessagesTabProps) {
                         <ArchiveBoxIcon className="h-5 w-5 text-amber-300" />
                         <p className="text-sm font-semibold text-white">Archived Messages</p>
                       </div>
-                      <p className="text-xs text-white/60 mb-4">Messages you've archived for safekeeping. Restore them anytime.</p>
+                      <p className="text-xs text-white/60 mb-4">Messages you&apos;ve archived for safekeeping. Restore them anytime.</p>
                       
                       <div className="space-y-2">
                         {[
