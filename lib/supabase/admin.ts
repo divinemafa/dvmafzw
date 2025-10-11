@@ -19,13 +19,24 @@ export function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // Validate environment variables
+  // Validate environment variables with detailed debugging
   if (!supabaseUrl) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set in environment variables');
+    console.error('❌ Missing NEXT_PUBLIC_SUPABASE_URL');
+    console.error('Available env vars:', Object.keys(process.env).filter(key => key.includes('SUPABASE')));
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL is not set. ' +
+      'Add it to your hosting environment variables and redeploy. ' +
+      'See .env.production.example for setup instructions.'
+    );
   }
 
   if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set in environment variables');
+    console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY');
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY is not set. ' +
+      'Add it to your hosting environment variables (server-side only) and redeploy. ' +
+      'See .env.production.example for setup instructions.'
+    );
   }
 
   // Create client with service role key
