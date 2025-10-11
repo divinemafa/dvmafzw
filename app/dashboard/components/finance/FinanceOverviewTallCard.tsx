@@ -1,90 +1,143 @@
-import { ArrowTrendingUpIcon, SparklesIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { ArrowTrendingUpIcon, SparklesIcon, ShieldCheckIcon, RocketLaunchIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import type { UserData } from '../../types';
 
 interface FinanceOverviewTallCardProps {
   userData: UserData;
 }
 
+const formatCurrency = (value: number, currency = 'ZAR') =>
+  new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(value);
+
 export const FinanceOverviewTallCard = ({ userData }: FinanceOverviewTallCardProps) => {
-  const fiatValue = `R${userData.fiatBalance.toLocaleString()}`;
-  const bmcValue = `${userData.bmcBalance.toLocaleString()} BMC`;
+  const chips = [
+    { label: '+12.5% growth', accent: 'border-emerald-300/40 bg-emerald-400/15 text-emerald-200' },
+    { label: 'Response 95%', accent: 'border-purple-300/40 bg-purple-500/15 text-purple-200' },
+    { label: 'Average 2h', accent: 'border-blue-300/40 bg-blue-500/15 text-blue-200' },
+  ];
+
+  const balanceBlocks = [
+    {
+      label: 'Token Credits',
+      value: userData.bmcBalance.toLocaleString(),
+      suffix: 'BMC',
+      icon: SparklesIcon,
+      accent: 'from-[#BD24DF]/35 via-[#7c3aed]/25 to-transparent',
+      hint: `≈ ${formatCurrency(userData.bmcBalance * 2)}`,
+    },
+    {
+      label: 'Fiat Balance',
+      value: formatCurrency(userData.fiatBalance, userData.currency),
+      suffix: userData.currency,
+      icon: BanknotesIcon,
+      accent: 'from-emerald-400/35 via-teal-400/25 to-transparent',
+      hint: 'Available to withdraw',
+    },
+  ] as const;
 
   return (
-    <section className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0b1023] via-white/5 to-transparent p-6 shadow-2xl backdrop-blur-2xl">
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute left-[-40%] top-[-20%] h-64 w-64 rounded-full bg-[#BD24DF]/20 blur-3xl transition-all duration-500 group-hover:scale-110" />
-        <div className="absolute right-[-20%] bottom-[-10%] h-72 w-72 rounded-full bg-[#2D6ADE]/30 blur-3xl transition-all duration-500 group-hover:scale-110" />
+    <section className="relative flex flex-col gap-6 overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-slate-950/85 via-slate-900/70 to-slate-950/60 p-6 shadow-[0_60px_160px_-110px_rgba(79,70,229,0.65)] backdrop-blur-2xl">
+      <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden>
+        <div className="absolute -left-1/3 top-[-15%] h-80 w-80 rounded-full bg-[#BD24DF]/25 blur-3xl" />
+        <div className="absolute bottom-[-10%] right-[-20%] h-96 w-96 rounded-full bg-[#2D6ADE]/30 blur-3xl" />
       </div>
 
-      <header className="relative z-10 flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-white/50">Portfolio Snapshot</span>
-        <h2 className="text-2xl font-bold text-white">Stability &amp; Growth</h2>
-        <p className="text-sm text-white/60">Track balances, momentum, and safety in one consolidated view.</p>
+      <header className="relative z-10 space-y-2 text-white">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">Portfolio Snapshot</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-semibold leading-tight">Stability &amp; Growth</h2>
+            <p className="text-sm text-white/65">
+              Monitor balances, release cadence, and safety posture in one console optimized for fast decisions.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-white transition hover:border-white/30 hover:bg-white/20"
+          >
+            <RocketLaunchIcon className="h-4 w-4" aria-hidden />
+            Launch earnings plan
+          </button>
+        </div>
       </header>
 
-      <div className="relative z-10 mt-6 grid gap-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 p-4 text-center">
-            <div className="relative flex h-28 w-28 items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-white/20" />
-              <div className="absolute inset-1 rounded-full border border-purple-400/60" />
-              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-purple-500/40 via-purple-600/20 to-transparent" />
-              <div className="relative flex flex-col items-center justify-center gap-1">
-                <SparklesIcon className="h-5 w-5 text-purple-200" />
-                <span className="text-lg font-bold text-white">{userData.bmcBalance.toLocaleString()}</span>
-                <span className="text-[11px] uppercase tracking-widest text-purple-200/80">BMC</span>
+      <div className="relative z-10 grid gap-4 md:grid-cols-2">
+        {balanceBlocks.map(({ label, value, suffix, icon: Icon, accent, hint }) => (
+          <article
+            key={label}
+            className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-5 text-white shadow-[0_45px_140px_-110px_rgba(56,189,248,0.55)] transition hover:border-white/25"
+          >
+            <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent} opacity-0 transition group-hover:opacity-100`} aria-hidden />
+            <div className="relative flex items-start justify-between gap-3">
+              <div className="space-y-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">{label}</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-semibold tracking-tight text-white">{value}</span>
+                  <span className="text-xs text-white/60">{suffix}</span>
+                </div>
+                <p className="text-xs text-white/60">{hint}</p>
               </div>
+              <span className="rounded-2xl border border-white/20 bg-white/10 p-3 text-white/80">
+                <Icon className="h-6 w-6" aria-hidden />
+              </span>
             </div>
-            <p className="text-xs text-white/60">Token Credits</p>
-          </div>
+          </article>
+        ))}
+      </div>
 
-          <div className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 p-4 text-center">
-            <div className="relative flex h-28 w-28 items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-white/20" />
-              <div className="absolute inset-1 rounded-full border border-emerald-400/60" />
-              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-emerald-500/40 via-emerald-600/20 to-transparent" />
-              <div className="relative flex flex-col items-center justify-center gap-1">
-                <ArrowTrendingUpIcon className="h-5 w-5 text-emerald-200" />
-                <span className="text-lg font-bold text-white">{fiatValue}</span>
-                <span className="text-[11px] uppercase tracking-widest text-emerald-200/80">Available</span>
-              </div>
-            </div>
-            <p className="text-xs text-white/60">Fiat Balance</p>
+      <div className="relative z-10 grid gap-4 rounded-2xl border border-white/15 bg-white/5 p-5 text-white">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/55">Member Level</p>
+            <p className="text-base font-semibold">{userData.level}</p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-white/70">
+            <ShieldCheckIcon className="h-5 w-5 text-cyan-200" aria-hidden />
+            <span>Verified since {userData.joinDate}</span>
           </div>
         </div>
-
-        <div className="grid gap-3 rounded-2xl border border-white/15 bg-white/5 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/50">Member Level</p>
-              <p className="text-base font-semibold text-white">{userData.level}</p>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-white/70">
-              <ShieldCheckIcon className="h-5 w-5 text-blue-200" />
-              <span>Verified since {userData.joinDate}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-wide text-white/60">
-            <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-1 text-emerald-200">+12.5% growth</span>
-            <span className="rounded-full border border-purple-300/30 bg-purple-500/10 px-3 py-1 text-purple-200">Response 95%</span>
-            <span className="rounded-full border border-blue-300/30 bg-blue-500/10 px-3 py-1 text-blue-200">Average 2h</span>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wide">
+          {chips.map((chip) => (
+            <span key={chip.label} className={`rounded-full border px-3 py-1 font-medium ${chip.accent}`}>
+              {chip.label}
+            </span>
+          ))}
         </div>
       </div>
 
-      <footer className="relative z-10 mt-6 flex flex-col gap-3 rounded-2xl border border-yellow-300/40 bg-yellow-400/20 p-4 shadow-inner shadow-yellow-500/30">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#1a1330]">Boost your earnings momentum</p>
-            <p className="text-xs text-[#1a1330]/70">Activate premium boosts and climb the leaderboard faster.</p>
+      <div className="relative z-10 grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <div className="overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/10 via-transparent to-transparent p-5 text-white shadow-[0_40px_120px_-110px_rgba(251,191,36,0.55)]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/60">Boost momentum</p>
+              <h3 className="text-lg font-semibold leading-tight">Activate premium boosts</h3>
+              <p className="text-xs text-white/65">Accelerate discovery, unlock higher-tier clients, and keep payouts flowing.</p>
+            </div>
+            <span className="rounded-full border border-amber-300/30 bg-amber-400/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-100">Hot</span>
           </div>
-          <span className="rounded-full border border-[#1a1330]/20 bg-[#1a1330]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#1a1330]/90">Hot</span>
+          <button
+            type="button"
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-white transition hover:border-white/30 hover:bg-white/20"
+          >
+            Launch boost center
+          </button>
         </div>
-        <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 px-4 py-2 text-sm font-semibold text-[#1a1330] shadow-lg shadow-amber-500/40 transition hover:from-amber-300 hover:to-yellow-300">
-          Launch Boost Center
-        </button>
-      </footer>
+        <div className="grid gap-3 text-sm text-white/70">
+          <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">Next action</p>
+            <p className="mt-1 font-semibold text-white">Schedule payout review</p>
+            <p className="text-xs text-white/60">Reconcile tomorrow’s release and approve pending documents.</p>
+          </div>
+          <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">Safety score</p>
+            <p className="mt-1 font-semibold text-white">92 / 100</p>
+            <p className="text-xs text-white/60">Add 2FA withdrawal approval to reach 95.</p>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };

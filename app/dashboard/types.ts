@@ -8,6 +8,21 @@ export interface MarketplaceStats {
   totalReviews: number;
   responseRate: number;
   responseTime: string;
+  responseGoalHours?: number;
+  previousActiveListings?: number;
+  previousPendingBookings?: number;
+  previousPipelineTotal?: number;
+  previousCompletedBookings?: number;
+  previousTotalViews?: number;
+  previousConversionRate?: number;
+  previousAverageRating?: number;
+  previousResponseRate?: number;
+  trends?: {
+    activeListings?: number;
+    pipelineBookings?: number;
+    conversionRate?: number;
+    averageRating?: number;
+  };
 }
 
 export interface Listing {
@@ -36,6 +51,9 @@ export interface Booking {
   listingTitle?: string;
   startDate?: string; // ISO
   endDate?: string; // ISO
+  location?: string | null;
+  // Legacy datasets shipped location under a misspelled key; keep for compatibility
+  loaction?: string | null;
   // include cancelled for broader status handling
   status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
 }
@@ -115,6 +133,18 @@ export interface Client {
   joined?: string;
   // UI convenience
   isActive?: boolean;
+  company?: string | null;
+  phone?: string | null;
+  preferredChannel?: 'email' | 'sms' | 'phone' | 'in-app';
+  tags?: string[];
+  consentStatus?: 'granted' | 'revoked' | 'pending';
+  complianceTier?: 'verified' | 'pending' | 'restricted';
+  outstandingDocuments?: number;
+  openInvoices?: number;
+  outstandingBalance?: number;
+  lastInvoiceAt?: string;
+  currency?: string;
+  nextMilestone?: string;
 }
 
 // Message Types

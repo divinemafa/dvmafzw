@@ -35,8 +35,8 @@ import { FinancePayoutPlanner } from './components/finance/FinancePayoutPlanner'
 import { BookingsTab } from './components/bookings/BookingsTab';
 import { MessagesTab } from './components/messages/MessagesTab';
 import { CalendarTab } from './components/calendar/CalendarTab';
-import { ReviewsTab } from './components/reviews/ReviewsTab';
-import { ClientsTab } from './components/clients/ClientsTab';
+import { ReviewsTab, ReviewsInsights } from './components/reviews/ReviewsTab';
+import { ClientsTab, ClientsInsights } from './components/clients/ClientsTab';
 import { AnalyticsTab } from './components/analytics/AnalyticsTab';
 import { SettingsTab } from './components/settings/SettingsTab';
 
@@ -51,6 +51,7 @@ import {
   mockActivity,
   mockEarnOpportunities,
   mockPremiumFeatures,
+  mockClients,
 } from './mockData';
 
 type FinanceModuleId = 'overview' | 'payouts' | 'transactions' | 'earn' | 'compliance';
@@ -285,6 +286,15 @@ const payoutHistory = [
   },
 ];
 
+const financeFrameClasses = [
+  'relative isolate flex min-h-[calc(100vh-96px)] flex-col overflow-hidden rounded-[32px]',
+  'border border-white/10 bg-gradient-to-br from-slate-950/85 via-slate-900/70 to-slate-950/60',
+  'p-5 md:p-6 xl:p-8 shadow-[0_60px_180px_-90px_rgba(30,64,175,0.75)]',
+].join(' ');
+
+const financeFrameOverlayClasses =
+  'pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.35),transparent_55%)]';
+
 /**
  * DashboardPage - Main marketplace dashboard
  * 
@@ -421,15 +431,21 @@ export default function DashboardPage() {
 
   const renderStandardTab = (
     main: React.ReactNode,
-    aside: React.ReactNode = quickActionsAside,
+    aside: React.ReactNode | null = quickActionsAside,
   ) => (
-    <div className="grid gap-4 lg:grid-cols-12" aria-live="polite">
-      <div className="space-y-4 lg:col-span-8" role="region" aria-label="Primary content">
+    <div className={`grid gap-4 ${aside ? 'lg:grid-cols-12' : ''}`} aria-live="polite">
+      <div
+        className={`space-y-4 ${aside ? 'lg:col-span-8' : ''}`}
+        role="region"
+        aria-label="Primary content"
+      >
         {main}
       </div>
-      <aside className="space-y-4 lg:col-span-4" aria-label="Secondary actions">
-        {aside}
-      </aside>
+      {aside ? (
+        <aside className="space-y-4 lg:col-span-4" aria-label="Secondary actions">
+          {aside}
+        </aside>
+      ) : null}
     </div>
   );
 
@@ -453,72 +469,76 @@ export default function DashboardPage() {
         );
       case 'finance':
         return (
-          <div className="grid gap-4 lg:grid-cols-12" aria-live="polite">
-            <nav
-              className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-4 shadow-xl backdrop-blur-2xl lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto"
-              aria-label="Finance modules"
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-white">Finance Modules</h2>
-                <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/50">
-                  {financeModules.length}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {financeModules.map((module) => {
-                  const Icon = module.icon;
-                  const isActive = activeFinanceModule === module.id;
-                  return (
-                    <button
-                      key={module.id}
-                      type="button"
-                      onClick={() => setActiveFinanceModule(module.id)}
-                      className={`w-full rounded-xl border px-4 py-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BD24DF]/50 ${
-                        isActive
-                          ? 'border-white/40 bg-white/15 text-white shadow-lg shadow-[#BD24DF]/20'
-                          : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
-                      }`}
-                      aria-pressed={isActive}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`rounded-xl border p-2 ${
-                            isActive
-                              ? 'border-[#BD24DF]/30 bg-[#BD24DF]/20 text-white'
-                              : 'border-white/10 bg-white/10 text-white/60'
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white">{module.label}</p>
-                          <p className="text-xs text-white/60">{module.description}</p>
+          <div className={financeFrameClasses} aria-live="polite">
+            <div className={financeFrameOverlayClasses} aria-hidden />
+            <div className="relative grid gap-4 lg:grid-cols-12">
+              <nav
+                className="flex flex-col gap-3 rounded-[26px] border border-white/10 bg-white/5 p-5 shadow-[0_40px_140px_-120px_rgba(148,163,184,0.6)] backdrop-blur-2xl lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-1"
+                aria-label="Finance modules"
+              >
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-white">Finance Modules</h2>
+                  <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/50">
+                    {financeModules.length}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {financeModules.map((module) => {
+                    const Icon = module.icon;
+                    const isActive = activeFinanceModule === module.id;
+                    return (
+                      <button
+                        key={module.id}
+                        type="button"
+                        onClick={() => setActiveFinanceModule(module.id)}
+                        className={`w-full rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BD24DF]/50 ${
+                          isActive
+                            ? 'border-white/40 bg-white/15 text-white shadow-lg shadow-[#BD24DF]/20'
+                            : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`rounded-2xl border p-2 ${
+                              isActive
+                                ? 'border-[#BD24DF]/30 bg-[#BD24DF]/20 text-white'
+                                : 'border-white/10 bg-white/10 text-white/60'
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-white">{module.label}</p>
+                            <p className="text-xs text-white/60">{module.description}</p>
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </nav>
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
 
-            <section
-              className="flex flex-col gap-4 lg:col-span-6 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto"
-              aria-label="Finance detail"
-            >
-              {renderFinanceModuleContent()}
-            </section>
+              <section
+                className="flex flex-col gap-4 rounded-[26px] border border-white/10 bg-white/5 p-5 shadow-[0_45px_140px_-120px_rgba(79,70,229,0.65)] backdrop-blur-2xl lg:col-span-6 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-1"
+                aria-label="Finance detail"
+              >
+                {renderFinanceModuleContent()}
+              </section>
 
-            <aside
-              className="flex flex-col gap-4 lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto"
-              aria-label="Finance insights"
-            >
-              {renderFinanceModuleAside()}
-            </aside>
+              <aside
+                className="flex flex-col gap-4 lg:col-span-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-1"
+                aria-label="Finance insights"
+              >
+                {renderFinanceModuleAside()}
+              </aside>
+            </div>
           </div>
         );
       case 'bookings':
         return renderStandardTab(
-          <BookingsTab bookings={mockBookings} />
+          <BookingsTab bookings={mockBookings} />,
+          null,
         ); // TODO: Wire bookings to scheduling service once backend endpoints are ready.
       case 'messages':
         return renderStandardTab(
@@ -530,11 +550,23 @@ export default function DashboardPage() {
         ); // TODO: Feed availability slots from calendar integration.
       case 'reviews':
         return renderStandardTab(
-          <ReviewsTab reviews={mockReviews} />
+          <ReviewsTab reviews={mockReviews} />,
+          (
+            <div className="space-y-4">
+              <QuickActions />
+              <ReviewsInsights reviews={mockReviews} />
+            </div>
+          )
         ); // TODO: Source reviews from marketplace feedback service.
       case 'clients':
         return renderStandardTab(
-          <ClientsTab clients={[]} />
+          <ClientsTab clients={mockClients} />,
+          (
+            <div className="space-y-4">
+              <QuickActions />
+              <ClientsInsights clients={mockClients} />
+            </div>
+          )
         ); // TODO: Populate with CRM customer data.
       case 'analytics':
         return renderStandardTab(
