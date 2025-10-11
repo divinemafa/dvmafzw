@@ -315,7 +315,7 @@ pub struct Proposal {
 - **Token Name:** Bitcoin Mascot
 - **Token Symbol:** BMC
 - **Blockchain:** Solana (SPL Token)
-- **Contract Address:** FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
+- **Contract Address:** Tt0T0000T00000t000000000000tT
 - **Total Supply:** 850,000,000,000 BMC (850 billion)
 - **Decimals:** 9
 - **Token Standard:** SPL (Solana Program Library)
@@ -1415,7 +1415,7 @@ Collaborate with us to expand the decentralized service economy. Contact: partne
 ### Appendix B: Technical Specifications
 
 **Smart Contract Addresses:**
-- BMC Token: FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
+- BMC Token: Tt0T0000T00000t000000000000tT
 - Escrow Contract: [To be deployed]
 - Reward Contract: [To be deployed]
 - Governance Contract: [To be deployed]
@@ -1492,6 +1492,6 @@ This white paper has not been reviewed by any regulatory authority. The regulato
 
 **© 2025 Bitcoin Mascot. All rights reserved.**
 
-**Contract Address:** FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg  
+**Contract Address:** Tt0T0000T00000t000000000000tT  
 **Version:** 1.0  
 **Last Updated:** October 6, 2025

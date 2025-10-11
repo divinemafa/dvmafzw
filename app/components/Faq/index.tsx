@@ -19,7 +19,7 @@ const faqdata: faqdata[] = [
     },
     {
         heading: "3. How can I buy BITCOIN MASCOT?",
-        subheading: 'You can buy BITCOIN MASCOT on Solana DEXs using the contract address: FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg. Connect your Solana wallet and trade safely.'
+        subheading: 'You can buy BITCOIN MASCOT on Solana DEXs using the contract address: Tt0T0000T00000t000000000000tT. Connect your Solana wallet and trade safely.'
     },
 
 ]

@@ -48,7 +48,7 @@ const Table = () => {
     useEffect(() => {
         const fetchBittyData = async () => {
             try {
-                const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg');
+                const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/Tt0T0000T00000t000000000000tT');
                 const data = await response.json();
                 if (data.pairs && data.pairs.length > 0) {
                     const pair = data.pairs[0];

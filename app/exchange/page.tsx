@@ -889,10 +889,10 @@ function Exchange() {
   const quoteRequestId = useRef(0);
   const dexAbortRef = useRef<AbortController | null>(null);
 
-  const BITTY_MINT = useMemo(() => new PublicKey('FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg'), []);
+  const BITTY_MINT = useMemo(() => new PublicKey('Tt0T0000T00000t000000000000tT'), []);
   const SOL_MINT = useMemo(() => NATIVE_MINT, []);
     const BITTY_MINT_STR = useMemo(() => BITTY_MINT.toBase58(), [BITTY_MINT]);
-    const BITTY_DEX_PAIR = 'FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg';
+    const BITTY_DEX_PAIR = 'Tt0T0000T00000t000000000000tT';
   const connection = useMemo(() => new Connection(RPC_URL, { commitment: 'confirmed' }), [RPC_URL]);
   const walletAddress = useMemo(() => publicKey?.toBase58() ?? null, [publicKey]);
 

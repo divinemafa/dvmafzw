@@ -283,7 +283,7 @@ INSERT INTO public.supported_currencies (
     display_priority, description, can_price_services
 ) VALUES
 ('BMC', 'Bitcoin Mascot', 'cryptocurrency', 'BMC', 'before', 9, 'solana', 
- 'FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg', 'SPL',
+ 'Tt0T0000T00000t000000000000tT', 'SPL',
  'coingecko', 'bitcoin-mascot', true, 1, 13, 5, 
  'Bitcoin Mascot - Native utility token for BMC marketplace', false);
 
