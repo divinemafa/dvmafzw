@@ -89,6 +89,7 @@ export function useCategories(options: UseCategoriesOptions = {}): UseCategories
 
   useEffect(() => {
     fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options.type, options.featured, options.format]);
 
   return {

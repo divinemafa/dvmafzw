@@ -301,7 +301,7 @@ export function CategorySelector({
               /* Empty State */
               <div className="px-4 py-3 text-sm">
                 <p className="mb-2 text-white/60">
-                  No categories match "{searchQuery}"
+                  No categories match &quot;{searchQuery}&quot;
                 </p>
                 {allowCustom && searchQuery.trim() && (
                   <button
@@ -309,7 +309,7 @@ export function CategorySelector({
                     onClick={handleCustomCategory}
                     className="w-full rounded-lg bg-cyan-500/10 px-3 py-2 text-left text-cyan-300 transition hover:bg-cyan-500/20"
                   >
-                    ➕ Add "{searchQuery}" as custom category
+                    ➕ Add &quot;{searchQuery}&quot; as custom category
                   </button>
                 )}
               </div>
