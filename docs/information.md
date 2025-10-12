@@ -68,7 +68,7 @@ And this is only the beginning.
 # #BitcoinMascot #CryptoTruth #OGBitty
 
 Contract Address
-Tt0T0000T00000t000000000000tT
+FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
 
 Copy Contract
 Tokenomics
@@ -140,6 +140,6 @@ Buy BITCOIN MASCOT Now
 BITCOIN MASCOT
 The Official Bitcoin Mascot Token on Solana
 
-Contract: Tt0T0000T00000t000000000000tT
+Contract: FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
 
 © 2024 BITCOIN MASCOT. All rights reserved. Cryptocurrency investments carry risk.

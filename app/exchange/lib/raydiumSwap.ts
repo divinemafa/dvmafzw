@@ -25,9 +25,21 @@ export class RaydiumSwap {
   connection: Connection;
   wallet: BasicWallet;
 
-  constructor(RPC_URL: string, WALLET_PRIVATE_KEY: string) {
+  constructor(RPC_URL: string, WALLET_PRIVATE_KEY?: string | null) {
     this.connection = new Connection(RPC_URL, { commitment: 'confirmed' });
-    const payer = Keypair.fromSecretKey(Uint8Array.from(bs58.decode(WALLET_PRIVATE_KEY)));
+    let payer: Keypair;
+
+    if (WALLET_PRIVATE_KEY && WALLET_PRIVATE_KEY.trim().length > 0) {
+      try {
+        const decoded = bs58.decode(WALLET_PRIVATE_KEY.trim());
+        payer = Keypair.fromSecretKey(decoded);
+      } catch (error) {
+        console.warn('Invalid Raydium wallet key supplied. Falling back to ephemeral key.', error);
+        payer = Keypair.generate();
+      }
+    } else {
+      payer = Keypair.generate();
+    }
     this.wallet = {
       publicKey: payer.publicKey,
       payer,

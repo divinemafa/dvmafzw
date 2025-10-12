@@ -88,7 +88,7 @@ const footer = () => {
 
           <div className="col-span-4">
             <h3 className="text-white text-xl font-medium mb-9">Contract Address</h3>
-            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/number.svg'} alt="contract-icon" width={20} height={20} style={{ width: 'auto', height: 'auto' }} />Tt0T0000T00000t000000000000tT</h4>
+            <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/number.svg'} alt="contract-icon" width={20} height={20} style={{ width: 'auto', height: 'auto' }} />FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg</h4>
             <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/email.svg'} alt="solana-icon" width={20} height={20} style={{ width: 'auto', height: 'auto' }} />Solana Blockchain</h4>
             <h4 className="text-offwhite text-sm font-normal mb-6 flex gap-2"><Image src={'/images/Footer/address.svg'} alt="mascot-icon" width={20} height={20} style={{ width: 'auto', height: 'auto' }} />₿ Official Mascot</h4>
           </div>

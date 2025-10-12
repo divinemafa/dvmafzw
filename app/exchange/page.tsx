@@ -46,9 +46,21 @@ class RaydiumSwap {
   connection: Connection
   wallet: BasicWallet
 
-  constructor(RPC_URL: string, WALLET_PRIVATE_KEY: string) {
+  constructor(RPC_URL: string, WALLET_PRIVATE_KEY?: string | null) {
     this.connection = new Connection(RPC_URL, { commitment: 'confirmed' })
-    const payer = Keypair.fromSecretKey(Uint8Array.from(bs58.decode(WALLET_PRIVATE_KEY)))
+    let payer: Keypair
+
+    if (WALLET_PRIVATE_KEY && WALLET_PRIVATE_KEY.trim().length > 0) {
+      try {
+        const decoded = bs58.decode(WALLET_PRIVATE_KEY.trim())
+        payer = Keypair.fromSecretKey(decoded)
+      } catch (error) {
+        console.warn('Invalid Raydium wallet key supplied. Falling back to ephemeral key.', error)
+        payer = Keypair.generate()
+      }
+    } else {
+      payer = Keypair.generate()
+    }
     this.wallet = {
       publicKey: payer.publicKey,
       payer,
@@ -889,10 +901,10 @@ function Exchange() {
   const quoteRequestId = useRef(0);
   const dexAbortRef = useRef<AbortController | null>(null);
 
-  const BITTY_MINT = useMemo(() => new PublicKey('Tt0T0000T00000t000000000000tT'), []);
+  const BITTY_MINT = useMemo(() => new PublicKey('FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg'), []);
   const SOL_MINT = useMemo(() => NATIVE_MINT, []);
     const BITTY_MINT_STR = useMemo(() => BITTY_MINT.toBase58(), [BITTY_MINT]);
-    const BITTY_DEX_PAIR = 'Tt0T0000T00000t000000000000tT';
+    const BITTY_DEX_PAIR = 'FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg';
   const connection = useMemo(() => new Connection(RPC_URL, { commitment: 'confirmed' }), [RPC_URL]);
   const walletAddress = useMemo(() => publicKey?.toBase58() ?? null, [publicKey]);
 
@@ -1040,11 +1052,7 @@ function Exchange() {
 
       try {
         setQuoteLoading(true);
-        const dummyKeypair = Keypair.generate();
-        const swapInstance = new RaydiumSwap(
-          RPC_URL,
-          bs58.encode(dummyKeypair.secretKey)
-        );
+        const swapInstance = new RaydiumSwap(RPC_URL);
         await swapInstance.loadPoolKeys('https://api.raydium.io/v2/sdk/liquidity/mainnet.json');
         if (!cancelled) {
           raydiumSwapRef.current = swapInstance;
