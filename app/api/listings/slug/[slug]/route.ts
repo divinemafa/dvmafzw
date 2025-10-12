@@ -8,10 +8,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Helper function to create Supabase client on-demand
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  
+  return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export async function GET(
   request: NextRequest,
@@ -32,6 +39,9 @@ export async function GET(
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     });
+
+    // Get Supabase client
+    const supabase = getSupabaseClient();
 
     // Fetch listing with full provider information
     const { data: listing, error } = await supabase
