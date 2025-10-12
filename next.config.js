@@ -84,8 +84,35 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'dweb.link',
         pathname: '/ipfs/**'
+      },
+      // Common image hosting services (for user-uploaded external images)
+      {
+        protocol: 'https',
+        hostname: '**.imgur.com',
+        pathname: '/**'
+      },
+      {
+        protocol: 'https',
+        hostname: '**.googleusercontent.com',
+        pathname: '/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.discordapp.com',
+        pathname: '/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.discordapp.net',
+        pathname: '/**'
       }
-    ]
+    ],
+    // Disable optimization in development to allow any external image
+    unoptimized: process.env.NODE_ENV === 'development',
+    // Fallback for images from unconfigured domains
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;"
   },
   
   // Trailing slash handling
