@@ -184,6 +184,7 @@ export async function GET(request: NextRequest) {
     
     // Optional filters
     const category = searchParams.get('category');
+    const categoryId = searchParams.get('category_id');
     const status = searchParams.get('status');
     const featured = searchParams.get('featured');
     const myListings = searchParams.get('my_listings'); // New filter for user's own listings
@@ -230,6 +231,10 @@ export async function GET(request: NextRequest) {
     // Apply filters
     if (category) {
       query = query.eq('category', category);
+    }
+
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
     }
 
     if (status && status !== 'all') {
@@ -291,6 +296,10 @@ export async function GET(request: NextRequest) {
     
     if (category) {
       countQueryFiltered = countQueryFiltered.eq('category', category);
+    }
+    
+    if (categoryId) {
+      countQueryFiltered = countQueryFiltered.eq('category_id', categoryId);
     }
     
     if (status && status !== 'all') {

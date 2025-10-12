@@ -1,16 +1,15 @@
 'use client';
 
 import { Fragment, useState, useEffect } from 'react';
-import { Dialog, Transition, Combobox } from '@headlessui/react';
+import { Dialog, Transition } from '@headlessui/react';
 import {
   XMarkIcon,
   PhotoIcon,
   PlusIcon,
   TrashIcon,
   SparklesIcon,
-  CheckIcon,
-  ChevronUpDownIcon,
 } from '@heroicons/react/24/outline';
+import { CategorySelector } from './CategorySelector';
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -41,7 +40,8 @@ export const CreateListingModal = ({
 }: CreateListingModalProps) => {
   const [formData, setFormData] = useState({
     title: '',
-    category: '',
+    categoryId: null as string | null,
+    categoryName: '',
     customCategory: '',
     shortDescription: '',
     longDescription: '',
@@ -55,39 +55,28 @@ export const CreateListingModal = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFetchingListing, setIsFetchingListing] = useState(false); // NEW: Loading state for fetching
+  const [isFetchingListing, setIsFetchingListing] = useState(false);
   const [showCustomCategory, setShowCustomCategory] = useState(false);
-  
-  // Category state
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [categoryQuery, setCategoryQuery] = useState('');
-  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Fetch categories from API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const response = await fetch('/api/categories?type=service');
-        const data = await response.json();
-        
-        if (response.ok && data.categories) {
-          setCategories(data.categories);
-        } else {
-          console.error('Failed to fetch categories:', data.error);
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
+  // Category handlers
+  const handleCategorySelect = (categoryId: string | null, category: Category | null) => {
+    setFormData({
+      ...formData,
+      categoryId,
+      categoryName: category?.name || '',
+    });
+    setShowCustomCategory(false);
+  };
 
-    if (isOpen) {
-      fetchCategories();
-    }
-  }, [isOpen]);
+  const handleCustomCategory = (categoryName: string) => {
+    setShowCustomCategory(true);
+    setFormData({
+      ...formData,
+      customCategory: categoryName,
+      categoryId: null,
+      categoryName: '',
+    });
+  };
 
   // NEW: Fetch listing data if in edit mode
   useEffect(() => {
@@ -105,7 +94,8 @@ export const CreateListingModal = ({
           // Pre-fill form with existing data
           setFormData({
             title: listing.title || '',
-            category: listing.category || '',
+            categoryId: listing.category_id || null,
+            categoryName: listing.category || '',
             customCategory: '',
             shortDescription: listing.short_description || '',
             longDescription: listing.long_description || '',
@@ -119,20 +109,6 @@ export const CreateListingModal = ({
             tags: Array.isArray(listing.tags) ? listing.tags.join(', ') : '',
             imageUrl: listing.image_url || '',
           });
-
-          // Set selected category if exists
-          if (listing.category_id && categories.length > 0) {
-            const category = categories.find(cat => cat.id === listing.category_id);
-            if (category) {
-              setSelectedCategory(category);
-            }
-          } else if (listing.category) {
-            // Fallback: find by name
-            const category = categories.find(cat => cat.name === listing.category);
-            if (category) {
-              setSelectedCategory(category);
-            }
-          }
         } else {
           alert('Failed to load listing data: ' + (data.error || 'Unknown error'));
           onClose();
@@ -147,18 +123,9 @@ export const CreateListingModal = ({
     };
 
     fetchListingData();
-  }, [isOpen, mode, listingId, categories, onClose]);
+  }, [isOpen, mode, listingId, onClose]);
 
-  // Filter categories based on search query
-  const filteredCategories =
-    categoryQuery === ''
-      ? categories.filter(cat => cat.is_featured) // Show only featured when no search
-      : categories.filter((category) =>
-          category.name.toLowerCase().includes(categoryQuery.toLowerCase())
-        );
-  
-  // Get featured categories for initial display
-  const featuredCategories = categories.filter(cat => cat.is_featured).slice(0, 4);
+
 
   const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...formData.features];
@@ -181,8 +148,8 @@ export const CreateListingModal = ({
 
     try {
       // Use custom category if user entered one, otherwise use selected category
-      const categoryToSubmit = showCustomCategory ? formData.customCategory : selectedCategory?.name;
-      const categoryIdToSubmit = showCustomCategory ? null : selectedCategory?.id;
+      const categoryToSubmit = showCustomCategory ? formData.customCategory : formData.categoryName;
+      const categoryIdToSubmit = showCustomCategory ? null : formData.categoryId;
 
       // Determine API endpoint and method based on mode
       const url = mode === 'create' ? '/api/listings' : `/api/listings/${listingId}`;
@@ -239,7 +206,8 @@ export const CreateListingModal = ({
       if (mode === 'create') {
         setFormData({
           title: '',
-          category: '',
+          categoryId: null,
+          categoryName: '',
           customCategory: '',
           shortDescription: '',
           longDescription: '',
@@ -252,8 +220,6 @@ export const CreateListingModal = ({
           imageUrl: '',
         });
         setShowCustomCategory(false);
-        setSelectedCategory(null);
-        setCategoryQuery('');
       }
       
       // Reload page to show updated/new listing
@@ -344,171 +310,22 @@ export const CreateListingModal = ({
                       />
                     </div>
 
-                    {/* Category - Searchable Combobox */}
+                    {/* Category - Hierarchical Selector */}
                     <div>
                       <label className="block text-sm font-semibold text-white">
                         Category *
                       </label>
                       {!showCustomCategory ? (
-                        <div className="space-y-2">
-                          <Combobox value={selectedCategory} onChange={setSelectedCategory}>
-                            <div className="relative mt-2">
-                              <div className="relative w-full">
-                                <Combobox.Input
-                                  required={!showCustomCategory}
-                                  className="w-full rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-xl px-4 py-3 pr-10 !text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20 [color-scheme:dark]"
-                                  displayValue={(category: Category | null) => category?.name || ''}
-                                  onChange={(e) => setCategoryQuery(e.target.value)}
-                                  placeholder={loadingCategories ? 'Loading...' : 'Type to search (e.g., "cleaning", "legal", "tech")...'}
-                                  disabled={loadingCategories}
-                                />
-                                <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                  <ChevronUpDownIcon className="h-5 w-5 text-white/40" aria-hidden="true" />
-                                </Combobox.Button>
-                              </div>
-                              {!selectedCategory && !categoryQuery && featuredCategories.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  <span className="text-xs text-white/50">Popular:</span>
-                                  {featuredCategories.map((cat) => (
-                                    <button
-                                      key={cat.id}
-                                      type="button"
-                                      onClick={() => setSelectedCategory(cat)}
-                                      className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/80 transition hover:bg-white/10 hover:text-white"
-                                    >
-                                      {cat.icon && <span>{cat.icon}</span>}
-                                      {cat.name}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                              <Transition
-                                as={Fragment}
-                                leave="transition ease-in duration-100"
-                                leaveFrom="opacity-100"
-                                leaveTo="opacity-0"
-                                afterLeave={() => setCategoryQuery('')}
-                              >
-                                <Combobox.Options 
-                                  className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-xl py-1 shadow-2xl"
-                                  style={{ backgroundColor: 'rgb(15 23 42 / 0.95)', color: 'white' }}
-                                >
-                                  {loadingCategories ? (
-                                    <div className="px-4 py-3 text-sm text-white/60">
-                                      <div className="flex items-center gap-2">
-                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-cyan-400"></div>
-                                        Loading categories...
-                                      </div>
-                                    </div>
-                                  ) : filteredCategories.length === 0 && categoryQuery !== '' ? (
-                                    <div className="px-4 py-3 text-sm">
-                                      <p className="text-white/60 mb-2">No categories match "{categoryQuery}"</p>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setShowCustomCategory(true);
-                                          setFormData({ ...formData, customCategory: categoryQuery });
-                                        }}
-                                        className="w-full rounded-lg bg-cyan-500/10 px-3 py-2 text-left text-cyan-300 hover:bg-cyan-500/20"
-                                      >
-                                        ➕ Add "{categoryQuery}" as custom category
-                                      </button>
-                                    </div>
-                                  ) : categoryQuery === '' ? (
-                                    <>
-                                      <div className="px-4 py-2 text-xs font-semibold text-white/40 uppercase">
-                                        Featured Categories (★)
-                                      </div>
-                                      {filteredCategories.map((category) => (
-                                        <Combobox.Option
-                                          key={category.id}
-                                          value={category}
-                                          className={({ active }) =>
-                                            `relative cursor-pointer select-none py-2 pl-10 pr-4 !bg-transparent ${
-                                              active ? '!bg-[#BD24DF]/20 !text-white' : '!text-white/90'
-                                            }`
-                                          }
-                                        >
-                                          {({ selected, active }) => (
-                                            <>
-                                              <div className="flex items-center gap-2 !text-white">
-                                                {category.icon && <span className="text-lg">{category.icon}</span>}
-                                                <span className={`block truncate !text-white ${selected ? 'font-semibold' : 'font-normal'}`}>
-                                                  {category.name}
-                                                </span>
-                                                {category.is_featured && (
-                                                  <span className="text-xs text-cyan-400">★</span>
-                                                )}
-                                              </div>
-                                              {selected && (
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-400">
-                                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                                </span>
-                                              )}
-                                            </>
-                                          )}
-                                        </Combobox.Option>
-                                      ))}
-                                      {categoryQuery !== '' && (
-                                        <div className="border-t border-white/10 px-4 py-2 text-xs text-white/50">
-                                          Showing {filteredCategories.length} of {categories.length} categories
-                                        </div>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={() => setShowCustomCategory(true)}
-                                        className="w-full border-t border-white/10 px-4 py-2 text-left text-sm font-semibold text-cyan-300 hover:bg-white/5"
-                                      >
-                                        ➕ Add Custom Category
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      {filteredCategories.map((category) => (
-                                        <Combobox.Option
-                                          key={category.id}
-                                          value={category}
-                                          className={({ active }) =>
-                                            `relative cursor-pointer select-none py-2 pl-10 pr-4 !bg-transparent ${
-                                              active ? '!bg-[#BD24DF]/20 !text-white' : '!text-white/90'
-                                            }`
-                                          }
-                                        >
-                                          {({ selected, active }) => (
-                                            <>
-                                              <div className="flex items-center gap-2 !text-white">
-                                                {category.icon && <span className="text-lg">{category.icon}</span>}
-                                                <span className={`block truncate !text-white ${selected ? 'font-semibold' : 'font-normal'}`}>
-                                                  {category.name}
-                                                </span>
-                                              </div>
-                                              {selected && (
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-400">
-                                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                                </span>
-                                              )}
-                                            </>
-                                          )}
-                                        </Combobox.Option>
-                                      ))}
-                                      {categoryQuery !== '' && (
-                                        <div className="border-t border-white/10 px-4 py-2 text-xs text-white/50">
-                                          Showing {filteredCategories.length} of {categories.length} categories
-                                        </div>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={() => setShowCustomCategory(true)}
-                                        className="w-full border-t border-white/10 px-4 py-2 text-left text-sm font-semibold text-cyan-300 hover:bg-white/5"
-                                      >
-                                        ➕ Add Custom Category
-                                      </button>
-                                    </>
-                                  )}
-                                </Combobox.Options>
-                              </Transition>
-                            </div>
-                          </Combobox>
+                        <div className="mt-2">
+                          <CategorySelector
+                            value={formData.categoryId}
+                            onChange={handleCategorySelect}
+                            type="service"
+                            required
+                            placeholder="Search categories (e.g., cleaning, legal, tech)..."
+                            allowCustom
+                            onCustomCategory={handleCustomCategory}
+                          />
                         </div>
                       ) : (
                         <div className="space-y-2">

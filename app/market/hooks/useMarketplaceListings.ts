@@ -80,6 +80,7 @@ interface UseMarketplaceListingsOptions {
   initialPage?: number;
   limit?: number;
   category?: string;
+  categoryId?: string | null;
   sort?: 'newest' | 'popular' | 'price_low' | 'price_high';
   search?: string;
 }
@@ -107,6 +108,7 @@ export function useMarketplaceListings(options: UseMarketplaceListingsOptions = 
     initialPage = 1,
     limit = 20,
     category,
+    categoryId,
     sort = 'newest',
     search,
   } = options;
@@ -140,6 +142,10 @@ export function useMarketplaceListings(options: UseMarketplaceListingsOptions = 
       
       if (category) {
         params.append('category', category);
+      }
+      
+      if (categoryId) {
+        params.append('category_id', categoryId);
       }
       
       if (search && search.trim() !== '') {
@@ -232,7 +238,7 @@ export function useMarketplaceListings(options: UseMarketplaceListingsOptions = 
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [limit, category, sort, search]);
+  }, [limit, category, categoryId, sort, search]);
 
   /**
    * Initial fetch on mount or when dependencies change

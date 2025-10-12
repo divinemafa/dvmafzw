@@ -1,11 +1,18 @@
 /**
  * API Route: /api/categories
  * Purpose: Fetch active marketplace categories for services and products
- * Methods: GET
+ * Methods: GET, POST
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+
+// Service role client for read operations (better performance, bypasses RLS)
+const serviceSupabase = createServiceClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 /**
  * GET /api/categories
@@ -15,33 +22,29 @@ import { NextResponse } from 'next/server';
  * - type: 'service' | 'product' | 'both' (optional, returns all if not specified)
  * - featured: 'true' | 'false' (optional, filter featured categories)
  * - search: string (optional, search category names)
+ * - parent_id: uuid | 'null' (optional, filter by parent category or top-level)
+ * - format: 'flat' | 'grouped' (optional, default: flat)
  * 
- * Returns: Array of category objects
+ * Returns: Array of category objects or grouped hierarchy
  */
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 500 }
-      );
-    }
-    
-    const { searchParams } = new URL(request.url);
+    const { searchParams} = new URL(request.url);
     
     // Extract query parameters
     const typeFilter = searchParams.get('type');
     const featuredFilter = searchParams.get('featured');
     const searchQuery = searchParams.get('search');
+    const parentIdFilter = searchParams.get('parent_id');
+    const format = searchParams.get('format');
 
-    // Build query
-    let query = supabase
+    // Build query (use service role for better performance)
+    let query = serviceSupabase
       .from('categories')
       .select('*')
       .eq('status', 'active')
-      .order('sort_order', { ascending: true });
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true });
 
     // Apply type filter (service, product, or both)
     if (typeFilter && ['service', 'product', 'both'].includes(typeFilter)) {
@@ -66,24 +69,75 @@ export async function GET(request: Request) {
       query = query.ilike('name', `%${searchQuery.trim()}%`);
     }
 
+    // Apply parent filter
+    if (parentIdFilter === 'null') {
+      query = query.is('parent_id', null);
+    } else if (parentIdFilter) {
+      query = query.eq('parent_id', parentIdFilter);
+    }
+
     const { data: categories, error } = await query;
 
     if (error) {
       console.error('Error fetching categories:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch categories' },
+        { success: false, error: 'Failed to fetch categories' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ categories }, { status: 200 });
+    // If format=grouped, build parent/child structure
+    if (format === 'grouped') {
+      const grouped = buildCategoryGroups(categories || []);
+      return NextResponse.json({ 
+        success: true,
+        groups: grouped,
+        total: categories?.length || 0 
+      }, { status: 200 });
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      categories: categories || [],
+      total: categories?.length || 0
+    }, { status: 200 });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+/**
+ * Build category groups (parent categories with their children)
+ * Used for UI dropdowns/navigation
+ */
+function buildCategoryGroups(categories: any[]) {
+  const parentMap = new Map();
+  const children = new Map();
+
+  // Separate parents and children
+  categories.forEach(cat => {
+    if (cat.parent_id === null) {
+      parentMap.set(cat.id, { ...cat, children: [] });
+    } else {
+      if (!children.has(cat.parent_id)) {
+        children.set(cat.parent_id, []);
+      }
+      children.get(cat.parent_id).push(cat);
+    }
+  });
+
+  // Attach children to parents
+  const groups: any[] = [];
+  parentMap.forEach((parent, parentId) => {
+    parent.children = children.get(parentId) || [];
+    groups.push(parent);
+  });
+
+  return groups;
 }
 
 /**

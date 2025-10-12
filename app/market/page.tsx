@@ -24,11 +24,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { BookmarkIcon } from '@heroicons/react/24/solid';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
-import type { StatusTone, MarketplaceListing } from './data/listings';
+import type { StatusTone, MarketplaceListing } from './types';
 import { IPFSImage } from '@/components/IPFSImage';
 import { ProviderLink, ProviderLinkCompact } from './components/ProviderLink';
 import { useMarketplaceListings } from './hooks/useMarketplaceListings';
 import type { MarketplaceListing as RealMarketplaceListing } from './hooks/useMarketplaceListings';
+import { useCategories } from './hooks/useCategories';
+import CategoryFilters from './components/CategoryFilters';
 
 const marketplaceMetrics = [
   {
@@ -434,6 +436,9 @@ export default function MarketPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState<'newest' | 'popular' | 'price_low' | 'price_high'>('newest');
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterValue>('all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<'all' | 'service' | 'product'>('all');
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [showFeaturedCollections, setShowFeaturedCollections] = useState(true);
   const [previewListing, setPreviewListing] = useState<any | null>(null);
   const [bookingListing, setBookingListing] = useState<any | null>(null);
@@ -454,6 +459,12 @@ export default function MarketPage() {
     limit: 20,
     search: searchTerm,
     sort: sortOption,
+    categoryId: selectedCategoryId, // Filter by category
+  });
+
+  // Fetch categories from database based on selected type
+  const { categories: dbCategories, isLoading: categoriesLoading } = useCategories({
+    type: selectedType === 'all' ? undefined : selectedType,
   });
 
   useEffect(() => {
@@ -526,6 +537,33 @@ export default function MarketPage() {
   const handleClosePreview = () => setPreviewListing(null);
   const handleOpenBooking = (listing: any) => setBookingListing(listing);
   const handleCloseBooking = () => setBookingListing(null);
+  
+  // Handle category filtering
+  const handleCategoryFilter = (categoryId: string | null) => {
+    setSelectedCategoryId(categoryId);
+    setActiveQuickFilter('all'); // Reset quick filters when category changes
+  };
+
+  // Handle type filtering (Services/Products)
+  const handleTypeChange = (type: 'all' | 'service' | 'product') => {
+    setSelectedType(type);
+    setSelectedGroup(null);
+    setSelectedCategoryId(null);
+    setActiveQuickFilter('all');
+  };
+
+  // Handle group filtering (Parent category)
+  const handleGroupChange = (groupId: string | null) => {
+    setSelectedGroup(groupId);
+    setSelectedCategoryId(groupId); // Set the parent category as the filter
+    setActiveQuickFilter('all');
+  };
+
+  // Handle specific category filtering (Child category)
+  const handleCategoryChange = (categoryId: string | null) => {
+    setSelectedCategoryId(categoryId);
+    setActiveQuickFilter('all');
+  };
 
   useEffect(() => {
     const hasOverlay = Boolean(previewListing || bookingListing);
@@ -776,28 +814,30 @@ export default function MarketPage() {
               </div>
             </div>
 
-            {/* Categories - Grouped */}
-            <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl">
-              <div className="border-b border-white/10 px-3 py-2">
-                <h3 className="text-xs font-semibold text-white">Browse Categories</h3>
+            {/* Category Filters with Type Selection */}
+            {!categoriesLoading && (
+              <CategoryFilters
+                categories={dbCategories}
+                selectedType={selectedType}
+                selectedGroup={selectedGroup}
+                selectedCategory={selectedCategoryId}
+                onTypeChange={handleTypeChange}
+                onGroupChange={handleGroupChange}
+                onCategoryChange={handleCategoryChange}
+              />
+            )}
+            
+            {/* Loading State */}
+            {categoriesLoading && (
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl p-8">
+                <div className="text-white/60 text-xs text-center">
+                  Loading categories...
+                </div>
               </div>
-              <div className="relative">
-                <nav className="max-h-96 overflow-y-auto p-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
-                  <ul className="space-y-2 text-xs">
-                    {/* All Services */}
-                    <li>
-                      <button
-                        type="button"
-                        className="w-full rounded-lg px-2.5 py-1.5 text-left transition bg-white/10 font-semibold text-white"
-                      >
-                        All Services
-                      </button>
-                    </li>
-                    
-                    {/* Grouped Categories */}
-                    {categoryGroups.map((group) => {
+            )}
 
-                    {previewListing ? (
+            {/* Preview Modal */}
+            {previewListing ? (
                       <div
                         role="dialog"
                         aria-modal="true"
@@ -935,38 +975,6 @@ export default function MarketPage() {
                         </div>
                       </div>
                     ) : null}
-                      const groupCategories = allCategories.filter(cat => cat.parent === group.id);
-                      return (
-                        <li key={group.id} className="space-y-1">
-                          {/* Group Header with subtle glow */}
-                          <div className="relative px-2.5 py-2 mt-2">
-                            {/* Faint glowing line above */}
-                            <div className="absolute top-0 left-2.5 right-2.5 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent shadow-[0_0_8px_rgba(255,255,255,0.1)]" />
-                            {/* Header text with subtle glow */}
-                            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/90 drop-shadow-[0_0_4px_rgba(255,255,255,0.15)]">
-                              {group.name}
-                            </div>
-                          </div>
-                          {/* Group Items */}
-                          {groupCategories.map((cat) => (
-                            <button
-                              key={cat.id}
-                              type="button"
-                              className="w-full rounded-lg px-2.5 py-1.5 text-left transition text-white/70 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                            >
-                              <span className="text-sm">{cat.icon}</span>
-                              <span className="flex-1 line-clamp-1 text-[11px]">{cat.name}</span>
-                            </button>
-                          ))}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </nav>
-                {/* Fade effect at bottom */}
-                <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#0a1532] via-[#0a1532]/80 to-transparent" />
-              </div>
-            </div>
 
             {/* Quick Stats - Compact */}
             <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-2.5 shadow-xl backdrop-blur-2xl">

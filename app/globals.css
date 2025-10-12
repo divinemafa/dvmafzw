@@ -464,3 +464,19 @@ th:last-child {
   font-weight: 600 !important;
   color: white !important;
 }
+
+/* Category Filters Animations */
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.2s ease-out forwards;
+}
