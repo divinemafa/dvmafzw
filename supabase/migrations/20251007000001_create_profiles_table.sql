@@ -299,6 +299,41 @@ BEGIN
         ALTER TABLE public.profiles ADD COLUMN max_advance_booking_days INTEGER DEFAULT 90;
     END IF;
     
+    -- Add username field for profile URLs (e.g., /profile/johndoe)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'username') THEN
+        ALTER TABLE public.profiles ADD COLUMN username TEXT UNIQUE;
+    END IF;
+    
+    -- Add verification_level (0-4 tier system)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'verification_level') THEN
+        ALTER TABLE public.profiles ADD COLUMN verification_level INTEGER DEFAULT 0 CHECK (verification_level >= 0 AND verification_level <= 4);
+    END IF;
+    
+    -- Add website_url for provider profiles
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'website_url') THEN
+        ALTER TABLE public.profiles ADD COLUMN website_url TEXT;
+    END IF;
+    
+    -- Add social_links JSONB for social media profiles
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'social_links') THEN
+        ALTER TABLE public.profiles ADD COLUMN social_links JSONB DEFAULT '{}'::jsonb;
+    END IF;
+    
+    -- Add total_reviews (alias for review_count for consistency)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'total_reviews') THEN
+        ALTER TABLE public.profiles ADD COLUMN total_reviews INTEGER DEFAULT 0 CHECK (total_reviews >= 0);
+    END IF;
+    
+    -- Add total_bookings (alias for bookings_count for consistency)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'total_bookings') THEN
+        ALTER TABLE public.profiles ADD COLUMN total_bookings INTEGER DEFAULT 0 CHECK (total_bookings >= 0);
+    END IF;
+    
+    -- Add joined_at timestamp
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'joined_at') THEN
+        ALTER TABLE public.profiles ADD COLUMN joined_at TIMESTAMPTZ DEFAULT NOW();
+    END IF;
+    
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'minimum_booking_notice_hours') THEN
         ALTER TABLE public.profiles ADD COLUMN minimum_booking_notice_hours INTEGER DEFAULT 24;
     END IF;

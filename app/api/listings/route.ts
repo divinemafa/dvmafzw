@@ -177,21 +177,39 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url);
     
+    // Pagination parameters
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50); // Max 50 per page
+    const offset = (page - 1) * limit;
+    
     // Optional filters
     const category = searchParams.get('category');
     const status = searchParams.get('status');
     const featured = searchParams.get('featured');
     const myListings = searchParams.get('my_listings'); // New filter for user's own listings
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const sort = searchParams.get('sort') || 'newest'; // newest, popular, price_low, price_high
+    const search = searchParams.get('search'); // Search term
 
     // Check if user is authenticated (for viewing own draft/paused listings)
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Build query
+    // Build query with enhanced provider data
     let query = supabase
       .from('service_listings')
-      .select('*, provider:profiles(id, display_name, rating, auth_user_id)')
+      .select(`
+        *,
+        provider:profiles(
+          id,
+          username,
+          display_name,
+          avatar_url,
+          rating,
+          total_reviews,
+          is_verified,
+          verification_level,
+          auth_user_id
+        )
+      `)
       .is('deleted_at', null);
 
     // If user wants their own listings, filter by their provider_id
@@ -226,10 +244,73 @@ export async function GET(request: NextRequest) {
       query = query.eq('featured', true);
     }
 
-    // Order by created date (newest first)
-    query = query.order('created_at', { ascending: false });
+    // Apply search filter
+    if (search && search.trim() !== '') {
+      const searchTerm = search.trim().toLowerCase();
+      // Search in title, short_description, category, and tags (using ILIKE for case-insensitive search)
+      query = query.or(`title.ilike.%${searchTerm}%,short_description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+    }
 
-    // Apply pagination
+    // Apply sorting
+    switch (sort) {
+      case 'popular':
+        query = query.order('views', { ascending: false });
+        break;
+      case 'price_low':
+        query = query.order('price', { ascending: true });
+        break;
+      case 'price_high':
+        query = query.order('price', { ascending: false });
+        break;
+      case 'newest':
+      default:
+        query = query.order('created_at', { ascending: false });
+        break;
+    }
+
+    // Get total count for pagination (before applying range)
+    const countQuery = supabase
+      .from('service_listings')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null);
+
+    // Apply same filters to count query
+    let countQueryFiltered = countQuery;
+    
+    if (myListings === 'true' && user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+      
+      if (profile) {
+        countQueryFiltered = countQueryFiltered.eq('provider_id', profile.id);
+      }
+    }
+    
+    if (category) {
+      countQueryFiltered = countQueryFiltered.eq('category', category);
+    }
+    
+    if (status && status !== 'all') {
+      countQueryFiltered = countQueryFiltered.eq('status', status);
+    } else if (myListings !== 'true') {
+      countQueryFiltered = countQueryFiltered.eq('status', 'active');
+    }
+    
+    if (featured === 'true') {
+      countQueryFiltered = countQueryFiltered.eq('featured', true);
+    }
+    
+    if (search && search.trim() !== '') {
+      const searchTerm = search.trim().toLowerCase();
+      countQueryFiltered = countQueryFiltered.or(`title.ilike.%${searchTerm}%,short_description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+    }
+
+    const { count: totalCount } = await countQueryFiltered;
+
+    // Apply pagination to main query
     query = query.range(offset, offset + limit - 1);
 
     const { data: listings, error } = await query;
@@ -242,10 +323,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Calculate pagination metadata
+    const total = totalCount || 0;
+    const totalPages = Math.ceil(total / limit);
+    const hasMore = (offset + limit) < total;
+
     return NextResponse.json({
       success: true,
       listings,
-      count: listings?.length || 0,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore,
+      },
     }, { status: 200 });
 
   } catch (error) {

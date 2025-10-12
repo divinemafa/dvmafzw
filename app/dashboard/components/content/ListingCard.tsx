@@ -3,21 +3,26 @@ import {
   PhotoIcon,
   EyeIcon, 
   CalendarIcon, 
-  PencilSquareIcon, 
-  PauseCircleIcon, 
-  TrashIcon,
-  PlayCircleIcon,
   ChartBarIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import type { Listing } from '../../types';
+import { ListingStatusActions } from './listings/components/ListingStatusActions';
 
 interface ListingCardProps {
   listing: Listing;
+  onEdit?: (listingId: string) => void;
+  onDelete?: (listingId: string) => void;
+  onStatusChange?: () => void;
 }
 
-export const ListingCard = ({ listing }: ListingCardProps) => {
+export const ListingCard = ({ 
+  listing,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: ListingCardProps) => {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'active':
@@ -130,31 +135,16 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="group relative flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[11px] font-semibold text-white transition hover:border-white/25 hover:bg-white/20">
-              <div className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-white/15 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-              <PencilSquareIcon className="h-4 w-4" />
-              Edit
-            </button>
-            {listing.status === 'paused' ? (
-              <button className="group relative flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-[11px] font-semibold text-emerald-200 transition hover:border-emerald-400/40 hover:bg-emerald-400/20">
-                <div className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-emerald-400/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                <PlayCircleIcon className="h-4 w-4" />
-                Resume
-              </button>
-            ) : (
-              <button className="group relative flex items-center gap-1.5 rounded-lg border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-[11px] font-semibold text-yellow-200 transition hover:border-yellow-400/40 hover:bg-yellow-400/20">
-                <div className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-yellow-400/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                <PauseCircleIcon className="h-4 w-4" />
-                Pause
-              </button>
-            )}
-            <button className="group relative flex items-center gap-1.5 rounded-lg border border-red-400/25 bg-red-400/10 px-3 py-2 text-[11px] font-semibold text-red-200 transition hover:border-red-400/40 hover:bg-red-400/20">
-              <div className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-red-400/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-              <TrashIcon className="h-4 w-4" />
-              Delete
-            </button>
-          </div>
+          <ListingStatusActions
+            listing={{
+              id: listing.id.toString(),
+              title: listing.title,
+              status: listing.status as 'draft' | 'active' | 'paused',
+            }}
+            onStatusChange={onStatusChange || (() => {})}
+            onEdit={onEdit || (() => {})}
+            onDelete={onDelete || (() => {})}
+          />
         </div>
       </div>
     </div>

@@ -15,6 +15,9 @@ import {
 interface CreateListingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: 'create' | 'edit'; // NEW: Support both create and edit modes
+  listingId?: string; // NEW: Required for edit mode
+  onSuccess?: () => void; // NEW: Callback after successful save
 }
 
 interface Category {
@@ -29,7 +32,13 @@ interface Category {
 
 const CURRENCIES = ['ZAR', 'BTC', 'USD', 'EUR'];
 
-export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps) => {
+export const CreateListingModal = ({ 
+  isOpen, 
+  onClose, 
+  mode = 'create', // Default to create mode
+  listingId,
+  onSuccess 
+}: CreateListingModalProps) => {
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -46,6 +55,7 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingListing, setIsFetchingListing] = useState(false); // NEW: Loading state for fetching
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   
   // Category state
@@ -78,6 +88,66 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
       fetchCategories();
     }
   }, [isOpen]);
+
+  // NEW: Fetch listing data if in edit mode
+  useEffect(() => {
+    const fetchListingData = async () => {
+      if (mode !== 'edit' || !listingId || !isOpen) return;
+
+      setIsFetchingListing(true);
+      try {
+        const response = await fetch(`/api/listings/${listingId}`);
+        const data = await response.json();
+
+        if (response.ok && data.listing) {
+          const listing = data.listing;
+          
+          // Pre-fill form with existing data
+          setFormData({
+            title: listing.title || '',
+            category: listing.category || '',
+            customCategory: '',
+            shortDescription: listing.short_description || '',
+            longDescription: listing.long_description || '',
+            price: listing.price?.toString() || '',
+            currency: listing.currency || 'ZAR',
+            location: listing.location || '',
+            availability: listing.availability || '',
+            features: Array.isArray(listing.features) && listing.features.length > 0 
+              ? listing.features 
+              : ['', '', ''],
+            tags: Array.isArray(listing.tags) ? listing.tags.join(', ') : '',
+            imageUrl: listing.image_url || '',
+          });
+
+          // Set selected category if exists
+          if (listing.category_id && categories.length > 0) {
+            const category = categories.find(cat => cat.id === listing.category_id);
+            if (category) {
+              setSelectedCategory(category);
+            }
+          } else if (listing.category) {
+            // Fallback: find by name
+            const category = categories.find(cat => cat.name === listing.category);
+            if (category) {
+              setSelectedCategory(category);
+            }
+          }
+        } else {
+          alert('Failed to load listing data: ' + (data.error || 'Unknown error'));
+          onClose();
+        }
+      } catch (error) {
+        console.error('Error fetching listing:', error);
+        alert('Error loading listing. Please try again.');
+        onClose();
+      } finally {
+        setIsFetchingListing(false);
+      }
+    };
+
+    fetchListingData();
+  }, [isOpen, mode, listingId, categories, onClose]);
 
   // Filter categories based on search query
   const filteredCategories =
@@ -114,9 +184,13 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
       const categoryToSubmit = showCustomCategory ? formData.customCategory : selectedCategory?.name;
       const categoryIdToSubmit = showCustomCategory ? null : selectedCategory?.id;
 
-      // Call API to create listing
-      const response = await fetch('/api/listings', {
-        method: 'POST',
+      // Determine API endpoint and method based on mode
+      const url = mode === 'create' ? '/api/listings' : `/api/listings/${listingId}`;
+      const method = mode === 'create' ? 'POST' : 'PATCH';
+
+      // Call API to create/update listing
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -139,34 +213,50 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create listing');
+        throw new Error(data.error || `Failed to ${mode} listing`);
       }
 
       // Success! Close modal and reset form
-      const successMessage = showCustomCategory 
-        ? 'Listing created successfully! Your custom category will be reviewed by admins before going live.'
-        : 'Listing created successfully! It will be reviewed before going live.';
-      alert(successMessage);
-      onClose();
-      setFormData({
-        title: '',
-        category: '',
-        customCategory: '',
-        shortDescription: '',
-        longDescription: '',
-        price: '',
-        currency: 'ZAR',
-        location: '',
-        availability: '',
-        features: ['', '', ''],
-        tags: '',
-        imageUrl: '',
-      });
-      setShowCustomCategory(false);
-      setSelectedCategory(null);
-      setCategoryQuery('');
+      let successMessage = '';
+      if (mode === 'create') {
+        successMessage = showCustomCategory 
+          ? 'Listing created successfully! Your custom category will be reviewed by admins before going live.'
+          : 'Listing created successfully as draft! Click "Publish" to make it live.';
+      } else {
+        successMessage = 'Listing updated successfully!';
+      }
       
-      // Reload page to show new listing
+      alert(successMessage);
+      
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      onClose();
+      
+      // Only reset form if in create mode
+      if (mode === 'create') {
+        setFormData({
+          title: '',
+          category: '',
+          customCategory: '',
+          shortDescription: '',
+          longDescription: '',
+          price: '',
+          currency: 'ZAR',
+          location: '',
+          availability: '',
+          features: ['', '', ''],
+          tags: '',
+          imageUrl: '',
+        });
+        setShowCustomCategory(false);
+        setSelectedCategory(null);
+        setCategoryQuery('');
+      }
+      
+      // Reload page to show updated/new listing
       window.location.reload();
     } catch (error) {
       console.error('Failed to create listing:', error);
@@ -208,10 +298,13 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
                   <div>
                     <Dialog.Title className="flex items-center gap-2 text-2xl font-semibold text-white">
                       <SparklesIcon className="h-6 w-6 text-cyan-400" aria-hidden />
-                      Create New Listing
+                      {mode === 'create' ? 'Create New Listing' : 'Edit Listing'}
                     </Dialog.Title>
                     <p className="mt-1 text-sm text-white/60">
-                      Fill in the details below to create your service listing. All fields marked with * are required.
+                      {mode === 'create' 
+                        ? 'Fill in the details below to create your service listing. All fields marked with * are required.'
+                        : 'Update your listing details below. Changes will be saved immediately.'
+                      }
                     </p>
                   </div>
                   <button
@@ -223,8 +316,17 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
                   </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+                {/* Loading State for Edit Mode */}
+                {isFetchingListing ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-cyan-400"></div>
+                      <p className="text-sm text-white/60">Loading listing data...</p>
+                    </div>
+                  </div>
+                ) : (
+                  /* Form */
+                  <form onSubmit={handleSubmit} className="mt-6 space-y-6">
                   <div className="grid gap-6 md:grid-cols-2">
                     {/* Title */}
                     <div className="md:col-span-2">
@@ -633,17 +735,18 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
                       {isSubmitting ? (
                         <>
                           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          Creating...
+                          {mode === 'create' ? 'Creating...' : 'Saving...'}
                         </>
                       ) : (
                         <>
                           <SparklesIcon className="h-5 w-5" />
-                          Create Listing
+                          {mode === 'create' ? 'Create Listing' : 'Save Changes'}
                         </>
                       )}
                     </button>
                   </div>
                 </form>
+                )}
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -652,3 +755,6 @@ export const CreateListingModal = ({ isOpen, onClose }: CreateListingModalProps)
     </Transition>
   );
 };
+
+// Export with alias for backward compatibility
+export { CreateListingModal as ListingModal };

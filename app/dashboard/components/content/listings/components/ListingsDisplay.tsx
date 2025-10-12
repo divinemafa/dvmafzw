@@ -5,9 +5,18 @@ import type { Listing, ViewMode } from '../types';
 interface ListingsDisplayProps {
   listings: Listing[];
   viewMode: ViewMode;
+  onEditListing?: (listingId: string) => void;
+  onDeleteListing?: (listingId: string) => void;
+  onStatusChange?: () => void;
 }
 
-export const ListingsDisplay = ({ listings, viewMode }: ListingsDisplayProps) => {
+export const ListingsDisplay = ({ 
+  listings, 
+  viewMode,
+  onEditListing,
+  onDeleteListing,
+  onStatusChange,
+}: ListingsDisplayProps) => {
   // Empty state
   if (listings.length === 0) {
     return (
@@ -27,7 +36,13 @@ export const ListingsDisplay = ({ listings, viewMode }: ListingsDisplayProps) =>
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {listings.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} />
+          <ListingCard 
+            key={listing.id} 
+            listing={listing}
+            onEdit={onEditListing}
+            onDelete={onDeleteListing}
+            onStatusChange={onStatusChange}
+          />
         ))}
       </div>
     );
@@ -37,7 +52,13 @@ export const ListingsDisplay = ({ listings, viewMode }: ListingsDisplayProps) =>
   return (
     <div className="space-y-3">
       {listings.map((listing) => (
-        <ListingListItem key={listing.id} listing={listing} />
+        <ListingListItem 
+          key={listing.id} 
+          listing={listing}
+          onEdit={onEditListing}
+          onDelete={onDeleteListing}
+          onStatusChange={onStatusChange}
+        />
       ))}
     </div>
   );

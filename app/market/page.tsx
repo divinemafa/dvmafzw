@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Bars3BottomRightIcon,
@@ -25,8 +24,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { BookmarkIcon } from '@heroicons/react/24/solid';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
-import type { MarketplaceListing, StatusTone } from './data/listings';
-import { marketplaceListings } from './data/listings';
+import type { StatusTone, MarketplaceListing } from './data/listings';
+import { IPFSImage } from '@/components/IPFSImage';
+import { ProviderLink, ProviderLinkCompact } from './components/ProviderLink';
+import { useMarketplaceListings } from './hooks/useMarketplaceListings';
+import type { MarketplaceListing as RealMarketplaceListing } from './hooks/useMarketplaceListings';
 
 const marketplaceMetrics = [
   {
@@ -430,14 +432,29 @@ function StatusBadge({ tone, label }: { tone: StatusTone; label: string }) {
 export default function MarketPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOption, setSortOption] = useState<'trending' | 'priceLow' | 'priceHigh'>('trending');
+  const [sortOption, setSortOption] = useState<'newest' | 'popular' | 'price_low' | 'price_high'>('newest');
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterValue>('all');
   const [showFeaturedCollections, setShowFeaturedCollections] = useState(true);
-  const [previewListing, setPreviewListing] = useState<MarketplaceListing | null>(null);
-  const [bookingListing, setBookingListing] = useState<MarketplaceListing | null>(null);
+  const [previewListing, setPreviewListing] = useState<any | null>(null);
+  const [bookingListing, setBookingListing] = useState<any | null>(null);
   const exploreScrollRef = useRef<HTMLDivElement | null>(null);
   const featuredSectionRef = useRef<HTMLDivElement | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+
+  // Use real marketplace data from hook
+  const {
+    listings,
+    pagination,
+    isLoading,
+    isLoadingMore,
+    error,
+    loadMore,
+    refetch,
+  } = useMarketplaceListings({
+    limit: 20,
+    search: searchTerm,
+    sort: sortOption,
+  });
 
   useEffect(() => {
     const node = exploreScrollRef.current;
@@ -505,9 +522,9 @@ export default function MarketPage() {
 
   const handleHideFeatured = () => setShowFeaturedCollections(false);
   const handleShowFeatured = () => setShowFeaturedCollections(true);
-  const handleOpenPreview = (listing: MarketplaceListing) => setPreviewListing(listing);
+  const handleOpenPreview = (listing: any) => setPreviewListing(listing);
   const handleClosePreview = () => setPreviewListing(null);
-  const handleOpenBooking = (listing: MarketplaceListing) => setBookingListing(listing);
+  const handleOpenBooking = (listing: any) => setBookingListing(listing);
   const handleCloseBooking = () => setBookingListing(null);
 
   useEffect(() => {
@@ -521,37 +538,20 @@ export default function MarketPage() {
     }
   }, [previewListing, bookingListing]);
 
+  // Filter listings by quick filter (tags)
   const filteredListings = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-
-    return marketplaceListings.filter((listing) => {
-      const searchable = `${listing.title} ${listing.category} ${listing.shortDescription} ${listing.creator}`.toLowerCase();
-      const matchesSearch =
-        query.length === 0 ||
-        searchable.includes(query) ||
-        listing.tags.some((tag) => tag.toLowerCase().includes(query));
-      const matchesFilter = activeQuickFilter === 'all' || listing.tags.includes(activeQuickFilter);
-      return matchesSearch && matchesFilter;
+    if (activeQuickFilter === 'all') {
+      return listings;
+    }
+    
+    return listings.filter((listing) => {
+      return listing.tags?.some((tag: string) => tag.toLowerCase() === activeQuickFilter.toLowerCase());
     });
-  }, [searchTerm, activeQuickFilter]);
+  }, [listings, activeQuickFilter]);
 
-  const sortedListings = useMemo(() => {
-    if (sortOption === 'trending') {
-      return filteredListings;
-    }
-
-    const sorted = [...filteredListings];
-    if (sortOption === 'priceLow') {
-      sorted.sort((a, b) => a.priceValue - b.priceValue);
-    } else {
-      sorted.sort((a, b) => b.priceValue - a.priceValue);
-    }
-    return sorted;
-  }, [filteredListings, sortOption]);
-
-  const resultsCount = sortedListings.length;
+  const resultsCount = filteredListings.length;
   const hasActiveFilters = activeQuickFilter !== 'all' || searchTerm.trim().length > 0;
-  const hasModifiedSort = sortOption !== 'trending';
+  const hasModifiedSort = sortOption !== 'newest';
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -559,13 +559,13 @@ export default function MarketPage() {
 
   const handleResetExploration = () => {
     setActiveQuickFilter('all');
-    setSortOption('trending');
+    setSortOption('newest');
     setSearchTerm('');
   };
 
-  const renderTagPills = (listing: MarketplaceListing) => (
+  const renderTagPills = (listing: any) => (
     <div className="mt-2 flex flex-wrap gap-1.5">
-      {listing.tags.slice(0, 4).map((tag) => (
+      {listing.tags && listing.tags.slice(0, 4).map((tag: string) => (
         <span
           key={`${listing.id}-${tag}`}
           className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60"
@@ -576,7 +576,7 @@ export default function MarketPage() {
     </div>
   );
 
-  const renderListingGridCard = (listing: MarketplaceListing) => (
+  const renderListingGridCard = (listing: any) => (
     <article
       key={listing.id}
       className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
@@ -587,7 +587,7 @@ export default function MarketPage() {
         className="relative block aspect-square w-full overflow-hidden"
       >
         <span className="sr-only">View photo for {listing.title}</span>
-        <Image
+        <IPFSImage
           src={listing.image}
           alt={listing.title}
           fill
@@ -627,16 +627,12 @@ export default function MarketPage() {
         </div>
 
         <div className="mb-2 flex items-center justify-between gap-2 text-[9px] text-white/60">
-          <p className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
             <span className="text-white/50">by</span>
-            <span className="font-semibold text-white/80">{listing.creator}</span>
-            {listing.verified && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[8px] font-semibold text-emerald-200">
-                <ShieldCheckIcon className="h-2.5 w-2.5" aria-hidden="true" />
-                Verified
-              </span>
+            {listing.provider && (
+              <ProviderLinkCompact provider={listing.provider} />
             )}
-          </p>
+          </div>
           <span className="text-white/40">Responds in {listing.responseTime}</span>
         </div>
 
@@ -671,7 +667,7 @@ export default function MarketPage() {
     </article>
   );
 
-  const renderListingListItem = (listing: MarketplaceListing) => (
+  const renderListingListItem = (listing: any) => (
     <article
       key={listing.id}
       className="group flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl md:flex-row md:items-stretch"
@@ -681,7 +677,7 @@ export default function MarketPage() {
         onClick={() => handleOpenPreview(listing)}
         className="relative aspect-video w-full overflow-hidden rounded-xl md:w-64"
       >
-        <Image
+        <IPFSImage
           src={listing.image}
           alt={listing.title}
           fill
@@ -821,7 +817,7 @@ export default function MarketPage() {
                             <XMarkIcon className="h-5 w-5" />
                           </button>
                           <div className="relative h-64 w-full sm:h-96">
-                            <Image
+                            <IPFSImage
                               src={previewListing.image}
                               alt={previewListing.title}
                               fill
@@ -836,7 +832,12 @@ export default function MarketPage() {
                           </div>
                           <div className="grid gap-6 px-6 py-5 sm:grid-cols-2">
                             <div className="space-y-3 text-sm text-white/70">
-                              <p><span className="font-semibold text-white">Provider:</span> {previewListing.creator}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-white">Provider:</span>
+                                {previewListing.provider && (
+                                  <ProviderLink provider={previewListing.provider} size="sm" showVerified />
+                                )}
+                              </div>
                               <p><span className="font-semibold text-white">Location:</span> {previewListing.location}</p>
                               <p><span className="font-semibold text-white">Price:</span> {previewListing.price}</p>
                               <button
@@ -853,7 +854,7 @@ export default function MarketPage() {
                             <div className="space-y-2 text-sm text-white/70">
                               <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">Included Features</h4>
                               <ul className="space-y-2">
-                                {previewListing.features.map((feature) => (
+                                {previewListing.features && previewListing.features.map((feature: string) => (
                                   <li key={feature} className="flex items-start gap-2">
                                     <CheckCircleIcon className="mt-0.5 h-4 w-4 text-emerald-300" />
                                     <span>{feature}</span>
@@ -907,7 +908,7 @@ export default function MarketPage() {
                             <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Included highlights</p>
                               <ul className="mt-2 space-y-1.5">
-                                {bookingListing.features.slice(0, 3).map((feature) => (
+                                {bookingListing.features && bookingListing.features.slice(0, 3).map((feature: string) => (
                                   <li key={feature} className="flex items-center gap-2">
                                     <CheckCircleIcon className="h-4 w-4 text-emerald-300" />
                                     <span>{feature}</span>
@@ -1093,8 +1094,48 @@ export default function MarketPage() {
               ref={exploreScrollRef}
               className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10"
             >
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {marketplaceListings.map((listing) => (
+              {/* Loading State */}
+              {isLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-blue-500"></div>
+                    <p className="text-sm text-white/70">Loading marketplace...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {error && (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-center">
+                  <p className="text-sm text-red-300">Failed to load listings. Please try again.</p>
+                  <button
+                    onClick={refetch}
+                    className="mt-4 rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!isLoading && !error && filteredListings.length === 0 && (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
+                  <p className="text-white/70">No listings found</p>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={handleResetExploration}
+                      className="mt-4 rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Listings Grid */}
+              {!isLoading && !error && filteredListings.length > 0 && (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredListings.map((listing) => (
                   <article
                     key={listing.id}
                     className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-2xl transition hover:border-white/20 hover:shadow-2xl"
@@ -1105,7 +1146,7 @@ export default function MarketPage() {
                       className="relative block aspect-square w-full overflow-hidden"
                     >
                       <span className="sr-only">View photo for {listing.title}</span>
-                      <Image
+                      <IPFSImage
                         src={listing.image}
                         alt={listing.title}
                         fill
@@ -1129,13 +1170,10 @@ export default function MarketPage() {
                         <StatusBadge tone={listing.badgeTone} label={listing.status} />
                       </div>
                       
-                      <div className="mb-2 flex items-center gap-1.5">
-                        <p className="text-[9px] text-white/60">by {listing.creator}</p>
-                        {listing.verified && (
-                          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[8px] font-semibold text-emerald-200">
-                            <ShieldCheckIcon className="h-2.5 w-2.5" aria-hidden="true" />
-                            Verified
-                          </span>
+                      <div className="mb-2 flex items-center gap-1.5 text-[9px] text-white/60">
+                        <span className="text-white/50">by</span>
+                        {listing.provider && (
+                          <ProviderLinkCompact provider={listing.provider} />
                         )}
                       </div>
                       
@@ -1169,7 +1207,28 @@ export default function MarketPage() {
                     </div>
                   </article>
                 ))}
-              </div>
+                </div>
+              )}
+
+              {/* Load More Button */}
+              {!isLoading && !error && pagination && pagination.hasMore && (
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    className="rounded-lg border border-white/20 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingMore ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white"></div>
+                        Loading...
+                      </span>
+                    ) : (
+                      `Load More (${pagination ? pagination.total - filteredListings.length : 0} remaining)`
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </section>
         </div>

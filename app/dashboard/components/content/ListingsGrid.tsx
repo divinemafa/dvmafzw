@@ -14,6 +14,8 @@ import {
   applyFilters,
   type ViewMode,
 } from './listings';
+import { CreateListingModal } from './listings/components/CreateListingModal';
+import { DeleteListingModal } from './listings/components/DeleteListingModal';
 
 const getFrameClasses = () =>
   [
@@ -49,6 +51,12 @@ export const ListingsGrid = ({ listings = [] }: ListingsGridProps) => {
   const [maxPrice, setMaxPrice] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Modal state for Edit and Delete
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [selectedListingForDelete, setSelectedListingForDelete] = useState<{ id: string; title: string } | null>(null);
 
   // Calculate stats from listings
   const stats = useMemo(() => calculateListingStats(listings), [listings]);
@@ -71,6 +79,25 @@ export const ListingsGrid = ({ listings = [] }: ListingsGridProps) => {
     setMinPrice('');
     setMaxPrice('');
     setSearchQuery('');
+  };
+
+  // Modal handlers
+  const handleEditListing = (listingId: string) => {
+    setSelectedListingId(listingId);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteListing = (listingId: string) => {
+    const listing = listings.find(l => l.id.toString() === listingId);
+    if (listing) {
+      setSelectedListingForDelete({ id: listing.id.toString(), title: listing.title });
+      setDeleteModalOpen(true);
+    }
+  };
+
+  const handleRefreshListings = () => {
+    // Reload the page to refresh listings data
+    window.location.reload();
   };
 
   return (
@@ -125,10 +152,33 @@ export const ListingsGrid = ({ listings = [] }: ListingsGridProps) => {
               </p>
             </div>
 
-            <ListingsDisplay listings={filteredListings} viewMode={viewMode} />
+            <ListingsDisplay 
+              listings={filteredListings} 
+              viewMode={viewMode}
+              onEditListing={handleEditListing}
+              onDeleteListing={handleDeleteListing}
+              onStatusChange={handleRefreshListings}
+            />
           </section>
         </div>
       </div>
+
+      {/* Edit Listing Modal */}
+      <CreateListingModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        mode="edit"
+        listingId={selectedListingId || undefined}
+        onSuccess={handleRefreshListings}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteListingModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        listing={selectedListingForDelete}
+        onDeleted={handleRefreshListings}
+      />
     </div>
   );
 };

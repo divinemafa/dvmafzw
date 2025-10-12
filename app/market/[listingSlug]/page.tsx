@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -6,13 +5,16 @@ import {
   CalendarDaysIcon,
   CheckCircleIcon,
   MapPinIcon,
-  ShieldCheckIcon,
   StarIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import type { Metadata } from 'next';
-import { getMarketplaceListing, marketplaceListings } from '../data/listings';
+import { IPFSImage } from '@/components/IPFSImage';
+import { CompactProviderInfo } from '../components/CompactProviderInfo';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 interface ListingPageProps {
   params: {
@@ -20,12 +22,29 @@ interface ListingPageProps {
   };
 }
 
-export function generateStaticParams() {
-  return marketplaceListings.map((listing) => ({ listingSlug: listing.slug }));
+// Fetch listing by slug
+async function getListingBySlug(slug: string) {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/listings/slug/${slug}`, {
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data.success ? data.listing : null;
+  } catch (error) {
+    console.error('Error fetching listing:', error);
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: ListingPageProps): Promise<Metadata> {
-  const listing = getMarketplaceListing(params.listingSlug);
+  const listing = await getListingBySlug(params.listingSlug);
+  
   if (!listing) {
     return {
       title: 'Listing not found • Bitcoin Mascot Marketplace',
@@ -38,8 +57,8 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
   };
 }
 
-export default function MarketplaceListingPage({ params }: ListingPageProps) {
-  const listing = getMarketplaceListing(params.listingSlug);
+export default async function MarketplaceListingPage({ params }: ListingPageProps) {
+  const listing = await getListingBySlug(params.listingSlug);
 
   if (!listing) {
     notFound();
@@ -69,7 +88,7 @@ export default function MarketplaceListingPage({ params }: ListingPageProps) {
 
         <header className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
           <div className="relative h-72 w-full sm:h-[420px]">
-            <Image
+            <IPFSImage
               src={listing.image}
               alt={listing.title}
               fill
@@ -111,17 +130,19 @@ export default function MarketplaceListingPage({ params }: ListingPageProps) {
               <p className="mt-3 text-sm leading-relaxed text-white/70">{listing.longDescription}</p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-2xl">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/50">What&apos;s included</h3>
-              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                {listing.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-white/70">
-                    <CheckCircleIcon className="mt-0.5 h-4 w-4 text-emerald-300" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {listing.features && listing.features.length > 0 && (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-2xl">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/50">What&apos;s included</h3>
+                <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {listing.features.map((feature: string) => (
+                    <li key={feature} className="flex items-start gap-3 text-sm text-white/70">
+                      <CheckCircleIcon className="mt-0.5 h-4 w-4 text-emerald-300" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-2xl">
               <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/50">Availability</h3>
@@ -129,46 +150,26 @@ export default function MarketplaceListingPage({ params }: ListingPageProps) {
                 <CalendarDaysIcon className="h-5 w-5" />
                 <p>{listing.availability}</p>
               </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {listing.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/60"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+              {listing.tags && listing.tags.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {listing.tags.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/60"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           <aside className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-2xl">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-white/50">Provider</h3>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/70 to-purple-500/70 text-sm font-semibold text-white">
-                  {listing.creator.charAt(0)}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">{listing.creator}</p>
-                  <p className="text-xs text-white/60">Trusted provider since 2023</p>
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-white/60">
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-200">
-                  <ShieldCheckIcon className="h-3.5 w-3.5" />
-                  Verified
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2 py-1">
-                  <MapPinIcon className="h-3.5 w-3.5" />
-                  {listing.location}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2 py-1">
-                  <StarSolidIcon className="h-3.5 w-3.5 text-yellow-200" />
-                  {listing.rating.toFixed(1)} · {listing.reviews.toLocaleString()} reviews
-                </span>
-              </div>
-            </div>
+            {/* Provider Info */}
+            {listing.provider && (
+              <CompactProviderInfo provider={listing.provider} showStats />
+            )}
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-2xl">
               <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-white/50">Ready to book?</h3>

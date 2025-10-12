@@ -3,20 +3,25 @@ import {
   PhotoIcon,
   EyeIcon, 
   CalendarIcon, 
-  PencilSquareIcon, 
-  PauseCircleIcon, 
-  TrashIcon,
-  PlayCircleIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import type { Listing } from '../../types';
+import { ListingStatusActions } from './listings/components/ListingStatusActions';
 
 interface ListingListItemProps {
   listing: Listing;
+  onEdit?: (listingId: string) => void;
+  onDelete?: (listingId: string) => void;
+  onStatusChange?: () => void;
 }
 
-export const ListingListItem = ({ listing }: ListingListItemProps) => {
+export const ListingListItem = ({ 
+  listing,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: ListingListItemProps) => {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'active':
@@ -124,23 +129,16 @@ export const ListingListItem = ({ listing }: ListingListItemProps) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <button className="rounded-lg border border-white/15 bg-white/10 p-2 text-white backdrop-blur-sm transition hover:border-white/25 hover:bg-white/20" title="Edit">
-            <PencilSquareIcon className="h-4 w-4" />
-          </button>
-          {listing.status === 'paused' ? (
-            <button className="rounded-lg border border-emerald-400/25 bg-emerald-400/10 p-2 text-emerald-200 backdrop-blur-sm transition hover:border-emerald-400/35 hover:bg-emerald-400/20" title="Resume">
-              <PlayCircleIcon className="h-4 w-4" />
-            </button>
-          ) : (
-            <button className="rounded-lg border border-yellow-400/25 bg-yellow-400/10 p-2 text-yellow-200 backdrop-blur-sm transition hover:border-yellow-400/35 hover:bg-yellow-400/20" title="Pause">
-              <PauseCircleIcon className="h-4 w-4" />
-            </button>
-          )}
-          <button className="rounded-lg border border-red-400/25 bg-red-400/10 p-2 text-red-200 backdrop-blur-sm transition hover:border-red-400/35 hover:bg-red-400/20" title="Delete">
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
+        <ListingStatusActions
+          listing={{
+            id: listing.id.toString(),
+            title: listing.title,
+            status: listing.status as 'draft' | 'active' | 'paused',
+          }}
+          onStatusChange={onStatusChange || (() => {})}
+          onEdit={onEdit || (() => {})}
+          onDelete={onDelete || (() => {})}
+        />
       </div>
     </div>
   );
