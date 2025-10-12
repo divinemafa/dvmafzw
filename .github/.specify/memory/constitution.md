@@ -1,18 +1,24 @@
 <!--
 Sync Impact Report:
-Version: 0.0.0 → 1.0.0
-Modified Principles: N/A (Initial creation)
-Added Sections:
-  - Core Principles (7 principles defined)
-  - Security & Compliance Requirements
-  - Quality Standards
-  - Governance
+Version: 1.1.0 → 1.2.0
+Modified Principles:
+  - Enhanced Principle VIII with Analysis-First Mandate and Component-Scoped Execution (BREAKING CHANGE)
+Added Requirements:
+  - Formal Gap Analysis before any backend integration work
+  - Component-by-component execution (mass-wiring forbidden)
+  - Schema verification from migration files mandatory
+  - Gap documentation required before coding
 Templates Status:
-  ✅ plan-template.md - Reviewed, aligned with principles
-  ✅ spec-template.md - Reviewed, aligned with principles
-  ✅ tasks-template.md - Reviewed, aligned with principles
+  ✅ plan-template.md - Aligned with principles
+  ✅ spec-template.md - Aligned with principles
+  ✅ tasks-template.md - Aligned with principles
+  ✅ backend-integration-template.md - UPDATED: Added Pre-Implementation Analysis section
+Workflow Changes:
+  - New mandatory workflow: Analyze → Gap Analysis → Plan → Execute (Component-by-Component)
+  - Old reactive workflow deprecated
 Follow-up TODOs: None
-Rationale: MAJOR version (1.0.0) - Initial constitution establishment
+Rationale: MINOR version (1.2.0) - Major workflow enhancement to prevent errors and ensure strategic integration
+Last Updated: October 12, 2025
 -->
 
 # Bitcoin Mascot (BMC) Marketplace Constitution
@@ -116,6 +122,23 @@ Rationale: MAJOR version (1.0.0) - Initial constitution establishment
 - Performance degradation (>500ms p95) MUST trigger automatic alerts
 
 **Rationale:** Financial marketplace requires high availability. Users cannot access funds or complete bookings if platform is down. Observable systems enable rapid debugging.
+
+### VIII. Backend Integration & Data Wiring (NON-NEGOTIABLE)
+**Production features MUST replace all mock data with real backend connections.**
+
+- **Analysis-First Mandate**: All backend integration work MUST begin with a formal 'Gap Analysis' that compares the target UI component's data needs against the existing database schema defined in migration files
+- **Component-Scoped Execution**: Implementation MUST proceed on a component-by-component basis after the analysis is complete. Mass-wiring of an entire page in a single step is forbidden
+- **Schema Verification Required**: Before writing any integration code, AI/developer MUST read all relevant migration files to understand current database state
+- **Gap Documentation**: All missing database fields, tables, or relationships MUST be documented in a structured plan before implementation
+- Mock/placeholder data MUST be removed during feature implementation (not left for "later")
+- UI components MUST connect to real API endpoints and database queries
+- Business logic algorithms (calculations, filters, sorting, validations) MUST be implemented with the feature
+- Database schema updates MUST modify existing migration files (avoid creating new migrations unnecessarily)
+- Large files (>700 lines) MUST be refactored into smaller, function-based modules during backend integration
+- Code refactoring MUST happen alongside feature implementation (not as separate "cleanup" task)
+- Each feature integration is complete only when: real data flows, algorithms work, placeholder code removed, files refactored
+
+**Rationale:** UI prototyping phase is complete. All visible UI elements now require real data and functional algorithms. Accumulating technical debt (mock data, large files, missing logic) creates maintenance burden and deployment blockers. The analysis-first approach drastically reduces errors, prevents scope creep, and ensures database modifications are deliberate and well-planned. It transforms integration from a reactive task to a planned, strategic process. "Analyze before you wire" prevents costly mistakes and rework.
 
 ## Security & Compliance Requirements
 
@@ -238,4 +261,4 @@ Any deviation from simplicity (introducing new dependencies, architectural patte
 - Trade-off analysis (complexity cost vs. benefit)
 - Approval from technical lead
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-06 | **Last Amended**: 2025-10-06
+**Version**: 1.2.0 | **Ratified**: 2025-10-06 | **Last Amended**: 2025-10-12

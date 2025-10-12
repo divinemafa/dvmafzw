@@ -1,11 +1,33 @@
 # GitHub Copilot Instructions - BMC Platform
 
 use these instructions to guide GitHub Copilot in generating high-quality, maintainable code for the Bitcoin Mascot (BMC) platform. The focus is on React with TypeScript, adhering to best practices for component structure, file organization, and coding standards.
-first read the constitution in `.specify/memory/constitution.md` for overall project principles.
+first read the constitution in `.github/.specify/memory/constitution.md` for overall project principles.
+
+---
+
+## 🚀 **CURRENT PROJECT PHASE: BACKEND INTEGRATION & DATA WIRING**
+
+**We are now transitioning from UI prototyping to production-ready backend integration.**
+
+### **Phase Objectives:**
+1. ✅ **Backend Integration** - Wire APIs to existing UI components
+2. ✅ **Data Population** - Replace ALL mock/placeholder data with real database calls
+3. ✅ **Algorithm Implementation** - Build business logic (calculations, filters, sorting, validations)
+4. ✅ **Code Refactoring** - Break large files into maintainable modules by functionality
+5. ✅ **Database Schema Management** - Update existing migration files (avoid creating new ones)
+6. ✅ **Production-Ready Code** - Remove all demo/placeholder code during implementation
+
+---
 
 ## 🎯 Core Coding Principles
-- ✅ work on one feature at a time
-- ✅ **REMOVE ALL DEMO/PLACEHOLDER CODE when building real features** - Delete demo components, mock data, and placeholder logic when implementing production functionality
+- ✅ **ANALYZE BEFORE YOU WIRE** - Every integration task MUST start with a gap analysis comparing UI needs vs. database schema
+- ✅ **COMPONENT-SCOPED INTEGRATION** - Wire ONE component at a time. Do NOT wire an entire page at once
+- ✅ **Work on one feature at a time** - Complete backend integration before moving to next feature
+- ✅ **REMOVE ALL DEMO/PLACEHOLDER CODE** - Delete mock data, demo components, and placeholder logic as you wire real data
+- ✅ **WIRE BACKEND TO FRONTEND** - Connect every UI component to real API endpoints and database queries
+- ✅ **BUILD ALGORITHMS IN PLACE** - If a feature needs calculations/logic, implement it immediately (don't skip)
+- ✅ **UPDATE EXISTING MIGRATIONS** - Modify original migration files instead of creating new ones (use descriptive suffixes like `_schema_updates.sql` if absolutely necessary)
+- ✅ **REFACTOR AS YOU GO** - Break files into smaller modules when wiring backend (don't wait)
 - ✅ **DOCUMENTATION RULES**:
   - **ONLY create documentation when explicitly requested by the user**
   - Do NOT automatically create docs after every change
@@ -14,9 +36,65 @@ first read the constitution in `.specify/memory/constitution.md` for overall pro
   - Use clear headings and bullet points
   - Focus on what changed, why, and next steps only
   - No verbose explanations or lengthy examples
-- create a clipboard for instructions follow when starting a new feature
-- document any deviations from the standard practices
-- ask clarifying questions if unsure about requirements or implementation details
+- ✅ **Ask clarifying questions** if backend data structure, API endpoints, or business logic is unclear
+
+---
+
+## 🔬 **New Workflow: Analysis-First Backend Integration**
+
+### **Old Workflow (Reactive - DEPRECATED)**
+```
+❌ Pick a page → Start coding → Discover missing DB fields → Fix schema → Continue coding
+```
+
+### **New Workflow (Analysis-First - MANDATORY)**
+```
+✅ 1. Analyze Target Page → 2. Analyze DB Schema → 3. Generate Gap Analysis & Plan → 4. Execute Component-by-Component
+```
+
+### **Detailed Steps:**
+
+#### **Step 1: Analyze the Target Page**
+- Developer (or AI) specifies a UI page/file to be integrated
+- Example: `app/dashboard/page.tsx` or `app/dashboard/components/content/ListingsGrid.tsx`
+
+#### **Step 2: Analyze the Database Schema**
+- AI MUST read existing migration files in `supabase/migrations/`
+- Understand current state of database tables, columns, relationships
+- Identify what already exists vs. what's missing
+
+#### **Step 3: Generate a Gap Analysis & Plan**
+The AI MUST produce a detailed plan that:
+- **Lists all components** on the page (break down by functionality)
+- **Maps data requirements** for each component (what data does it need?)
+- **Identifies missing database fields** required by the UI
+- **Proposes schema changes** (ALTER TABLE statements, new tables, indexes)
+- **Lists required API endpoints** (GET/POST/PATCH/DELETE)
+- **Prioritizes components** (which to wire first, second, third)
+
+**Output Format**: Use `.github/.specify/templates/backend-integration-template.md`
+
+#### **Step 4: Execute Component-by-Component**
+- After the plan is approved, work begins on the **FIRST component only**
+- Complete implementation: DB changes → API → Frontend → Testing
+- Move to next component only when current one is 100% done
+- **DO NOT implement the entire plan at once**
+
+---
+
+## 📋 **Analysis Checklist (Required Before Coding)**
+
+Before writing ANY code for backend integration, confirm:
+
+- [ ] **Target page/component identified** - Know exactly what UI needs wiring
+- [ ] **All migration files read** - Understand current database schema
+- [ ] **Gap analysis completed** - Document what's missing vs. what UI needs
+- [ ] **Schema changes documented** - Know which ALTER TABLE statements needed
+- [ ] **API endpoints documented** - Know which routes to create
+- [ ] **Component priority set** - Know which component to wire first
+- [ ] **Plan approved by user** - Don't proceed without confirmation
+
+**If ANY checkbox is unchecked, STOP and complete analysis first.**
 
 ### **1. Code Length & File Size**
 - ✅ **Recommended file length**: 350-750 lines per component/file
@@ -467,23 +545,26 @@ const calculateVerificationLevel = (user: User): number => {
 ## ✅ Summary
 
 **Key Principles:**
-1. Keep files under 500 lines (flexible guideline, not strict rule)
-2. Single responsibility per component
-3. Extract reusable logic to hooks
-4. Extract reusable UI to components
-5. Use TypeScript strictly
-6. Optimize performance with memo/callback
-7. Document complex logic
-8. Follow naming conventions
-9. Organize imports properly
-10. Avoid anti-patterns
-11. **Refactor when needed, but don't over-engineer**
-12. **Cohesive code is better than artificially split code**
+1. **Complete backend integration before moving to next feature** (current phase priority)
+2. **Replace ALL mock data with real API calls** (no "TODO: wire backend later" comments)
+3. **Implement algorithms immediately** (calculations, filters, sorting, validations)
+4. Keep files under 700 lines (refactor as you wire backend)
+5. Single responsibility per component
+6. Extract reusable logic to hooks and utils
+7. Extract reusable UI to components
+8. Use TypeScript strictly
+9. Optimize performance with memo/callback
+10. Document complex business logic
+11. Follow naming conventions
+12. Organize imports properly
+13. **Update existing migrations** (avoid creating new ones unless absolutely necessary)
+14. **Remove demo/placeholder code as you implement** (not as separate cleanup task)
 
 **When Copilot suggests code, ensure it follows these principles!**
 
 ---
 
-**Last Updated**: October 7, 2025  
-**Version**: 1.1  
+**Last Updated**: October 12, 2025  
+**Version**: 1.2  
+**Phase**: Backend Integration & Data Wiring  
 **Status**: Active - Enforce on all new code
