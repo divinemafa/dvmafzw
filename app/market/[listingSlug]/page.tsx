@@ -22,20 +22,47 @@ interface ListingPageProps {
   };
 }
 
-// Fetch listing by slug
+// Fetch listing by slug directly from database (Server Component)
 async function getListingBySlug(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/listings/slug/${slug}`, {
-      cache: 'no-store',
-    });
+    const { createClient } = await import('@supabase/supabase-js');
+    
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !anonKey) {
+      console.error('Missing Supabase environment variables');
+      return null;
+    }
+    
+    const supabase = createClient(supabaseUrl, anonKey);
+    
+    const { data: listing, error } = await supabase
+      .from('service_listings')
+      .select(`
+        *,
+        provider:profiles(
+          id,
+          username,
+          display_name,
+          avatar_url,
+          rating,
+          total_reviews,
+          is_verified,
+          verification_level
+        )
+      `)
+      .eq('slug', slug)
+      .eq('status', 'active')
+      .is('deleted_at', null)
+      .single();
 
-    if (!response.ok) {
+    if (error) {
+      console.error('Error fetching listing:', error);
       return null;
     }
 
-    const data = await response.json();
-    return data.success ? data.listing : null;
+    return listing;
   } catch (error) {
     console.error('Error fetching listing:', error);
     return null;
