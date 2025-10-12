@@ -169,8 +169,15 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     
     if (!supabase) {
+      console.error('Supabase client initialization failed:', {
+        hasUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+        hasAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      });
       return NextResponse.json(
-        { error: 'Failed to initialize database connection' },
+        { 
+          error: 'Database connection failed',
+          details: 'Missing Supabase configuration. Please check environment variables.' 
+        },
         { status: 500 }
       );
     }

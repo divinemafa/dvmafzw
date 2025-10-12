@@ -8,16 +8,17 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Service role client helper (created on-demand to avoid build-time errors)
-function getServiceSupabase() {
+// Public client helper (created on-demand to avoid build-time errors)
+// Uses anon key for public data - everyone can read categories
+function getPublicSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing Supabase environment variables');
+  if (!supabaseUrl || !anonKey) {
+    throw new Error('Missing Supabase environment variables (URL or ANON_KEY)');
   }
   
-  return createServiceClient(supabaseUrl, serviceRoleKey);
+  return createServiceClient(supabaseUrl, anonKey);
 }
 
 /**
@@ -44,9 +45,22 @@ export async function GET(request: Request) {
     const parentIdFilter = searchParams.get('parent_id');
     const format = searchParams.get('format');
 
-    // Build query (use service role for better performance)
-    const serviceSupabase = getServiceSupabase();
-    let query = serviceSupabase
+    // Build query (use public anon key - categories are public data)
+    let publicSupabase;
+    try {
+      publicSupabase = getPublicSupabase();
+    } catch (error) {
+      console.error('Failed to create Supabase client:', error);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Database connection failed',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 500 }
+      );
+    }
+    let query = publicSupabase
       .from('categories')
       .select('*')
       .eq('status', 'active')
