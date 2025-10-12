@@ -80,7 +80,7 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
 
   return {
     title: `${listing.title} • Bitcoin Mascot Marketplace`,
-    description: listing.shortDescription,
+    description: listing.short_description,
   };
 }
 
@@ -116,7 +116,7 @@ export default async function MarketplaceListingPage({ params }: ListingPageProp
         <header className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
           <div className="relative h-72 w-full sm:h-[420px]">
             <IPFSImage
-              src={listing.image}
+              src={listing.image_url || '/placeholder-listing.jpg'}
               alt={listing.title}
               fill
               sizes="(min-width: 1024px) 960px, 100vw"
@@ -128,22 +128,30 @@ export default async function MarketplaceListingPage({ params }: ListingPageProp
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.3em] text-white/60">{listing.category}</p>
                   <h1 className="text-2xl font-semibold text-white sm:text-3xl">{listing.title}</h1>
-                  <p className="mt-2 max-w-xl text-sm text-white/70">{listing.shortDescription}</p>
+                  <p className="mt-2 max-w-xl text-sm text-white/70">{listing.short_description}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-3 py-1 font-semibold text-yellow-200">
-                      <StarSolidIcon className="h-4 w-4" />
-                      {listing.rating.toFixed(1)}
-                    </span>
-                    <span className="text-white/70">{listing.reviews.toLocaleString()} reviews</span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2 py-1 text-xs text-white/70">
-                      <StarIcon className="h-3.5 w-3.5" />
-                      Responds in {listing.responseTime}
-                    </span>
+                    {listing.provider?.rating && (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-3 py-1 font-semibold text-yellow-200">
+                          <StarSolidIcon className="h-4 w-4" />
+                          {listing.provider.rating.toFixed(1)}
+                        </span>
+                        {listing.provider.total_reviews && (
+                          <span className="text-white/70">{listing.provider.total_reviews.toLocaleString()} reviews</span>
+                        )}
+                      </>
+                    )}
+                    {listing.provider?.is_verified && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-xs text-cyan-200">
+                        <CheckCircleIcon className="h-3.5 w-3.5" />
+                        Verified Provider
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-black/30 px-4 py-3 text-right">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Starting from</p>
-                  <p className="text-2xl font-semibold text-white">{listing.price}</p>
+                  <p className="text-2xl font-semibold text-white">{listing.price_display || `${listing.price} ${listing.currency}`}</p>
                 </div>
               </div>
             </div>
@@ -154,7 +162,7 @@ export default async function MarketplaceListingPage({ params }: ListingPageProp
           <div className="space-y-6">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-white">About this service</h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/70">{listing.longDescription}</p>
+              <p className="mt-3 text-sm leading-relaxed text-white/70">{listing.long_description}</p>
             </div>
 
             {listing.features && listing.features.length > 0 && (
