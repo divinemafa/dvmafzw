@@ -8,11 +8,17 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Service role client for read operations (better performance, bypasses RLS)
-const serviceSupabase = createServiceClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Service role client helper (created on-demand to avoid build-time errors)
+function getServiceSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  
+  return createServiceClient(supabaseUrl, serviceRoleKey);
+}
 
 /**
  * GET /api/categories
@@ -39,6 +45,7 @@ export async function GET(request: Request) {
     const format = searchParams.get('format');
 
     // Build query (use service role for better performance)
+    const serviceSupabase = getServiceSupabase();
     let query = serviceSupabase
       .from('categories')
       .select('*')
