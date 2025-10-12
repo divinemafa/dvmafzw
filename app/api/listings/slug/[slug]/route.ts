@@ -8,16 +8,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Helper function to create Supabase client on-demand
-function getSupabaseClient() {
+// Helper function to create public Supabase client on-demand
+// Uses anon key since listing details are public (for active listings)
+function getPublicSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing Supabase environment variables');
+  if (!supabaseUrl || !anonKey) {
+    throw new Error('Missing Supabase environment variables (URL or ANON_KEY)');
   }
   
-  return createClient(supabaseUrl, serviceRoleKey);
+  return createClient(supabaseUrl, anonKey);
 }
 
 export async function GET(
@@ -40,8 +41,8 @@ export async function GET(
       hasServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     });
 
-    // Get Supabase client
-    const supabase = getSupabaseClient();
+    // Get public Supabase client
+    const supabase = getPublicSupabaseClient();
 
     // Fetch listing with full provider information
     const { data: listing, error } = await supabase
