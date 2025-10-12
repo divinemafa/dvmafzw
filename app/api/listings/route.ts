@@ -1,0 +1,258 @@
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Failed to initialize database connection' },
+        { status: 500 }
+      );
+    }
+    
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please log in' },
+        { status: 401 }
+      );
+    }
+
+    // Get user's profile to verify they're a provider
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, user_type')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      );
+    }
+
+    // Verify user can create listings (provider, both, business, service, individual)
+    const allowedTypes = ['provider', 'both', 'business', 'service', 'individual'];
+    
+    if (!allowedTypes.includes(profile.user_type)) {
+      return NextResponse.json(
+        { error: 'Your account type cannot create listings. Only business, service, and individual accounts can create listings. Please contact support to upgrade your account.' },
+        { status: 403 }
+      );
+    }
+
+    // Parse request body
+    const body = await request.json();
+    const {
+      title,
+      category,
+      categoryId,
+      shortDescription,
+      longDescription,
+      price,
+      currency,
+      location,
+      availability,
+      features,
+      tags,
+      imageUrl,
+    } = body;
+
+    // Validate required fields (accept either category name or categoryId)
+    if (!title || (!category && !categoryId) || !shortDescription || !longDescription || !price || !location) {
+      return NextResponse.json(
+        { error: 'Missing required fields: title, category/categoryId, shortDescription, longDescription, price, location' },
+        { status: 400 }
+      );
+    }
+    
+    // If category name is provided, look up category_id
+    let resolvedCategoryId = categoryId;
+    if (!resolvedCategoryId && category) {
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('name', category)
+        .eq('status', 'active')
+        .single();
+      
+      if (categoryData) {
+        resolvedCategoryId = categoryData.id;
+      }
+    }
+
+    // Validate price
+    const priceValue = parseFloat(price);
+    if (isNaN(priceValue) || priceValue < 0) {
+      return NextResponse.json(
+        { error: 'Invalid price value' },
+        { status: 400 }
+      );
+    }
+
+    // Validate features array
+    const featuresArray = Array.isArray(features) ? features.filter((f: string) => f.trim() !== '') : [];
+    if (featuresArray.length < 3) {
+      return NextResponse.json(
+        { error: 'At least 3 features are required' },
+        { status: 400 }
+      );
+    }
+
+    // Parse tags
+    const tagsArray = typeof tags === 'string' 
+      ? tags.split(',').map(t => t.trim()).filter(t => t !== '')
+      : Array.isArray(tags) ? tags : [];
+
+    // Format price display
+    const priceDisplay = `${priceValue} ${currency}`;
+
+    // Create listing
+    const { data: listing, error: insertError } = await supabase
+      .from('service_listings')
+      .insert({
+        provider_id: profile.id,
+        title,
+        category, // Keep for backward compatibility
+        category_id: resolvedCategoryId || null, // New foreign key
+        short_description: shortDescription,
+        long_description: longDescription,
+        price: priceValue,
+        currency: currency || 'ZAR',
+        price_display: priceDisplay,
+        location,
+        availability: availability || null,
+        image_url: imageUrl || null,
+        features: featuresArray,
+        tags: tagsArray,
+        status: 'draft', // New listings start as drafts
+        verified: false,
+        badge_tone: 'sky',
+        rating: 0,
+        reviews_count: 0,
+        views: 0,
+        bookings: 0,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Database insert error:', insertError);
+      return NextResponse.json(
+        { error: 'Failed to create listing', details: insertError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Listing created successfully',
+      listing,
+    }, { status: 201 });
+
+  } catch (error) {
+    console.error('Unexpected error creating listing:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Failed to initialize database connection' },
+        { status: 500 }
+      );
+    }
+    
+    const { searchParams } = new URL(request.url);
+    
+    // Optional filters
+    const category = searchParams.get('category');
+    const status = searchParams.get('status');
+    const featured = searchParams.get('featured');
+    const myListings = searchParams.get('my_listings'); // New filter for user's own listings
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
+
+    // Check if user is authenticated (for viewing own draft/paused listings)
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Build query
+    let query = supabase
+      .from('service_listings')
+      .select('*, provider:profiles(id, display_name, rating, auth_user_id)')
+      .is('deleted_at', null);
+
+    // If user wants their own listings, filter by their provider_id
+    if (myListings === 'true' && user) {
+      // Get user's profile to find provider_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+      
+      if (profile) {
+        query = query.eq('provider_id', profile.id);
+        // For own listings, show all statuses by default
+      }
+    }
+
+    // Apply filters
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    } else if (myListings !== 'true') {
+      // For public listings, default to active only
+      // For user's own listings, show all statuses
+      query = query.eq('status', 'active');
+    }
+
+    if (featured === 'true') {
+      query = query.eq('featured', true);
+    }
+
+    // Order by created date (newest first)
+    query = query.order('created_at', { ascending: false });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: listings, error } = await query;
+
+    if (error) {
+      console.error('Database query error:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch listings', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      listings,
+      count: listings?.length || 0,
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Unexpected error fetching listings:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}

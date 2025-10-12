@@ -28,14 +28,13 @@ first read the constitution in `.github/.specify/memory/constitution.md` for ove
 - ✅ **BUILD ALGORITHMS IN PLACE** - If a feature needs calculations/logic, implement it immediately (don't skip)
 - ✅ **UPDATE EXISTING MIGRATIONS** - Modify original migration files instead of creating new ones (use descriptive suffixes like `_schema_updates.sql` if absolutely necessary)
 - ✅ **REFACTOR AS YOU GO** - Break files into smaller modules when wiring backend (don't wait)
-- ✅ **DOCUMENTATION RULES**:
-  - **ONLY create documentation when explicitly requested by the user**
-  - Do NOT automatically create docs after every change
-  - When asked to document, place files in the `/docs` folder
-  - Maximum 300 words per documentation file
-  - Use clear headings and bullet points
-  - Focus on what changed, why, and next steps only
-  - No verbose explanations or lengthy examples
+- ✅ **NO AUTOMATIC DOCUMENTATION** - This is a strict rule:
+  - **NEVER create documentation files automatically**
+  - **ONLY create docs when user explicitly asks: "document this" or "create documentation"**
+  - **Exception 1**: When user requests a final report after completing a full page/feature
+  - **Exception 2**: When user specifically says "analyze and document"
+  - When documentation IS requested: place in `/docs`, max 300 words, clear headings, focus on what/why/next steps
+  - **Default behavior**: Just code. No docs. No analysis files. No summaries.
 - ✅ **Ask clarifying questions** if backend data structure, API endpoints, or business logic is unclear
 
 ---

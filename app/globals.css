@@ -431,3 +431,36 @@ th:last-child {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Force dark theme for Headless UI Combobox */
+[data-headlessui-state] {
+  background-color: rgb(15 23 42 / 0.95) !important;
+  color: white !important;
+}
+
+[data-headlessui-state="active"] {
+  background-color: rgba(189, 36, 223, 0.2) !important;
+  color: white !important;
+}
+
+/* Combobox specific overrides */
+[role="listbox"] {
+  background-color: rgb(15 23 42 / 0.95) !important;
+  backdrop-filter: blur(24px) !important;
+  color: white !important;
+}
+
+[role="option"] {
+  background-color: transparent !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[role="option"][data-headlessui-state~="active"] {
+  background-color: rgba(189, 36, 223, 0.2) !important;
+  color: white !important;
+}
+
+[role="option"][data-headlessui-state~="selected"] {
+  font-weight: 600 !important;
+  color: white !important;
+}

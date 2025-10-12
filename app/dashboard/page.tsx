@@ -41,7 +41,7 @@ import { AnalyticsTab, AnalyticsInsights } from './components/analytics/Analytic
 import { SettingsTab, SettingsSidebar } from './components/settings/SettingsTab';
 
 // Types and Data
-import type { TabType } from './types';
+import type { TabType, Listing } from './types';
 import {
   mockMarketplaceStats,
   mockListings,
@@ -310,6 +310,10 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [activeFinanceModule, setActiveFinanceModule] = useState<FinanceModuleId>('overview');
+  
+  // Real listings state
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(true);
 
   // Check authentication - redirect to login if not authenticated
   useEffect(() => {
@@ -317,6 +321,52 @@ export default function DashboardPage() {
       router.push('/auth/login');
     }
   }, [user, loading, router]);
+
+  // Fetch real listings from API
+  useEffect(() => {
+    const fetchListings = async () => {
+      if (!user) return;
+      
+      try {
+        setListingsLoading(true);
+        // Fetch user's own listings (including drafts, paused, etc.)
+        const response = await fetch('/api/listings?my_listings=true');
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Transform API response to match Listing type
+          const transformedListings: Listing[] = (data.listings || []).map((listing: any) => ({
+            id: listing.id,
+            title: listing.title,
+            category: listing.category || 'Uncategorized',
+            price: parseFloat(listing.price) || 0,
+            currency: listing.currency || 'ZAR',
+            views: listing.views || 0,
+            bookings: listing.bookings || 0,
+            status: listing.status || 'draft',
+            featured: listing.featured || false,
+            rating: listing.rating || 0,
+            imageUrl: listing.image_url || null,
+          }));
+          
+          setListings(transformedListings);
+        } else {
+          console.error('Failed to fetch listings:', response.statusText);
+          // Fall back to mock data on error
+          setListings(mockListings);
+        }
+      } catch (error) {
+        console.error('Error fetching listings:', error);
+        // Fall back to mock data on error
+        setListings(mockListings);
+      } finally {
+        setListingsLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, [user]);
 
   // Show loading state while checking authentication
   if (loading) {
@@ -463,8 +513,16 @@ export default function DashboardPage() {
         return (
           <div className="space-y-6">
             <AIContentBanner />
-            {/* TODO: Replace mockListings with live marketplace listings once marketplace API is available. */}
-            <ListingsGrid listings={mockListings} />
+            {listingsLoading ? (
+              <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-cyan-400" />
+                  <p className="text-sm text-white/70">Loading your listings...</p>
+                </div>
+              </div>
+            ) : (
+              <ListingsGrid listings={listings} />
+            )}
           </div>
         );
       case 'finance':
