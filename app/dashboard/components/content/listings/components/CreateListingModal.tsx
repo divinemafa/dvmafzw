@@ -301,7 +301,7 @@ export const CreateListingModal = ({
                     </Dialog.Title>
                     <p className="mt-1 text-sm text-white/60">
                       {mode === 'create' 
-                        ? 'Fill in the details below to create your service listing. All fields marked with * are required.'
+                        ? `Fill in the details below to create your ${formData.listingType} listing. All fields marked with * are required.`
                         : 'Update your listing details below. Changes will be saved immediately.'
                       }
                     </p>
@@ -381,7 +381,11 @@ export const CreateListingModal = ({
                         required
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="e.g., Professional Home Cleaning Service"
+                        placeholder={
+                          formData.listingType === 'service'
+                            ? 'e.g., Professional Home Cleaning Service'
+                            : 'e.g., Wireless Bluetooth Headphones'
+                        }
                         className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
                       />
                     </div>

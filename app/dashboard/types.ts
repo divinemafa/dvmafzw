@@ -47,6 +47,7 @@ export interface Booking {
   date?: string;
   time?: string;
   amount?: number;
+  currency?: string;
   // fields used by dashboard components
   listingTitle?: string;
   startDate?: string; // ISO
@@ -56,6 +57,12 @@ export interface Booking {
   loaction?: string | null;
   // include cancelled for broader status handling
   status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
+  // Additional fields from database
+  reference?: string; // booking_reference (BMC-BOOK-XXXXXX)
+  clientEmail?: string;
+  clientPhone?: string | null;
+  notes?: string | null;
+  providerResponse?: string | null;
 }
 
 export interface Review {

@@ -20,6 +20,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useCallback, useMemo, useState } from 'react';
 import type { Booking } from '../../types';
+import { BookingDetailsModal } from './BookingDetailsModal';
 
 interface BookingsTabProps {
   bookings?: Booking[];
@@ -136,12 +137,35 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
     alerts: true,
     team: true,
   });
+  
+  // Modal state for booking details
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [, setRefreshTrigger] = useState(0);
 
   const toggleSection = useCallback((sectionId: string) => {
     setOpenSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   }, []);
 
   const normalized = useMemo(() => bookings.slice().sort((a, b) => statusOrder[a.status] - statusOrder[b.status]), [bookings]);
+  
+  const handleBookingClick = useCallback((bookingId: string | number) => {
+    const booking = normalized.find((b) => b.id === bookingId);
+    if (booking) {
+      setSelectedBooking(booking);
+      setIsModalOpen(true);
+    }
+  }, [normalized]);
+  
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+  }, []);
+  
+  const handleBookingUpdated = useCallback(() => {
+    // Trigger parent refresh - dashboard should refetch bookings
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   const counts = useMemo(() => {
     const base = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 } as Record<BookingStatus, number>;
@@ -331,10 +355,15 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
         </div>
         <div className="divide-y divide-white/5">
           {pipelineRows.map((row) => (
-            <div
+            <button
               key={row.id}
-              className={`grid grid-cols-[110px,minmax(0,1.4fr),minmax(0,1fr),72px] items-center gap-2 px-4 py-3 text-xs ${
-                row.isPlaceholder ? 'text-white/45 italic' : 'text-white/70'
+              type="button"
+              onClick={() => !row.isPlaceholder && handleBookingClick(row.id)}
+              disabled={row.isPlaceholder}
+              className={`grid w-full grid-cols-[110px,minmax(0,1.4fr),minmax(0,1fr),72px] items-center gap-2 px-4 py-3 text-xs text-left transition ${
+                row.isPlaceholder 
+                  ? 'text-white/45 italic cursor-default' 
+                  : 'text-white/70 hover:bg-white/5 cursor-pointer'
               }`}
             >
               <span className="flex flex-wrap gap-1">
@@ -350,7 +379,7 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
               </span>
               <span className="text-[11px] text-white/55">{row.windowLabel}</span>
               <span className="text-right text-[11px] text-white/70">{row.amountLabel}</span>
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -379,9 +408,11 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
         <div className="divide-y divide-white/5">
           {timelineRows.length ? (
             timelineRows.map((row) => (
-              <div
+              <button
                 key={row.id}
-                className="grid grid-cols-[minmax(0,1.4fr),minmax(0,1fr),minmax(0,0.9fr),72px] items-center gap-2 px-4 py-3 text-xs text-white/70"
+                type="button"
+                onClick={() => handleBookingClick(row.id)}
+                className="grid w-full grid-cols-[minmax(0,1.4fr),minmax(0,1fr),minmax(0,0.9fr),72px] items-center gap-2 px-4 py-3 text-xs text-white/70 text-left transition hover:bg-white/5 cursor-pointer"
               >
                 <span className="min-w-0">
                   <span className="block truncate font-semibold text-white">{row.title}</span>
@@ -395,7 +426,7 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
                 <span className="text-[11px] text-white/55">{row.windowLabel}</span>
                 <span className="text-[11px] text-white/55">{row.location ?? '—'}</span>
                 <span className="text-right text-[11px] text-white/70">{row.amountLabel}</span>
-              </div>
+              </button>
             ))
           ) : (
             <div className="px-4 py-6 text-center text-[11px] text-white/45">No bookings match your filters right now.</div>
@@ -612,6 +643,28 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
           ))}
         </div>
       </div>
+      
+      {/* Booking Details Modal */}
+      <BookingDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        booking={selectedBooking ? {
+          booking_reference: selectedBooking.reference ?? '',
+          project_title: selectedBooking.listingTitle ?? selectedBooking.service ?? 'Untitled',
+          client_name: selectedBooking.client ?? 'Anonymous',
+          client_email: selectedBooking.clientEmail ?? '',
+          client_phone: selectedBooking.clientPhone ?? null,
+          status: selectedBooking.status,
+          amount: typeof selectedBooking.amount === 'number' ? selectedBooking.amount : 0,
+          currency: selectedBooking.currency ?? 'USD',
+          preferred_date: selectedBooking.startDate ?? selectedBooking.date ?? null,
+          location: selectedBooking.location ?? selectedBooking.loaction ?? null,
+          additional_notes: selectedBooking.notes ?? null,
+          listing_title: selectedBooking.listingTitle ?? selectedBooking.service ?? undefined,
+          provider_response: selectedBooking.providerResponse ?? null,
+        } : null}
+        onUpdated={handleBookingUpdated}
+      />
     </div>
   );
 }
