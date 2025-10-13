@@ -89,6 +89,9 @@ export default function BookingContent({ bookingReference }: BookingContentProps
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isCompletingBooking, setIsCompletingBooking] = useState(false);
+  const [showCompletionConfirm, setShowCompletionConfirm] = useState(false);
+  const [completionFeedback, setCompletionFeedback] = useState('');
 
   // ============================================================================
   // FETCH BOOKING DATA
@@ -150,6 +153,48 @@ export default function BookingContent({ bookingReference }: BookingContentProps
       router.back();
     } else {
       router.push('/');
+    }
+  };
+
+  // ============================================================================
+  // COMPLETE BOOKING HANDLER
+  // ============================================================================
+
+  const handleCompleteBooking = async () => {
+    if (!booking) return;
+
+    setIsCompletingBooking(true);
+
+    try {
+      const response = await fetch(`/api/bookings/${bookingReference}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'completed',
+          providerResponse: completionFeedback.trim() || 'Service completed successfully',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Refresh booking data
+        await fetchBooking();
+        setShowCompletionConfirm(false);
+        setCompletionFeedback('');
+        
+        // Show success message
+        alert('✅ Booking marked as completed! The provider can now request payout.');
+      } else {
+        alert(data.error || 'Failed to complete booking');
+      }
+    } catch (error) {
+      console.error('Error completing booking:', error);
+      alert('An error occurred while completing the booking');
+    } finally {
+      setIsCompletingBooking(false);
     }
   };
 
@@ -505,28 +550,134 @@ export default function BookingContent({ bookingReference }: BookingContentProps
       )}
 
       {booking.status === 'confirmed' && (
-        <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-6 backdrop-blur-xl">
-          <div className="flex items-start gap-3">
-            <CheckCircleIcon className="h-6 w-6 text-blue-400 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-blue-400">Booking Confirmed</h3>
-              <p className="mt-1 text-sm text-blue-300/80">
-                Your booking has been confirmed by the provider. Please contact them to finalize details.
-              </p>
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-6 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <CheckCircleIcon className="h-6 w-6 text-blue-400 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-400">Booking Confirmed</h3>
+                <p className="mt-1 text-sm text-blue-300/80">
+                  Your booking has been confirmed by the provider. Once the service is delivered, mark it as completed below.
+                </p>
+              </div>
             </div>
           </div>
+
+          {/* Completion Button */}
+          {!showCompletionConfirm ? (
+            <button
+              onClick={() => setShowCompletionConfirm(true)}
+              className="w-full rounded-2xl border border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20 p-6 text-left backdrop-blur-xl transition hover:from-green-500/30 hover:to-emerald-500/30"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircleIcon className="h-8 w-8 text-green-400" />
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Service Completed?</h3>
+                    <p className="mt-1 text-sm text-white/70">
+                      Click here if the provider has successfully delivered the service
+                    </p>
+                  </div>
+                </div>
+                <ArrowPathIcon className="h-6 w-6 text-green-400" />
+              </div>
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6 backdrop-blur-xl">
+              <div className="flex items-start gap-3 mb-4">
+                <CheckCircleIcon className="h-6 w-6 text-green-400 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-green-400">Confirm Service Completion</h3>
+                  <p className="mt-1 text-sm text-green-300/80">
+                    By marking this booking as completed, you confirm that the service was delivered satisfactorily. 
+                    The provider will then be able to request payout.
+                  </p>
+                </div>
+              </div>
+
+              {/* Optional Feedback */}
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-white/80">
+                  Feedback (Optional)
+                </label>
+                <textarea
+                  value={completionFeedback}
+                  onChange={(e) => setCompletionFeedback(e.target.value)}
+                  placeholder="Share your experience with this service..."
+                  rows={3}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-green-500/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowCompletionConfirm(false);
+                    setCompletionFeedback('');
+                  }}
+                  disabled={isCompletingBooking}
+                  className="flex-1 rounded-xl border border-white/20 bg-white/5 px-4 py-3 font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCompleteBooking}
+                  disabled={isCompletingBooking}
+                  className="flex-1 rounded-xl border border-green-500/30 bg-green-500/20 px-4 py-3 font-semibold text-green-300 transition hover:bg-green-500/30 disabled:opacity-50"
+                >
+                  {isCompletingBooking ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-transparent" />
+                      Processing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <CheckCircleIcon className="h-5 w-5" />
+                      Confirm Completion
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Security Note */}
+              <div className="mt-4 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
+                <p className="text-xs text-cyan-200">
+                  🔒 <strong>Payment Protection:</strong> Funds are held in escrow until you mark the service as completed. 
+                  Only confirm once you're satisfied with the delivery.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {booking.status === 'completed' && (
-        <div className="rounded-2xl border border-green-500/30 bg-green-500/10 p-6 backdrop-blur-xl">
+        <div className="rounded-2xl border border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6 backdrop-blur-xl">
           <div className="flex items-start gap-3">
-            <CheckCircleIcon className="h-6 w-6 text-green-400 flex-shrink-0" />
+            <CheckCircleIcon className="h-8 w-8 text-green-400 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-semibold text-green-400">Service Completed</h3>
-              <p className="mt-1 text-sm text-green-300/80">
-                This service has been successfully completed. Thank you for using our platform!
+              <h3 className="text-lg font-bold text-green-400">✅ Service Completed</h3>
+              <p className="mt-2 text-sm text-green-300/80">
+                This service has been successfully completed and verified. Thank you for using our platform!
               </p>
+              {booking.completedAt && (
+                <p className="mt-2 text-xs text-white/50">
+                  Completed on {new Date(booking.completedAt).toLocaleString('en-ZA', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              )}
+              <div className="mt-4 rounded-lg border border-green-500/20 bg-green-500/10 p-3">
+                <p className="text-xs text-green-200">
+                  💰 <strong>Payout Processing:</strong> The provider can now request payout for this completed service.
+                  Funds have been released from escrow.
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -2,6 +2,10 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import BookingContent from './components/BookingContent';
 
+// Force dynamic rendering for this route (disable static generation)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Props {
   params: {
     bookingReference: string;
