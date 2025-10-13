@@ -191,9 +191,11 @@ const formatCurrency = (amount: number, currency = 'USD') =>
 
 const bookingStatusOrder: Record<BookingStatus, number> = {
   pending: 1,
-  confirmed: 2,
-  completed: 3,
-  cancelled: 4,
+  client_cancellation_requested: 2,
+  provider_cancellation_requested: 3,
+  confirmed: 4,
+  completed: 5,
+  cancelled: 6,
 };
 
 interface ScrollIndicatorsState {
@@ -233,6 +235,8 @@ export const CompactTileGrid = ({ stats, bookings, reviews }: CompactTileGridPro
             confirmed: 0,
             completed: 0,
             cancelled: 0,
+            client_cancellation_requested: 0,
+            provider_cancellation_requested: 0,
           } satisfies Record<BookingStatus, number>,
         },
       ),
