@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useState } from 'react';
+import Image from 'next/image';
 import { Dialog, Transition } from '@headlessui/react';
 import {
   XMarkIcon,
@@ -310,9 +311,11 @@ export const BookingDetailsModal = ({
                         {listingTitle && (
                           <div className="flex flex-col gap-3 rounded-lg border border-blue-500/15 bg-blue-500/5 p-3 sm:flex-row sm:items-start sm:gap-4">
                             {listingImage && (
-                              <img
+                              <Image
                                 src={listingImage}
                                 alt={listingTitle}
+                                width={80}
+                                height={80}
                                 className="h-20 w-full shrink-0 rounded-lg border border-blue-500/20 object-cover sm:h-20 sm:w-20"
                               />
                             )}
