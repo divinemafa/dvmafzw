@@ -13,6 +13,7 @@ import {
   ArrowRightOnRectangleIcon,
   CheckCircleIcon,
   TruckIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 import type { ProfileSection } from '../types';
 
@@ -48,6 +49,12 @@ export function ProfileSidebar({
       id: 'tracking' as ProfileSection,
       label: 'Tracking',
       icon: TruckIcon,
+      badge: null,
+    },
+    {
+      id: 'bookings' as ProfileSection,
+      label: 'Bookings',
+      icon: CalendarDaysIcon,
       badge: null,
     },
     {

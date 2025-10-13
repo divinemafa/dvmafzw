@@ -314,6 +314,10 @@ export default function DashboardPage() {
   // Real listings state
   const [listings, setListings] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
+  
+  // Real bookings state
+  const [bookings, setBookings] = useState<typeof mockBookings>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
 
   // Check authentication - redirect to login if not authenticated
   useEffect(() => {
@@ -366,6 +370,51 @@ export default function DashboardPage() {
     };
 
     fetchListings();
+  }, [user]);
+  
+  // Fetch real bookings from API
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user) return;
+      
+      try {
+        setBookingsLoading(true);
+        // Fetch user's bookings (both as provider and client)
+        const response = await fetch('/api/bookings/recent?limit=50');
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Transform API response to match Booking type
+          const transformedBookings = (data.bookings || []).map((booking: any) => ({
+            id: booking.id,
+            listingTitle: booking.listingTitle || booking.project_title,
+            service: booking.listingTitle || booking.project_title,
+            client: booking.client || 'Anonymous',
+            date: booking.preferredDate || booking.startDate || booking.createdAt,
+            startDate: booking.preferredDate || booking.startDate,
+            time: booking.preferredDate ? new Date(booking.preferredDate).toLocaleTimeString() : '',
+            location: booking.location,
+            amount: booking.amount,
+            status: booking.status,
+          }));
+          
+          setBookings(transformedBookings);
+        } else {
+          console.error('Failed to fetch bookings:', response.statusText);
+          // Fall back to mock data on error
+          setBookings(mockBookings);
+        }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        // Fall back to mock data on error
+        setBookings(mockBookings);
+      } finally {
+        setBookingsLoading(false);
+      }
+    };
+
+    fetchBookings();
   }, [user]);
 
   // Show loading state while checking authentication
@@ -595,9 +644,9 @@ export default function DashboardPage() {
         );
       case 'bookings':
         return renderStandardTab(
-          <BookingsTab bookings={mockBookings} />,
+          <BookingsTab bookings={bookings} />,
           null,
-        ); // TODO: Wire bookings to scheduling service once backend endpoints are ready.
+        );
       case 'messages':
         return renderStandardTab(
           <MessagesTab messages={[]} />,

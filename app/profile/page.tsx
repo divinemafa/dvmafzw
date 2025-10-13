@@ -32,6 +32,7 @@ import { EnhancedSettingsSection } from './components/EnhancedSettingsSection';
 import { SecuritySection } from './components/SecuritySection';
 import { MessagesSection } from './components/MessagesSection';
 import { TrackingSection } from './components/TrackingSection';
+import { BookingsSection } from './components/BookingsSection';
 import { EditProfileModal } from './components/EditProfileModal';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
 import type { ProfileSection } from './types';
@@ -151,6 +152,9 @@ export default function ProfilePage() {
 
             {/* Tracking Section */}
             {activeSection === 'tracking' && <TrackingSection userEmail={profile.email} />}
+
+            {/* Bookings Section */}
+            {activeSection === 'bookings' && <BookingsSection userEmail={profile.email} />}
 
             {/* Verification Section */}
             {activeSection === 'verification' && (

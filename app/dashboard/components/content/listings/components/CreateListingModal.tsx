@@ -39,6 +39,7 @@ export const CreateListingModal = ({
   onSuccess 
 }: CreateListingModalProps) => {
   const [formData, setFormData] = useState({
+    listingType: 'service' as 'service' | 'product', // NEW: Listing type selector
     title: '',
     categoryId: null as string | null,
     categoryName: '',
@@ -52,6 +53,11 @@ export const CreateListingModal = ({
     features: ['', '', ''],
     tags: '',
     imageUrl: '',
+    // Product-specific fields
+    stockQuantity: '',
+    sku: '',
+    shippingEnabled: false,
+    shippingCost: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,6 +99,7 @@ export const CreateListingModal = ({
           
           // Pre-fill form with existing data
           setFormData({
+            listingType: listing.listing_type || 'service',
             title: listing.title || '',
             categoryId: listing.category_id || null,
             categoryName: listing.category || '',
@@ -108,6 +115,11 @@ export const CreateListingModal = ({
               : ['', '', ''],
             tags: Array.isArray(listing.tags) ? listing.tags.join(', ') : '',
             imageUrl: listing.image_url || '',
+            // Product-specific fields
+            stockQuantity: listing.stock_quantity?.toString() || '',
+            sku: listing.sku || '',
+            shippingEnabled: listing.shipping_enabled || false,
+            shippingCost: listing.shipping_cost?.toString() || '',
           });
         } else {
           alert('Failed to load listing data: ' + (data.error || 'Unknown error'));
@@ -155,26 +167,42 @@ export const CreateListingModal = ({
       const url = mode === 'create' ? '/api/listings' : `/api/listings/${listingId}`;
       const method = mode === 'create' ? 'POST' : 'PATCH';
 
+      // Build request body with listing type
+      const requestBody: any = {
+        listingType: formData.listingType,
+        title: formData.title,
+        category: categoryToSubmit,
+        categoryId: categoryIdToSubmit,
+        shortDescription: formData.shortDescription,
+        longDescription: formData.longDescription,
+        price: formData.price,
+        currency: formData.currency,
+        features: formData.features.filter((f) => f.trim() !== ''),
+        tags: formData.tags,
+        imageUrl: formData.imageUrl,
+      };
+
+      // Add service-specific fields
+      if (formData.listingType === 'service') {
+        requestBody.location = formData.location;
+        requestBody.availability = formData.availability;
+      }
+
+      // Add product-specific fields
+      if (formData.listingType === 'product') {
+        requestBody.stockQuantity = formData.stockQuantity ? parseInt(formData.stockQuantity) : null;
+        requestBody.sku = formData.sku || null;
+        requestBody.shippingEnabled = formData.shippingEnabled;
+        requestBody.shippingCost = formData.shippingCost ? parseFloat(formData.shippingCost) : null;
+      }
+
       // Call API to create/update listing
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: formData.title,
-          category: categoryToSubmit,
-          categoryId: categoryIdToSubmit,
-          shortDescription: formData.shortDescription,
-          longDescription: formData.longDescription,
-          price: formData.price,
-          currency: formData.currency,
-          location: formData.location,
-          availability: formData.availability,
-          features: formData.features.filter((f) => f.trim() !== ''),
-          tags: formData.tags,
-          imageUrl: formData.imageUrl,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -205,6 +233,7 @@ export const CreateListingModal = ({
       // Only reset form if in create mode
       if (mode === 'create') {
         setFormData({
+          listingType: 'service',
           title: '',
           categoryId: null,
           categoryName: '',
@@ -218,6 +247,10 @@ export const CreateListingModal = ({
           features: ['', '', ''],
           tags: '',
           imageUrl: '',
+          stockQuantity: '',
+          sku: '',
+          shippingEnabled: false,
+          shippingCost: '',
         });
         setShowCustomCategory(false);
       }
@@ -293,11 +326,54 @@ export const CreateListingModal = ({
                 ) : (
                   /* Form */
                   <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+                  {/* Listing Type Selector */}
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <label className="block text-sm font-semibold text-white mb-3">
+                      Listing Type *
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, listingType: 'service' })}
+                        className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 font-medium transition ${
+                          formData.listingType === 'service'
+                            ? 'border-blue-500/50 bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white shadow-lg'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Service
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, listingType: 'product' })}
+                        className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 font-medium transition ${
+                          formData.listingType === 'product'
+                            ? 'border-orange-500/50 bg-gradient-to-r from-orange-500/20 to-red-500/20 text-white shadow-lg'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        Product
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs text-white/50">
+                      {formData.listingType === 'service' 
+                        ? 'Services are booked by clients and require scheduling.' 
+                        : 'Products are purchased instantly and require inventory management.'
+                      }
+                    </p>
+                  </div>
+
                   <div className="grid gap-6 md:grid-cols-2">
                     {/* Title */}
                     <div className="md:col-span-2">
                       <label htmlFor="title" className="block text-sm font-semibold text-white">
-                        Service Title *
+                        {formData.listingType === 'service' ? 'Service Title *' : 'Product Title *'}
                       </label>
                       <input
                         type="text"
@@ -320,9 +396,13 @@ export const CreateListingModal = ({
                           <CategorySelector
                             value={formData.categoryId}
                             onChange={handleCategorySelect}
-                            type="service"
+                            type={formData.listingType}
                             required
-                            placeholder="Search categories (e.g., cleaning, legal, tech)..."
+                            placeholder={
+                              formData.listingType === 'service'
+                                ? "Search service categories (e.g., cleaning, legal, tech)..."
+                                : "Search product categories (e.g., electronics, clothing, books)..."
+                            }
                             allowCustom
                             onCustomCategory={handleCustomCategory}
                           />
@@ -354,21 +434,23 @@ export const CreateListingModal = ({
                       )}
                     </div>
 
-                    {/* Location */}
-                    <div>
-                      <label htmlFor="location" className="block text-sm font-semibold text-white">
-                        Location *
-                      </label>
-                      <input
-                        type="text"
-                        id="location"
-                        required
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        placeholder="e.g., Cape Town, Western Cape"
-                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
-                      />
-                    </div>
+                    {/* Location (Services only) */}
+                    {formData.listingType === 'service' && (
+                      <div>
+                        <label htmlFor="location" className="block text-sm font-semibold text-white">
+                          Service Location *
+                        </label>
+                        <input
+                          type="text"
+                          id="location"
+                          required
+                          value={formData.location}
+                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                          placeholder="e.g., Cape Town, Western Cape"
+                          className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
+                        />
+                      </div>
+                    )}
 
                     {/* Price */}
                     <div>
@@ -401,21 +483,107 @@ export const CreateListingModal = ({
                       </div>
                     </div>
 
-                    {/* Availability */}
-                    <div>
-                      <label htmlFor="availability" className="block text-sm font-semibold text-white">
-                        Availability *
-                      </label>
-                      <input
-                        type="text"
-                        id="availability"
-                        required
-                        value={formData.availability}
-                        onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
-                        placeholder="e.g., Next available: Tomorrow at 09:00"
-                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
-                      />
-                    </div>
+                    {/* Product-Specific Fields */}
+                    {formData.listingType === 'product' && (
+                      <>
+                        {/* Stock Quantity */}
+                        <div>
+                          <label htmlFor="stockQuantity" className="block text-sm font-semibold text-white">
+                            Stock Quantity *
+                          </label>
+                          <input
+                            type="number"
+                            id="stockQuantity"
+                            required
+                            min="0"
+                            value={formData.stockQuantity}
+                            onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
+                            placeholder="100"
+                            className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
+                          />
+                          <p className="mt-1 text-xs text-white/40">
+                            Available inventory count
+                          </p>
+                        </div>
+
+                        {/* SKU */}
+                        <div>
+                          <label htmlFor="sku" className="block text-sm font-semibold text-white">
+                            SKU (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            id="sku"
+                            value={formData.sku}
+                            onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                            placeholder="PROD-12345"
+                            className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
+                          />
+                          <p className="mt-1 text-xs text-white/40">
+                            Stock Keeping Unit for inventory tracking
+                          </p>
+                        </div>
+
+                        {/* Shipping Enabled */}
+                        <div className="md:col-span-2">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.shippingEnabled}
+                              onChange={(e) => setFormData({ ...formData, shippingEnabled: e.target.checked })}
+                              className="h-5 w-5 rounded border-white/10 bg-white/5 text-[#BD24DF] focus:ring-2 focus:ring-[#BD24DF]/20 focus:ring-offset-0"
+                            />
+                            <div>
+                              <span className="text-sm font-semibold text-white">Enable Shipping</span>
+                              <p className="text-xs text-white/40">
+                                Check this if physical delivery is available for this product
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+
+                        {/* Shipping Cost - Only if shipping enabled */}
+                        {formData.shippingEnabled && (
+                          <div>
+                            <label htmlFor="shippingCost" className="block text-sm font-semibold text-white">
+                              Shipping Cost *
+                            </label>
+                            <input
+                              type="number"
+                              id="shippingCost"
+                              required
+                              min="0"
+                              step="0.01"
+                              value={formData.shippingCost}
+                              onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })}
+                              placeholder="50"
+                              className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
+                            />
+                            <p className="mt-1 text-xs text-white/40">
+                              Flat rate shipping fee in {formData.currency}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Availability - Services Only */}
+                    {formData.listingType === 'service' && (
+                      <div>
+                        <label htmlFor="availability" className="block text-sm font-semibold text-white">
+                          Availability *
+                        </label>
+                        <input
+                          type="text"
+                          id="availability"
+                          required
+                          value={formData.availability}
+                          onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
+                          placeholder="e.g., Next available: Tomorrow at 09:00"
+                          className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
+                        />
+                      </div>
+                    )}
 
                     {/* Short Description */}
                     <div className="md:col-span-2">
@@ -429,7 +597,11 @@ export const CreateListingModal = ({
                         maxLength={120}
                         value={formData.shortDescription}
                         onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                        placeholder="Brief one-liner about your service"
+                        placeholder={
+                          formData.listingType === 'service'
+                            ? 'Brief one-liner about your service'
+                            : 'Brief one-liner about your product'
+                        }
                         className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
                       />
                       <p className="mt-1 text-xs text-white/40">
@@ -448,7 +620,11 @@ export const CreateListingModal = ({
                         rows={4}
                         value={formData.longDescription}
                         onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
-                        placeholder="Provide a detailed description of your service, what's included, your experience, etc."
+                        placeholder={
+                          formData.listingType === 'service'
+                            ? 'Provide a detailed description of your service, what\'s included, your experience, etc.'
+                            : 'Provide a detailed description of your product, specifications, features, condition, etc.'
+                        }
                         className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 transition focus:border-[#BD24DF]/40 focus:outline-none focus:ring-2 focus:ring-[#BD24DF]/20"
                       />
                     </div>
