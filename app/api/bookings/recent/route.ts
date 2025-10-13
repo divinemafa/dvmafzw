@@ -38,7 +38,16 @@ export async function GET(request: Request) {
       );
     }
     
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Get the access token from the Authorization header
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    // Create Supabase client with user's token if provided
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      },
+    });
     
     // Build query
     let query = supabase

@@ -307,7 +307,7 @@ const financeFrameOverlayClasses =
  */
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [activeFinanceModule, setActiveFinanceModule] = useState<FinanceModuleId>('overview');
   
@@ -375,12 +375,17 @@ export default function DashboardPage() {
   // Fetch real bookings from API
   useEffect(() => {
     const fetchBookings = async () => {
-      if (!user) return;
+      if (!user || !session) return;
       
       try {
         setBookingsLoading(true);
-        // Fetch user's bookings (both as provider and client)
-        const response = await fetch('/api/bookings/recent?limit=50');
+        // Fetch user's bookings (both as provider and client) with authentication
+        const response = await fetch('/api/bookings/recent?limit=50', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
         
         if (response.ok) {
           const data = await response.json();
@@ -415,7 +420,7 @@ export default function DashboardPage() {
     };
 
     fetchBookings();
-  }, [user]);
+  }, [user, session]);
 
   // Show loading state while checking authentication
   if (loading) {
