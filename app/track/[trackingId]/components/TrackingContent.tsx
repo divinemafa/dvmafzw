@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ClipboardDocumentIcon, 
@@ -92,7 +92,7 @@ export default function TrackingContent({ trackingId }: TrackingContentProps) {
   // FETCH PURCHASE DATA
   // ============================================================================
 
-  const fetchPurchase = async () => {
+  const fetchPurchase = useCallback(async () => {
     try {
       setError(null);
       
@@ -110,11 +110,11 @@ export default function TrackingContent({ trackingId }: TrackingContentProps) {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [trackingId]);
 
   useEffect(() => {
     fetchPurchase();
-  }, [trackingId]);
+  }, [fetchPurchase]);
 
   // ============================================================================
   // REFRESH HANDLER

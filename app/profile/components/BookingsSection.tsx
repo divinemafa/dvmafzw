@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CalendarDaysIcon,
@@ -49,11 +49,7 @@ export function BookingsSection({ userEmail }: BookingsSectionProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchBookings();
-  }, [userEmail]);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -88,7 +84,11 @@ export function BookingsSection({ userEmail }: BookingsSectionProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userEmail]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const handleBookingClick = (bookingReference: string) => {
     router.push(`/bookings/${bookingReference}`);
@@ -188,7 +188,7 @@ export function BookingsSection({ userEmail }: BookingsSectionProps) {
             <CalendarDaysIcon className="h-16 w-16 text-white/20 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Bookings Yet</h3>
             <p className="text-white/60 mb-6 max-w-md">
-              You haven't booked any services yet. Browse our marketplace to find and book services.
+              You haven&apos;t booked any services yet. Browse our marketplace to find and book services.
             </p>
             <button
               onClick={() => router.push('/market')}

@@ -181,7 +181,7 @@ export default function TrackingModal({ isOpen, onClose }: TrackingModalProps) {
                     <p className="text-xs text-white/50 text-center">
                       Your tracking ID was sent to your email after purchase.
                       <br />
-                      Can't find it? Check your spam folder.
+                      Can&apos;t find it? Check your spam folder.
                     </p>
                   </div>
                 </form>

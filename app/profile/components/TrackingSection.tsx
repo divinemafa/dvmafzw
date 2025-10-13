@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   TruckIcon,
@@ -46,11 +46,7 @@ export function TrackingSection({ userEmail }: TrackingSectionProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [userEmail]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -69,7 +65,11 @@ export function TrackingSection({ userEmail }: TrackingSectionProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userEmail]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const handleOrderClick = (trackingId: string) => {
     router.push(`/track/${trackingId}`);
@@ -170,7 +170,7 @@ export function TrackingSection({ userEmail }: TrackingSectionProps) {
             <ShoppingBagIcon className="h-16 w-16 text-white/20 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Orders Yet</h3>
             <p className="text-white/60 mb-6 max-w-md">
-              You haven't placed any orders yet. Browse our marketplace to find products and services.
+              You haven&apos;t placed any orders yet. Browse our marketplace to find products and services.
             </p>
             <button
               onClick={() => router.push('/market')}

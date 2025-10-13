@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ClipboardDocumentIcon, 
@@ -94,7 +94,7 @@ export default function BookingContent({ bookingReference }: BookingContentProps
   // FETCH BOOKING DATA
   // ============================================================================
 
-  const fetchBooking = async () => {
+  const fetchBooking = useCallback(async () => {
     try {
       setError(null);
       
@@ -112,11 +112,11 @@ export default function BookingContent({ bookingReference }: BookingContentProps
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [bookingReference]);
 
   useEffect(() => {
     fetchBooking();
-  }, [bookingReference]);
+  }, [fetchBooking]);
 
   // ============================================================================
   // REFRESH HANDLER
