@@ -644,7 +644,7 @@ export default function BookingContent({ bookingReference }: BookingContentProps
               <div className="mt-4 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
                 <p className="text-xs text-cyan-200">
                   🔒 <strong>Payment Protection:</strong> Funds are held in escrow until you mark the service as completed. 
-                  Only confirm once you're satisfied with the delivery.
+                  Only confirm once you&apos;re satisfied with the delivery.
                 </p>
               </div>
             </div>
