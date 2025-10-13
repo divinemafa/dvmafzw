@@ -8,6 +8,10 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Public client helper (created on-demand to avoid build-time errors)
 // Uses anon key for public data - everyone can read categories
 function getPublicSupabase() {
