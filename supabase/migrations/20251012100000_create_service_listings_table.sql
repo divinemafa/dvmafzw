@@ -141,6 +141,30 @@ CREATE TABLE IF NOT EXISTS public.service_listings (
     response_time TEXT,
     
     -- ========================================
+    -- PRODUCT-SPECIFIC FIELDS (Phase 3: Products vs Services)
+    -- ========================================
+    -- Listing type: 'service' (bookable) or 'product' (purchasable)
+    listing_type TEXT NOT NULL DEFAULT 'service' CHECK (listing_type IN ('service', 'product')),
+    
+    -- Stock quantity for products (NULL = unlimited, 0 = out of stock)
+    stock_quantity INTEGER CHECK (stock_quantity >= 0),
+    
+    -- SKU (Stock Keeping Unit) for inventory management
+    sku TEXT,
+    
+    -- Shipping availability for products
+    ships_to TEXT[], -- Array of countries/regions (e.g., ['South Africa', 'USA', 'Worldwide'])
+    
+    -- Estimated shipping time (e.g., "3-5 business days")
+    shipping_time TEXT,
+    
+    -- Shipping cost (NULL = free shipping, 0 = calculated at checkout)
+    shipping_cost DECIMAL(20, 8),
+    
+    -- Orders count (for products - parallel to bookings for services)
+    orders INTEGER DEFAULT 0,
+    
+    -- ========================================
     -- TIMESTAMPS
     -- ========================================
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

@@ -12,6 +12,7 @@ import {
   KeyIcon,
   ArrowRightOnRectangleIcon,
   CheckCircleIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 import type { ProfileSection } from '../types';
 
@@ -42,6 +43,12 @@ export function ProfileSidebar({
       label: 'Messages',
       icon: ChatBubbleLeftRightIcon,
       badge: unreadMessages > 0 ? unreadMessages : null,
+    },
+    {
+      id: 'tracking' as ProfileSection,
+      label: 'Tracking',
+      icon: TruckIcon,
+      badge: null,
     },
     {
       id: 'verification' as ProfileSection,

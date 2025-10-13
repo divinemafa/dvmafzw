@@ -196,7 +196,7 @@ export interface UserSettings {
 }
 
 // UI State types
-export type ProfileSection = 'profile' | 'messages' | 'verification' | 'settings' | 'security';
+export type ProfileSection = 'profile' | 'messages' | 'tracking' | 'verification' | 'settings' | 'security';
 export type MessageTab = 'inbox' | 'sent' | 'archived';
 
 // Message types (future implementation)

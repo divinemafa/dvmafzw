@@ -1,3 +1,5 @@
+'use client';
+
 import { Disclosure } from '@headlessui/react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -5,6 +7,9 @@ import React from 'react';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import Drawer from "./Drawer";
 import Drawerdata from "./Drawerdata";
+import TrackingModal from '../TrackingModal';
+import OrdersBadge from './OrdersBadge';
+import ProfileDropdown from './ProfileDropdown';
 // import Contactusform from './Contactus';
 
 interface NavigationItem {
@@ -29,6 +34,7 @@ function classNames(...classes: string[]) {
 const Navbar = () => {
 
     const [isOpen, setIsOpen] = React.useState(false);
+    const [showTrackingModal, setShowTrackingModal] = React.useState(false);
 
     return (
         <Disclosure as="nav" className="navbar">
@@ -78,9 +84,12 @@ const Navbar = () => {
                                 </div>
 
                             </div>
-                            <Link href="/profile" className='hidden lg:flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white font-bold text-lg hover:from-purple-600 hover:to-blue-600 transition ml-6'>
-                                DU
-                            </Link>
+
+                            {/* Orders Badge & Profile Dropdown */}
+                            <div className="hidden lg:flex items-center gap-3 ml-6">
+                                <OrdersBadge onTrackOrder={() => setShowTrackingModal(true)} />
+                                <ProfileDropdown onTrackOrder={() => setShowTrackingModal(true)} />
+                            </div>
                             {/* <Contactusform /> */}
                         </div>
 
@@ -101,6 +110,12 @@ const Navbar = () => {
 
                     </div>
                 </div>
+
+                {/* Tracking Modal */}
+                <TrackingModal 
+                    isOpen={showTrackingModal} 
+                    onClose={() => setShowTrackingModal(false)} 
+                />
             </>
         </Disclosure>
     )

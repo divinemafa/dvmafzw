@@ -7,11 +7,13 @@ import {
   MapPinIcon,
   StarIcon,
   UserIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import type { Metadata } from 'next';
 import { IPFSImage } from '@/components/IPFSImage';
 import { CompactProviderInfo } from '../components/CompactProviderInfo';
+import ListingActionCard from './components/ListingActionCard';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -206,45 +208,8 @@ export default async function MarketplaceListingPage({ params }: ListingPageProp
               <CompactProviderInfo provider={listing.provider} showStats />
             )}
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-2xl">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-white/50">Ready to book?</h3>
-              <p className="mt-2 text-sm text-white/70">
-                Share your preferred date, location, and any project details. The provider will confirm within a few hours.
-              </p>
-              <div className="mt-4 space-y-2 text-sm text-white/70">
-                <label className="block">
-                  <span className="text-xs uppercase tracking-[0.3em] text-white/40">Project title</span>
-                  <input
-                    type="text"
-                    placeholder="e.g. Deep clean before moving"
-                    className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-blue-400 focus:outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-xs uppercase tracking-[0.3em] text-white/40">Preferred date</span>
-                  <input
-                    type="date"
-                    className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-blue-400 focus:outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-xs uppercase tracking-[0.3em] text-white/40">Additional notes</span>
-                  <textarea
-                    rows={3}
-                    placeholder="Tell us anything important about your project."
-                    className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/40 focus:border-blue-400 focus:outline-none"
-                  />
-                </label>
-              </div>
-              <button
-                type="button"
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-gradient-to-r from-blue-500/80 to-purple-500/80 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:from-blue-500 hover:to-purple-500"
-              >
-                <UserIcon className="h-4 w-4" />
-                Submit booking request
-              </button>
-              <p className="mt-2 text-[11px] text-white/50">No payment required yet. You&apos;ll finalise the booking once the provider confirms availability.</p>
-            </div>
+            {/* Dynamic Action Card - Service Booking or Product Purchase */}
+            <ListingActionCard listing={listing} />
           </aside>
         </section>
       </article>
