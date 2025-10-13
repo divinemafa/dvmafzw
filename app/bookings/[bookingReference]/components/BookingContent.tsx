@@ -43,7 +43,7 @@ interface Booking {
     email: string;
     phone: string | null;
     businessName: string | null;
-  };
+  } | null;
   projectTitle: string;
   preferredDate: string;
   location: string;
@@ -401,46 +401,52 @@ export default function BookingContent({ bookingReference }: BookingContentProps
           <UserIcon className="h-6 w-6 text-cyan-400" />
           Provider Information
         </h2>
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm font-medium text-white/60">Provider Name</p>
-            <p className="mt-1 text-lg font-semibold text-white">
-              {booking.provider.businessName || booking.provider.name}
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
+        {booking.provider ? (
+          <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-white/60">Email</p>
-              <a
-                href={`mailto:${booking.provider.email}`}
-                className="mt-1 flex items-center gap-2 text-white hover:text-cyan-400 transition"
-              >
-                <EnvelopeIcon className="h-5 w-5" />
-                {booking.provider.email}
-              </a>
+              <p className="text-sm font-medium text-white/60">Provider Name</p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {booking.provider.businessName || booking.provider.name}
+              </p>
             </div>
-            {booking.provider.phone && (
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <p className="text-sm font-medium text-white/60">Phone</p>
+                <p className="text-sm font-medium text-white/60">Email</p>
                 <a
-                  href={`tel:${booking.provider.phone}`}
+                  href={`mailto:${booking.provider.email}`}
                   className="mt-1 flex items-center gap-2 text-white hover:text-cyan-400 transition"
                 >
-                  <PhoneIcon className="h-5 w-5" />
-                  {booking.provider.phone}
+                  <EnvelopeIcon className="h-5 w-5" />
+                  {booking.provider.email}
                 </a>
+              </div>
+              {booking.provider.phone && (
+                <div>
+                  <p className="text-sm font-medium text-white/60">Phone</p>
+                  <a
+                    href={`tel:${booking.provider.phone}`}
+                    className="mt-1 flex items-center gap-2 text-white hover:text-cyan-400 transition"
+                  >
+                    <PhoneIcon className="h-5 w-5" />
+                    {booking.provider.phone}
+                  </a>
+                </div>
+              )}
+            </div>
+            {booking.providerResponse && (
+              <div>
+                <p className="text-sm font-medium text-white/60">Provider Response</p>
+                <p className="mt-1 rounded-lg border border-white/10 bg-white/5 p-3 text-white">
+                  {booking.providerResponse}
+                </p>
               </div>
             )}
           </div>
-          {booking.providerResponse && (
-            <div>
-              <p className="text-sm font-medium text-white/60">Provider Response</p>
-              <p className="mt-1 rounded-lg border border-white/10 bg-white/5 p-3 text-white">
-                {booking.providerResponse}
-              </p>
-            </div>
-          )}
-        </div>
+        ) : (
+          <p className="text-sm text-white/60">
+            Provider details are not available for this booking.
+          </p>
+        )}
       </div>
 
       {/* Client Contact Card */}

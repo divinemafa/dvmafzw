@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       listing_id,
       project_title,
       preferred_date,
+      scheduled_end,
       location,
       additional_notes,
       client_name,
@@ -136,12 +137,30 @@ export async function POST(request: Request) {
     }
     
     // Create booking
+    const now = new Date();
+    const preferredDate = preferred_date ? new Date(preferred_date) : null;
+
+    let autoCancelAt: Date | null = null;
+    if (preferredDate) {
+      const sameUtcDay =
+        preferredDate.getUTCFullYear() === now.getUTCFullYear() &&
+        preferredDate.getUTCMonth() === now.getUTCMonth() &&
+        preferredDate.getUTCDate() === now.getUTCDate();
+
+      if (sameUtcDay) {
+        const endOfDay = new Date(preferredDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        autoCancelAt = endOfDay;
+      }
+    }
+
     const bookingData = {
       listing_id,
       provider_id: listing.provider_id,
       client_id,
       project_title,
-      preferred_date: preferred_date || null,
+      preferred_date: preferredDate ? preferredDate.toISOString() : null,
+  scheduled_end: scheduled_end ? new Date(scheduled_end).toISOString() : null,
       location: location || null,
       additional_notes: additional_notes || null,
       client_name: client_name || null,
@@ -151,6 +170,7 @@ export async function POST(request: Request) {
       currency: listing.currency,
       status: 'pending',
       payment_status: 'unpaid',
+      auto_cancel_at: autoCancelAt ? autoCancelAt.toISOString() : null,
     };
     
     const { data: booking, error: bookingError } = await supabase
@@ -177,10 +197,12 @@ export async function POST(request: Request) {
           booking_reference: booking.booking_reference,
           project_title: booking.project_title,
           preferred_date: booking.preferred_date,
+          scheduled_end: booking.scheduled_end,
           status: booking.status,
           amount: booking.amount,
           currency: booking.currency,
           created_at: booking.created_at,
+          auto_cancel_at: booking.auto_cancel_at,
         },
       },
       { status: 201 }

@@ -88,14 +88,37 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   -- STATUS MANAGEMENT
   -- ========================================
   status TEXT NOT NULL DEFAULT 'pending' 
-    CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+    CHECK (
+      status IN (
+        'pending',
+        'confirmed',
+        'completed',
+        'cancelled',
+        'client_cancellation_requested',
+        'provider_cancellation_requested'
+      )
+    ),
   
   -- Provider's response to booking request
   provider_response TEXT,
   
   -- Cancellation reason (if cancelled)
   cancellation_reason TEXT,
-  cancelled_by TEXT CHECK (cancelled_by IN ('client', 'provider')),
+  cancelled_by TEXT CHECK (cancelled_by IN ('client', 'provider', 'system')),
+
+  -- Cancellation workflow metadata
+  cancellation_requested_at TIMESTAMP WITH TIME ZONE,
+  cancellation_requested_by TEXT CHECK (cancellation_requested_by IN ('client', 'provider')),
+  cancellation_request_reason TEXT,
+  cancellation_resolution TEXT,
+  
+  -- Scheduled end time for service window (optional)
+  scheduled_end TIMESTAMP WITH TIME ZONE,
+
+  -- Auto-cancel support for time-sensitive bookings
+  auto_cancel_at TIMESTAMP WITH TIME ZONE,
+  auto_cancelled BOOLEAN DEFAULT FALSE,
+  auto_cancelled_reason TEXT,
   
   -- ========================================
   -- PAYMENT TRACKING
@@ -144,6 +167,10 @@ CREATE INDEX idx_bookings_reference ON public.bookings(booking_reference);
 -- Query bookings by scheduled date
 CREATE INDEX idx_bookings_preferred_date ON public.bookings(preferred_date) 
 WHERE status IN ('pending', 'confirmed');
+
+-- Query upcoming auto-cancel checks
+CREATE INDEX idx_bookings_auto_cancel_at ON public.bookings(auto_cancel_at) 
+WHERE auto_cancel_at IS NOT NULL AND auto_cancelled = FALSE;
 
 -- ============================================================================
 -- GENERATE BOOKING REFERENCE FUNCTION

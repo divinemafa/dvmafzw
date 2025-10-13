@@ -1,26 +1,21 @@
 /**
  * Bookings Tab - Immersive scheduling and pipeline console
+ * Now with REAL DATA from provider-dashboard API
  */
 
 'use client';
 
-import {
-  AdjustmentsHorizontalIcon,
-  ArrowTrendingUpIcon,
-  CalendarDaysIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  MagnifyingGlassIcon,
-  MapPinIcon,
-  TicketIcon,
-  UserGroupIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline';
-import { useCallback, useMemo, useState } from 'react';
+import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Booking } from '../../types';
 import { BookingDetailsModal } from './BookingDetailsModal';
+import { BookingsHero, buildHeroMetrics, type NextBookingSummary } from './BookingsHero';
+import { PipelineBoard, type PipelineRow } from './PipelineBoard';
+import { TimelineSection, type TimelineRow } from './TimelineSection';
+import { InsightsPanel } from './InsightsPanel';
+import { AlertsPanel } from './AlertsPanel';
+import { TeamPanel } from './TeamPanel';
+import { statusOrder } from './statusConfig';
 
 interface BookingsTabProps {
   bookings?: Booking[];
@@ -40,26 +35,6 @@ interface TimelineItem {
   amount?: number;
 }
 
-interface PipelineRow {
-  id: string | number;
-  status: BookingStatus;
-  title: string;
-  client?: string;
-  windowLabel: string;
-  amountLabel: string;
-  isPlaceholder?: boolean;
-}
-
-interface TimelineRow {
-  id: string | number;
-  status: BookingStatus;
-  title: string;
-  client: string;
-  windowLabel: string;
-  location?: string | null;
-  amountLabel: string;
-}
-
 const frameClasses = [
   'relative isolate flex flex-col overflow-hidden rounded-[32px]',
   'border border-white/10 bg-gradient-to-br from-slate-950/85 via-slate-900/70 to-slate-950/60',
@@ -68,29 +43,6 @@ const frameClasses = [
 
 const frameOverlayClasses =
   'pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.35),transparent_55%)]';
-
-const statusOrder: Record<BookingStatus, number> = {
-  pending: 1,
-  confirmed: 2,
-  completed: 3,
-  cancelled: 4,
-};
-
-const statusAccent: Record<BookingStatus, string> = {
-  pending: 'border-amber-300/40 bg-amber-400/20 text-amber-100',
-  confirmed: 'border-emerald-300/40 bg-emerald-400/20 text-emerald-100',
-  completed: 'border-sky-300/40 bg-sky-400/20 text-sky-100',
-  cancelled: 'border-rose-300/40 bg-rose-400/20 text-rose-100',
-};
-
-const statusChipBaseClass = 'whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]';
-
-const statusLabels: Record<BookingStatus, string> = {
-  pending: 'Pending',
-  confirmed: 'Confirmed',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-};
 
 const parseDate = (value?: string | null) => {
   if (!value) return null;
@@ -141,70 +93,110 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
   // Modal state for booking details
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [, setRefreshTrigger] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Real data state
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleSection = useCallback((sectionId: string) => {
     setOpenSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   }, []);
 
-  const normalized = useMemo(() => bookings.slice().sort((a, b) => statusOrder[a.status] - statusOrder[b.status]), [bookings]);
-  
-  const handleBookingClick = useCallback((bookingId: string | number) => {
-    const booking = normalized.find((b) => b.id === bookingId);
-    if (booking) {
-      setSelectedBooking(booking);
-      setIsModalOpen(true);
-    }
-  }, [normalized]);
-  
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedBooking(null);
-  }, []);
-  
-  const handleBookingUpdated = useCallback(() => {
-    // Trigger parent refresh - dashboard should refetch bookings
-    setRefreshTrigger((prev) => prev + 1);
-  }, []);
+  // Fetch real booking data from provider-dashboard API
+  useEffect(() => {
+    const fetchBookingsData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
+        const response = await fetch('/api/bookings/provider-dashboard');
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.details || errorData.error || response.statusText;
+          
+          if (response.status === 401) {
+            throw new Error('Please log in to view your bookings');
+          }
+          
+          throw new Error(`Failed to load bookings: ${errorMessage}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Bookings data loaded:', data);
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load bookings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBookingsData();
+  }, [refreshTrigger]); // Refetch when refreshTrigger changes
+
+  // Use real data if available, fallback to props for backward compatibility
+  const actualBookings = dashboardData?.bookings || bookings;
+  
+  const normalized = useMemo(() => actualBookings.slice().sort((a: Booking, b: Booking) => statusOrder[a.status] - statusOrder[b.status]), [actualBookings]);
+  
+  // Use metrics from API if available, otherwise calculate
   const counts = useMemo(() => {
-    const base = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 } as Record<BookingStatus, number>;
+    if (dashboardData?.metrics?.counts) {
+      return dashboardData.metrics.counts;
+    }
+    
+    // Fallback calculation
+    const base: Record<BookingStatus, number> = {
+      pending: 0,
+      confirmed: 0,
+      completed: 0,
+      cancelled: 0,
+      client_cancellation_requested: 0,
+      provider_cancellation_requested: 0,
+    };
     for (const booking of normalized) {
-      base[booking.status] += 1;
+      const status = booking.status as BookingStatus;
+      base[status] += 1;
     }
     return base;
-  }, [normalized]);
+  }, [dashboardData, normalized]);
 
   const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return normalized.filter((booking) => {
+    return normalized.filter((booking: Booking) => {
       const matchesStatus = activeFilter === 'all' || booking.status === activeFilter;
       if (!matchesStatus) return false;
 
       if (!query) return true;
-      const title = (booking.listingTitle ?? booking.service ?? '').toLowerCase();
+      // Support both API data (projectTitle) and legacy mock data (listingTitle/service)
+      const title = (booking.projectTitle ?? booking.listingTitle ?? booking.service ?? '').toLowerCase();
       const client = (booking.client ?? '').toLowerCase();
       return title.includes(query) || client.includes(query);
     });
   }, [activeFilter, normalized, searchQuery]);
 
   const timelineItems: TimelineItem[] = useMemo(() =>
-    filtered.map((booking) => {
-      const start = parseDate(booking.startDate ?? booking.date ?? null);
+    filtered.map((booking: Booking) => {
+      // Support both API data (projectTitle, preferredDate) and legacy mock data
+      const start = parseDate(booking.preferredDate ?? booking.startDate ?? booking.date ?? null);
       const end = parseDate(booking.endDate ?? null);
       return {
         id: booking.id,
-        title: booking.listingTitle ?? booking.service ?? 'Untitled booking',
+        title: booking.projectTitle ?? booking.listingTitle ?? booking.service ?? 'Untitled booking',
         windowLabel: formatRange(start, end),
         status: booking.status,
         client: booking.client ?? 'Anonymous client',
-  location: booking.location ?? booking.loaction ?? booking.time ?? null,
+        location: booking.location ?? booking.loaction ?? booking.time ?? null,
         start,
         end,
         amount: typeof booking.amount === 'number' ? booking.amount : undefined,
       };
     })
-      .sort((a, b) => {
+      .sort((a: TimelineItem, b: TimelineItem) => {
         if (!a.start && !b.start) return 0;
         if (!a.start) return 1;
         if (!b.start) return -1;
@@ -214,32 +206,27 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
 
   const nextBooking = useMemo(() => timelineItems.find((item) => item.status === 'confirmed' || item.status === 'pending'), [timelineItems]);
 
-  const heroMetrics = [
-    {
-      label: 'Pending',
-      value: counts.pending,
-      hint: 'Waiting on you',
-      icon: ClockIcon,
-    },
-    {
-      label: 'Confirmed',
-      value: counts.confirmed,
-      hint: 'Locked in',
-      icon: CheckCircleIcon,
-    },
-    {
-      label: 'Completed (30d)',
-      value: counts.completed,
-      hint: '+18% vs last month',
-      icon: TicketIcon,
-    },
-    {
-      label: 'Cancelled',
-      value: counts.cancelled,
-      hint: '2 chargebacks to review',
-      icon: XCircleIcon,
-    },
-  ];
+  const heroMetrics = useMemo(() => buildHeroMetrics(counts), [counts]);
+
+  // Use API nextBooking if available, otherwise calculate from timeline
+  const nextBookingSummary = useMemo<NextBookingSummary | null>(() => {
+    if (dashboardData?.metrics?.nextBooking) {
+      return dashboardData.metrics.nextBooking;
+    }
+    
+    if (!nextBooking) {
+      return null;
+    }
+
+    return {
+      title: nextBooking.title,
+      status: nextBooking.status,
+      windowLabel: nextBooking.windowLabel,
+      client: nextBooking.client,
+      location: nextBooking.location,
+      amount: nextBooking.amount,
+    };
+  }, [dashboardData, nextBooking]);
 
   const conversionSnapshot = [
     {
@@ -259,24 +246,29 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
     },
   ];
 
-  const alertHighlights = [
+  // Use API alerts if available
+  const alertHighlights = dashboardData?.alerts || [
     'Payment verification pending for booking #1245 — follow up today.',
     'Client Laura booked twice this month — send loyalty upgrade.',
     'Workshop cancellations trending up — refresh messaging before Friday.',
   ];
 
-  const teamTasks = [
+  // Use API team tasks if available
+  const teamTasks = dashboardData?.teamTasks || [
     'Share Friday masterclass prep checklist with studio crew.',
     'Confirm hybrid session equipment rental for 18 Oct.',
     'Sync with support to queue the post-session survey template.',
   ];
 
+  // Pipeline data structures (must be before early returns)
   const pipelineGroups = useMemo(() => {
     const grouping: Record<BookingStatus, TimelineItem[]> = {
       pending: [],
       confirmed: [],
       completed: [],
       cancelled: [],
+      client_cancellation_requested: [],
+      provider_cancellation_requested: [],
     };
 
     for (const item of timelineItems) {
@@ -286,7 +278,14 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
   }, [timelineItems]);
 
   const pipelineRows: PipelineRow[] = useMemo(() => {
-    const order: BookingStatus[] = ['pending', 'confirmed', 'completed', 'cancelled'];
+    const order: BookingStatus[] = [
+      'pending',
+      'confirmed',
+      'client_cancellation_requested',
+      'provider_cancellation_requested',
+      'completed',
+      'cancelled',
+    ];
     const laneOrder = activeFilter === 'all' ? order : order.filter((status) => status === activeFilter);
     return laneOrder.flatMap((status) => {
       const rows = pipelineGroups[status];
@@ -310,196 +309,126 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
         title: row.title,
         client: row.client,
         windowLabel: row.windowLabel,
-        amountLabel: typeof row.amount === 'number' ? `R${row.amount.toLocaleString()}` : '—',
+        amountLabel: row.amount ? `${row.amount.toFixed(2)} ZAR` : '—',
       }));
     });
   }, [activeFilter, pipelineGroups]);
 
-  const timelineRows: TimelineRow[] = useMemo(() =>
-    timelineItems.slice(0, 8).map((item) => ({
-      id: item.id,
-      status: item.status,
-      title: item.title,
-      client: item.client,
-      windowLabel: item.windowLabel,
-      location: item.location ?? null,
-      amountLabel: typeof item.amount === 'number' ? `R${item.amount.toLocaleString()}` : '—',
-    })),
-  [timelineItems]);
-
-  const pipelineSectionContent = (
-    <div className="space-y-3 text-xs text-white/70">
-      <div className="flex flex-wrap gap-1.5">
-        {(['pending', 'confirmed', 'completed', 'cancelled'] as BookingStatus[]).map((status) => (
-          <button
-            key={status}
-            type="button"
-            onClick={() => setActiveFilter((prev) => (prev === status ? 'all' : status))}
-            className={`${statusChipBaseClass} transition ${
-              activeFilter === status
-                ? `${statusAccent[status]} border-opacity-80`
-                : 'border-white/10 bg-white/5 text-white/60 hover:border-white/20 hover:text-white'
-            }`}
-          >
-            {statusLabels[status]}
-          </button>
-        ))}
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-        <div className="grid grid-cols-[110px,minmax(0,1.4fr),minmax(0,1fr),72px] items-center gap-2 border-b border-white/5 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/50">
-          <span>Status</span>
-          <span>Booking</span>
-          <span>Window</span>
-          <span className="text-right">Value</span>
-        </div>
-        <div className="divide-y divide-white/5">
-          {pipelineRows.map((row) => (
-            <button
-              key={row.id}
-              type="button"
-              onClick={() => !row.isPlaceholder && handleBookingClick(row.id)}
-              disabled={row.isPlaceholder}
-              className={`grid w-full grid-cols-[110px,minmax(0,1.4fr),minmax(0,1fr),72px] items-center gap-2 px-4 py-3 text-xs text-left transition ${
-                row.isPlaceholder 
-                  ? 'text-white/45 italic cursor-default' 
-                  : 'text-white/70 hover:bg-white/5 cursor-pointer'
-              }`}
-            >
-              <span className="flex flex-wrap gap-1">
-                <span className={`${statusChipBaseClass} ${statusAccent[row.status]}`}>
-                  {statusLabels[row.status]}
-                </span>
-              </span>
-              <span className="min-w-0">
-                <span className={`block truncate font-semibold text-white ${row.isPlaceholder ? 'text-white/50' : ''}`}>
-                  {row.title}
-                </span>
-                {row.client ? <span className="block text-[11px] text-white/50">{row.client}</span> : null}
-              </span>
-              <span className="text-[11px] text-white/55">{row.windowLabel}</span>
-              <span className="text-right text-[11px] text-white/70">{row.amountLabel}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+  const timelineRows: TimelineRow[] = useMemo(
+    () =>
+      timelineItems.map((item) => ({
+        id: item.id,
+        status: item.status,
+        title: item.title,
+        client: item.client,
+        windowLabel: item.windowLabel,
+        location: item.location,
+        amountLabel: item.amount ? `${item.amount.toFixed(2)} ZAR` : '—',
+      })),
+    [timelineItems]
   );
 
-  const timelineSectionContent = (
-    <div className="space-y-3 text-xs text-white/70">
-      <div className="relative">
-        <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          placeholder="Search client or booking"
-          className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-[11px] text-white placeholder-white/35 transition focus:border-white/25 focus:bg-white/10 focus:outline-none"
-        />
-      </div>
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-        <div className="grid grid-cols-[minmax(0,1.4fr),minmax(0,1fr),minmax(0,0.9fr),72px] items-center gap-2 border-b border-white/5 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/50">
-          <span>Booking</span>
-          <span>Schedule</span>
-          <span>Location</span>
-          <span className="text-right">Value</span>
-        </div>
-        <div className="divide-y divide-white/5">
-          {timelineRows.length ? (
-            timelineRows.map((row) => (
-              <button
-                key={row.id}
-                type="button"
-                onClick={() => handleBookingClick(row.id)}
-                className="grid w-full grid-cols-[minmax(0,1.4fr),minmax(0,1fr),minmax(0,0.9fr),72px] items-center gap-2 px-4 py-3 text-xs text-white/70 text-left transition hover:bg-white/5 cursor-pointer"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-semibold text-white">{row.title}</span>
-                  <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-white/55">
-                    <span className={`${statusChipBaseClass} ${statusAccent[row.status]}`}>
-                      {statusLabels[row.status]}
-                    </span>
-                    <span className="text-white/50">{row.client}</span>
-                  </span>
-                </span>
-                <span className="text-[11px] text-white/55">{row.windowLabel}</span>
-                <span className="text-[11px] text-white/55">{row.location ?? '—'}</span>
-                <span className="text-right text-[11px] text-white/70">{row.amountLabel}</span>
-              </button>
-            ))
-          ) : (
-            <div className="px-4 py-6 text-center text-[11px] text-white/45">No bookings match your filters right now.</div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  // Event handlers (must be after all other hooks)
+  const handleBookingClick = useCallback((bookingId: string | number) => {
+    const booking = normalized.find((b: Booking) => b.id === bookingId);
+    if (booking) {
+      setSelectedBooking(booking);
+      setIsModalOpen(true);
+    }
+  }, [normalized]);
+  
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+  }, []);
+  
+  const handleBookingUpdated = useCallback(() => {
+    // Trigger parent refresh - dashboard should refetch bookings
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
-  const insightsSectionContent = (
-    <div className="space-y-2 text-xs text-white/70">
-      {conversionSnapshot.map((metric) => (
-        <div key={metric.label} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/50">{metric.label}</p>
-            <p className="text-[11px] text-white/55">{metric.note}</p>
+  // Show loading state
+  if (isLoading && !dashboardData) {
+    return (
+      <div className={frameClasses}>
+        <div className={frameOverlayClasses} aria-hidden />
+        <div className="relative flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-white" />
+            <p className="mt-4 text-sm text-white/60">Loading bookings...</p>
           </div>
-          <p className="text-sm font-semibold text-white">{metric.value}</p>
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  }
 
-  const alertsSectionContent = (
-    <div className="space-y-2 text-xs text-white/70">
-      {alertHighlights.map((alert) => (
-        <div key={alert} className="rounded-xl border border-amber-200/30 bg-amber-400/15 px-3 py-2 text-left text-[11px] text-amber-50">
-          {alert}
+  // Show error state
+  if (error && !dashboardData) {
+    return (
+      <div className={frameClasses}>
+        <div className={frameOverlayClasses} aria-hidden />
+        <div className="relative flex items-center justify-center py-20">
+          <div className="text-center">
+            <p className="text-sm text-red-400">{error}</p>
+            <button
+              onClick={() => setRefreshTrigger((prev) => prev + 1)}
+              className="mt-4 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
+            >
+              Retry
+            </button>
+          </div>
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  }
 
-  const teamSectionContent = (
-    <ul className="space-y-2 text-xs text-white/70">
-      {teamTasks.map((task) => (
-        <li key={task} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-white/65">
-          {task}
-        </li>
-      ))}
-    </ul>
-  );
+  // All pipeline and timeline data is already computed above (before early returns)
+  // No duplicate declarations needed here
 
   const sectionConfigs = [
     {
       id: 'pipeline',
       title: 'Pipeline Board',
       subtitle: 'Status lanes snapshot.',
-      content: pipelineSectionContent,
+      content: (
+        <PipelineBoard
+          rows={pipelineRows}
+          activeFilter={activeFilter}
+          onFilterChange={(status) => setActiveFilter((prev) => (prev === status ? 'all' : status))}
+          onRowSelect={handleBookingClick}
+        />
+      ),
     },
     {
       id: 'timeline',
       title: 'Schedule Timeline',
       subtitle: 'Chronological view without overflow.',
-      content: timelineSectionContent,
+      content: (
+        <TimelineSection
+          rows={timelineRows}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onRowSelect={handleBookingClick}
+        />
+      ),
     },
     {
       id: 'insights',
       title: 'Conversion Insights',
       subtitle: 'Funnel signals this month.',
-      content: insightsSectionContent,
+      content: <InsightsPanel metrics={conversionSnapshot} />,
     },
     {
       id: 'alerts',
       title: 'Alerts & Actions',
       subtitle: 'Resolve blockers early.',
-      content: alertsSectionContent,
+      content: <AlertsPanel alerts={alertHighlights} />,
     },
     {
       id: 'team',
       title: 'Team Coordination',
       subtitle: 'Quick sync items.',
-      content: teamSectionContent,
+      content: <TeamPanel tasks={teamTasks} />,
     },
   ];
 
@@ -509,85 +438,7 @@ export function BookingsTab({ bookings = [] }: BookingsTabProps) {
 
       <div className="relative flex flex-col gap-6">
         <header className="grid gap-4 xl:grid-cols-[minmax(0,2.1fr)_minmax(0,1.1fr)]">
-          <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-6 text-white shadow-[0_60px_160px_-120px_rgba(79,70,229,0.7)]">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#BD24DF]/20 via-transparent to-[#2D6ADE]/30 opacity-70" aria-hidden />
-            <div className="relative flex flex-col gap-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">Scheduling cockpit</p>
-                  <h1 className="text-3xl font-semibold leading-tight">Bookings Pipeline</h1>
-                  <p className="mt-2 text-sm text-white/70">Live view of demand, upcoming sessions, and blockers that need action.</p>
-                </div>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-white transition hover:border-white/30 hover:bg-white/20"
-                >
-                  <AdjustmentsHorizontalIcon className="h-4 w-4" aria-hidden />
-                  Configure automations
-                </button>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
-                {heroMetrics.map(({ label, value, hint, icon: Icon }) => (
-                  <article
-                    key={label}
-                    className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-4 shadow-[0_40px_120px_-100px_rgba(59,130,246,0.65)] transition hover:border-white/25"
-                  >
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" aria-hidden />
-                    <div className="relative flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">{label}</p>
-                        <p className="text-2xl font-semibold text-white">{value}</p>
-                        <p className="text-xs text-white/60">{hint}</p>
-                      </div>
-                      <span className="rounded-2xl border border-white/20 bg-white/10 p-2 text-white/70">
-                        <Icon className="h-5 w-5" aria-hidden />
-                      </span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-
-              {nextBooking ? (
-                <div className="rounded-2xl border border-white/15 bg-gradient-to-r from-white/10 via-white/5 to-transparent px-5 py-4 text-sm text-white">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <CalendarDaysIcon className="h-5 w-5 text-cyan-200" aria-hidden />
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.24em] text-white/60">Next session</p>
-                        <p className="font-semibold text-white">{nextBooking.title}</p>
-                      </div>
-                    </div>
-                    <span className={`${statusChipBaseClass} ${statusAccent[nextBooking.status]}`}>
-                      {statusLabels[nextBooking.status]}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-white/70">
-                    <span className="inline-flex items-center gap-2">
-                      <ClockIcon className="h-4 w-4 text-emerald-200" aria-hidden />
-                      {nextBooking.windowLabel}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <UserGroupIcon className="h-4 w-4 text-purple-200" aria-hidden />
-                      {nextBooking.client}
-                    </span>
-                    {nextBooking.location ? (
-                      <span className="inline-flex items-center gap-2">
-                        <MapPinIcon className="h-4 w-4 text-amber-200" aria-hidden />
-                        {nextBooking.location}
-                      </span>
-                    ) : null}
-                    {typeof nextBooking.amount === 'number' ? (
-                      <span className="inline-flex items-center gap-2 text-white/80">
-                        <ArrowTrendingUpIcon className="h-4 w-4 text-cyan-200" aria-hidden />
-                        R{nextBooking.amount.toLocaleString()}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </section>
+          <BookingsHero metrics={heroMetrics} nextBooking={nextBookingSummary} />
 
           <aside className="flex flex-col justify-between gap-3 rounded-[28px] border border-white/10 bg-white/5 p-6 text-white shadow-[0_50px_150px_-110px_rgba(56,189,248,0.6)]">
             <div className="space-y-2">

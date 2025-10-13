@@ -53,7 +53,8 @@ export async function GET(
         ),
         provider:profiles!bookings_provider_id_fkey (
           id,
-          full_name,
+          display_name,
+          username,
           email,
           phone_number,
           business_name
@@ -75,7 +76,7 @@ export async function GET(
         status: 'pending',
         label: 'Booking Requested',
         timestamp: booking.created_at,
-        completed: true, // Always completed (booking was created)
+        completed: true,
       },
       {
         status: 'confirmed',
@@ -91,18 +92,28 @@ export async function GET(
       },
     ];
 
-    // If cancelled, add cancellation step
+    if (booking.cancellation_requested_at) {
+      timeline.push({
+        status: booking.status,
+        label:
+          booking.status === 'provider_cancellation_requested'
+            ? 'Cancellation Requested (Provider)'
+            : 'Cancellation Requested (Client)',
+        timestamp: booking.cancellation_requested_at,
+        completed: booking.status === 'cancelled',
+      });
+    }
+
     if (booking.cancelled_at) {
       timeline.push({
         status: 'cancelled',
-        label: 'Booking Cancelled',
+        label: booking.auto_cancelled ? 'Automatically Cancelled' : 'Booking Cancelled',
         timestamp: booking.cancelled_at,
         completed: true,
       });
     }
 
-    // Calculate current step
-    const currentStep = timeline.filter(step => step.completed).length - 1;
+    const currentStep = timeline.reduce((latest, step, index) => (step.completed ? index : latest), 0);
 
     // Format response
     const response = {
@@ -117,14 +128,17 @@ export async function GET(
           slug: booking.listing.slug,
           imageUrl: booking.listing.image_url,
         },
-        provider: {
-          name: booking.provider.full_name,
-          email: booking.provider.email,
-          phone: booking.provider.phone_number,
-          businessName: booking.provider.business_name,
-        },
+        provider: booking.provider
+          ? {
+              name: booking.provider.display_name || booking.provider.username || 'Provider',
+              email: booking.provider.email,
+              phone: booking.provider.phone_number,
+              businessName: booking.provider.business_name,
+            }
+          : null,
         projectTitle: booking.project_title,
         preferredDate: booking.preferred_date,
+        scheduledEnd: booking.scheduled_end,
         location: booking.location,
         additionalNotes: booking.additional_notes,
         clientName: booking.client_name,
@@ -137,6 +151,15 @@ export async function GET(
         confirmedAt: booking.confirmed_at,
         completedAt: booking.completed_at,
         cancelledAt: booking.cancelled_at,
+        cancellationReason: booking.cancellation_reason,
+        cancelledBy: booking.cancelled_by,
+        cancellationRequestedAt: booking.cancellation_requested_at,
+        cancellationRequestedBy: booking.cancellation_requested_by,
+        cancellationRequestReason: booking.cancellation_request_reason,
+        cancellationResolution: booking.cancellation_resolution,
+        autoCancelAt: booking.auto_cancel_at,
+        autoCancelled: booking.auto_cancelled,
+        autoCancelledReason: booking.auto_cancelled_reason,
         timeline,
         currentStep,
       },
@@ -182,8 +205,8 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
-    const { status, providerResponse } = body;
+  const body = await request.json();
+  const { status, providerResponse, cancellationReason, cancelledBy } = body;
 
     // Validate required fields
     if (!status) {
@@ -254,6 +277,15 @@ export async function PATCH(
       updateData.completed_at = new Date().toISOString();
     } else if (status === 'cancelled') {
       updateData.cancelled_at = new Date().toISOString();
+      updateData.cancellation_reason = cancellationReason || null;
+      updateData.cancelled_by = cancelledBy || null;
+      const isSystem = cancelledBy === 'system';
+      updateData.auto_cancelled = isSystem;
+      updateData.auto_cancelled_reason = isSystem ? cancellationReason || null : null;
+      updateData.cancellation_resolution = cancellationReason || null;
+      updateData.cancellation_requested_at = null;
+      updateData.cancellation_requested_by = null;
+      updateData.cancellation_request_reason = null;
     }
 
     // Add provider response if provided

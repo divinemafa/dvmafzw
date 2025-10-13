@@ -50,19 +50,51 @@ export interface Booking {
   currency?: string;
   // fields used by dashboard components
   listingTitle?: string;
+  projectTitle?: string;
   startDate?: string; // ISO
   endDate?: string; // ISO
   location?: string | null;
   // Legacy datasets shipped location under a misspelled key; keep for compatibility
   loaction?: string | null;
   // include cancelled for broader status handling
-  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
-  // Additional fields from database
+  status:
+    | 'confirmed'
+    | 'pending'
+    | 'completed'
+    | 'cancelled'
+    | 'client_cancellation_requested'
+    | 'provider_cancellation_requested';
+  // Additional fields from database (matching actual schema)
   reference?: string; // booking_reference (BMC-BOOK-XXXXXX)
   clientEmail?: string;
   clientPhone?: string | null;
   notes?: string | null;
   providerResponse?: string | null;
+  cancellationReason?: string | null;
+  cancelledBy?: string | null;
+  preferredDate?: string | null;
+  createdAt?: string;
+  confirmedAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  listing?: {
+    id: string;
+    title: string;
+    slug: string;
+    category?: string | null;
+    short_description?: string | null;
+    long_description?: string | null;
+    price?: number | null;
+    currency?: string | null;
+    image_url?: string | null;
+    features?: string[] | null;
+    tags?: string[] | null;
+    listing_type?: string | null;
+    availability?: string | null;
+    location?: string | null;
+    rating?: number | null;
+    reviews_count?: number | null;
+  } | null;
 }
 
 export interface Review {
