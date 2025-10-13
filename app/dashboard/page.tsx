@@ -561,6 +561,9 @@ export default function DashboardPage() {
             stats={mockMarketplaceStats}
             bookings={mockBookings}
             reviews={mockReviews}
+            onTabChange={setActiveTab}
+            listings={listings}
+            listingsLoading={listingsLoading}
           />
         );
       case 'content':
