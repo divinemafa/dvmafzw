@@ -6,6 +6,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { CalendarIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { SectionCard } from './SectionCard';
 import { formatCurrency } from './shared/utils';
@@ -24,6 +25,16 @@ export const NextBookingCard = ({
   formatDate,
   bookingCurrency,
 }: NextBookingCardProps) => {
+  const router = useRouter();
+  const bookingRef = upcomingBooking?.reference;
+  const handleOpen = () => {
+    if (bookingRef) {
+      router.push(`/bookings/${bookingRef}`);
+    } else {
+      // Fallback: go to bookings tab
+      router.push('/dashboard?tab=bookings');
+    }
+  };
   return (
     <SectionCard
       compact={compact}
@@ -31,6 +42,7 @@ export const NextBookingCard = ({
       subtitle={upcomingBooking ? 'Keep this touchpoint on track' : 'No upcoming bookings yet'}
       icon={CalendarIcon}
       actionLabel={upcomingBooking ? 'Open booking' : undefined}
+      onAction={upcomingBooking ? handleOpen : undefined}
       className="border-white/15 bg-gradient-to-br from-indigo-500/20 via-slate-900/30 to-transparent"
     >
       {upcomingBooking ? (
@@ -38,7 +50,7 @@ export const NextBookingCard = ({
           <div className="flex items-start justify-between gap-3 text-white/80">
             <div className="space-y-1">
               <p className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-white`}> 
-                {upcomingBooking.listingTitle ?? upcomingBooking.service ?? 'Unnamed service'}
+                {upcomingBooking.projectTitle ?? upcomingBooking.listingTitle ?? upcomingBooking.service ?? 'Unnamed service'}
               </p>
               <p className="text-xs uppercase tracking-wide text-white/50">Client</p>
               <p className="text-sm font-medium text-white/80">{upcomingBooking.client ?? 'Anonymous client'}</p>
@@ -52,14 +64,14 @@ export const NextBookingCard = ({
             <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">When</p>
               <p className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-white`}>
-                {formatDate(upcomingBooking.startDate ?? upcomingBooking.date) ?? 'Date to be scheduled'}
+                {formatDate(upcomingBooking.preferredDate ?? upcomingBooking.startDate ?? upcomingBooking.date) ?? 'Date to be scheduled'}
               </p>
             </div>
-            {typeof upcomingBooking.amount === 'number' ? (
+             {typeof upcomingBooking.amount === 'number' ? (
               <div className="rounded-xl border border-emerald-300/30 bg-emerald-400/10 px-3 py-2">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/80">Projected payout</p>
                 <p className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-emerald-100`}>
-                  {formatCurrency(upcomingBooking.amount, bookingCurrency)}
+                  {formatCurrency(upcomingBooking.amount, upcomingBooking.currency ?? bookingCurrency)}
                 </p>
               </div>
             ) : null}

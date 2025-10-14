@@ -36,13 +36,14 @@ export const ListingsDisplay = ({
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {listings.map((listing) => (
-          <ListingCard 
-            key={listing.id} 
-            listing={listing}
-            onEdit={onEditListing}
-            onDelete={onDeleteListing}
-            onStatusChange={onStatusChange}
-          />
+          <div key={listing.id} id={`listing-${listing.id}`}>
+            <ListingCard 
+              listing={listing}
+              onEdit={onEditListing}
+              onDelete={onDeleteListing}
+              onStatusChange={onStatusChange}
+            />
+          </div>
         ))}
       </div>
     );
@@ -52,13 +53,14 @@ export const ListingsDisplay = ({
   return (
     <div className="space-y-3">
       {listings.map((listing) => (
-        <ListingListItem 
-          key={listing.id} 
-          listing={listing}
-          onEdit={onEditListing}
-          onDelete={onDeleteListing}
-          onStatusChange={onStatusChange}
-        />
+        <div key={listing.id} id={`listing-${listing.id}`}>
+          <ListingListItem 
+            listing={listing}
+            onEdit={onEditListing}
+            onDelete={onDeleteListing}
+            onStatusChange={onStatusChange}
+          />
+        </div>
       ))}
     </div>
   );

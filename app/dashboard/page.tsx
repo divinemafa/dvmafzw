@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import type { ComponentType } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { Squares2X2Icon, ArrowsRightLeftIcon, SparklesIcon, ShieldCheckIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 
@@ -305,8 +305,12 @@ const financeFrameOverlayClasses =
  * 
  * Now uses REAL authentication (replaces demo LoginScreen)
  */
-export default function DashboardPage() {
+export const dynamic = 'force-dynamic';
+
+function DashboardPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { user, session, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [activeFinanceModule, setActiveFinanceModule] = useState<FinanceModuleId>('overview');
@@ -318,6 +322,39 @@ export default function DashboardPage() {
   // Real bookings state
   const [bookings, setBookings] = useState<typeof mockBookings>([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
+
+  // Sync tab from URL (e.g., /dashboard?tab=content&listingId=123)
+  useEffect(() => {
+    const tab = searchParams?.get('tab') as TabType | null;
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams, activeTab]);
+
+  // Two-way sync: whenever tab changes via UI, update the URL param as well
+  const setActiveTabAndUrl = useCallback((tab: TabType) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    params.set('tab', tab);
+    // If leaving content, drop listingId deep-link param
+    if (tab !== 'content') params.delete('listingId');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  }, [router, searchParams, pathname]);
+
+  // Clean listingId after initial highlight to avoid sticky behavior
+  useEffect(() => {
+    const hasListingId = !!searchParams?.get('listingId');
+    if (activeTab === 'content' && hasListingId) {
+      const timeout = setTimeout(() => {
+        const params = new URLSearchParams(searchParams!.toString());
+        params.delete('listingId');
+        const qs = params.toString();
+        router.replace(qs ? `${pathname}?${qs}` : pathname);
+      }, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [activeTab, searchParams, router, pathname]);
 
   // Check authentication - redirect to login if not authenticated
   useEffect(() => {
@@ -561,7 +598,7 @@ export default function DashboardPage() {
             stats={mockMarketplaceStats}
             bookings={mockBookings}
             reviews={mockReviews}
-            onTabChange={setActiveTab}
+            onTabChange={setActiveTabAndUrl}
             listings={listings}
             listingsLoading={listingsLoading}
           />
@@ -578,7 +615,10 @@ export default function DashboardPage() {
                 </div>
               </div>
             ) : (
-              <ListingsGrid listings={listings} />
+              <ListingsGrid 
+                listings={listings}
+                highlightListingId={searchParams?.get('listingId') || undefined}
+              />
             )}
           </div>
         );
@@ -704,7 +744,7 @@ export default function DashboardPage() {
   return (
     <main className="relative flex min-h-screen">
       {/* Collapsible Sidebar Navigation */}
-      <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+  <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTabAndUrl} />
 
       {/* Main Content Area - adjusts based on sidebar state */}
       <div className="flex-1 overflow-y-auto transition-all lg:ml-20">
@@ -731,5 +771,22 @@ export default function DashboardPage() {
       {/* Floating Chat Support Button */}
       <FloatingChatButton />
     </main>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#050814] via-[#0a1532] to-[#120333] text-white">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-blue-500" />
+            <p className="text-sm text-white/70">Loading dashboard...</p>
+          </div>
+        </main>
+      }
+    >
+      <DashboardPageContent />
+    </Suspense>
   );
 }

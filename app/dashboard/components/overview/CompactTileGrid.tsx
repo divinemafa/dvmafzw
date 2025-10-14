@@ -9,10 +9,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import type { Booking, MarketplaceStats, Review, TabType, Listing } from '../../types';
 import { useSavedLeads } from '../../hooks/useSavedLeads';
+import { useProviderBookings } from '../../hooks/useProviderBookings';
 import { useMessagesData } from '../../hooks/useMessagesData';
 import { CreateListingModal } from '../content/listings/components/CreateListingModal';
 import {
@@ -81,6 +83,21 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
     canScrollDown: false,
   });
   const msInDay = 24 * 60 * 60 * 1000;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const initialRange = (searchParams.get('range') as 'day' | 'week' | '30d' | null) ?? 'week';
+  const [activityRange, setActivityRange] = useState<'day' | 'week' | '30d'>(initialRange);
+
+  // Keep URL in sync when activityRange changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    if (params.get('range') !== activityRange) {
+      params.set('range', activityRange);
+      router.replace(`${pathname}?${params.toString()}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activityRange]);
 
   // ✅ BACKEND INTEGRATION: Fetch real pending bookings data
   const {
@@ -98,6 +115,9 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
     trend: realResponseTrend,
     nextUnread: realNextUnread,
   } = useMessagesData();
+
+  // ✅ BACKEND INTEGRATION: Fetch provider next booking
+  const { upcomingBooking: realUpcomingBooking } = useProviderBookings();
 
   // Calculate status counts and revenue
   const statusCounts = useMemo(
@@ -132,8 +152,70 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
     return Math.min(100, Math.max(0, Number(ratio.toFixed(1))));
   }, [stats.completedBookings, stats.totalViews]);
 
-  // Build activity series for chart
+  // Build activity series for chart (day/week/30d)
   const activitySeries = useMemo(() => {
+    const now = new Date();
+    const getBookingDate = (b: Booking): Date | null =>
+      parseDate((b as any).preferredDate) ||
+      parseDate((b as any).startDate) ||
+      parseDate((b as any).date) ||
+      parseDate((b as any).createdAt) ||
+      parseDate((b as any).created_at) ||
+      null;
+    if (activityRange === 'day') {
+      // Trailing 24 hours, aligned to the current hour
+      const HOUR = 60 * 60 * 1000;
+      const end = new Date(now);
+      end.setMinutes(0, 0, 0); // start of current hour
+      const startMs = end.getTime() - 23 * HOUR;
+      const series: ActivityPoint[] = Array.from({ length: 24 }, (_, i) => {
+        const ts = startMs + i * HOUR;
+        const label = new Date(ts).getHours().toString().padStart(2, '0');
+        return { label, completed: 0, cancelled: 0, inProgress: 0, total: 0 };
+      });
+      bookings.forEach((booking) => {
+        const d = getBookingDate(booking);
+        if (!d) return;
+        const idx = Math.floor((d.getTime() - startMs) / HOUR);
+        if (idx >= 0 && idx < 24) {
+          const point = series[idx];
+          point.total += 1;
+          if (booking.status === 'completed') point.completed += 1;
+          else if (booking.status === 'cancelled') point.cancelled += 1;
+          else point.inProgress += 1;
+        }
+      });
+      return series;
+    }
+
+    if (activityRange === '30d') {
+      // trailing 30 days, oldest to newest [start, start+30d)
+      const endDay = new Date(now);
+      endDay.setHours(0, 0, 0, 0);
+      const startMs = endDay.getTime() - 29 * msInDay;
+      const endMs = startMs + 30 * msInDay;
+      const series: ActivityPoint[] = Array.from({ length: 30 }, (_, i) => {
+        const ts = startMs + i * msInDay;
+        const d = new Date(ts);
+        const label = `${d.getDate().toString().padStart(2, '0')}`; // day of month
+        return { label, completed: 0, cancelled: 0, inProgress: 0, total: 0 };
+      });
+      bookings.forEach((booking) => {
+        const d = getBookingDate(booking);
+        if (!d) return;
+        const t = d.getTime();
+        if (t < startMs || t >= endMs) return;
+        const index = Math.floor((t - startMs) / msInDay);
+        const point = series[index];
+        point.total += 1;
+        if (booking.status === 'completed') point.completed += 1;
+        else if (booking.status === 'cancelled') point.cancelled += 1;
+        else point.inProgress += 1;
+      });
+      return series;
+    }
+
+    // week (Mon..Sun)
     const baseline = activityDayOrder.map<ActivityPoint>((label) => ({
       label,
       completed: 0,
@@ -141,25 +223,31 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
       inProgress: 0,
       total: 0,
     }));
-
     bookings.forEach((booking) => {
-      const candidate = booking.startDate ?? booking.date ?? null;
-      const parsed = parseDate(candidate);
-      if (!parsed) return;
-      const index = (parsed.getDay() + 6) % 7;
+      const d = getBookingDate(booking);
+      if (!d) return;
+      const index = (d.getDay() + 6) % 7;
       const point = baseline[index];
       point.total += 1;
-      if (booking.status === 'completed') {
-        point.completed += 1;
-      } else if (booking.status === 'cancelled') {
-        point.cancelled += 1;
-      } else {
-        point.inProgress += 1;
-      }
+      if (booking.status === 'completed') point.completed += 1;
+      else if (booking.status === 'cancelled') point.cancelled += 1;
+      else point.inProgress += 1;
     });
-
     return baseline;
-  }, [bookings]);
+  }, [bookings, activityRange, msInDay]);
+
+  function seriesStartDate(series: ActivityPoint[], now: Date) {
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (series.length - 1));
+    return start.getTime();
+  }
+
+  function seriesEndDate(series: ActivityPoint[], now: Date) {
+    const end = new Date(now);
+    end.setHours(0, 0, 0, 0);
+    return end.getTime();
+  }
 
   const maxActivityValue = useMemo(() => {
     const values = activitySeries.map((point) => Math.max(point.total, point.completed + point.inProgress));
@@ -168,10 +256,23 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
 
   // Calculate period comparison (7-day vs previous 7-day)
   const periodComparison = useMemo(() => {
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
-    const currentPeriodStart = today.getTime() - 6 * msInDay;
-    const previousPeriodStart = currentPeriodStart - 7 * msInDay;
+
+    let currentStart: number;
+    let previousStart: number;
+    if (activityRange === 'day') {
+      const HOUR = 60 * 60 * 1000;
+      const end = new Date(now);
+      end.setMinutes(0, 0, 0);
+      currentStart = end.getTime() - 23 * HOUR; // trailing 24h
+      previousStart = currentStart - 24 * HOUR;
+    } else {
+      const window = activityRange === 'week' ? 7 : 30;
+      currentStart = today.getTime() - (window - 1) * msInDay;
+      previousStart = currentStart - window * msInDay;
+    }
 
     let currentTotal = 0;
     let previousTotal = 0;
@@ -180,16 +281,23 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
     let currentCancelled = 0;
     let previousCancelled = 0;
 
+    const getBookingDate = (b: Booking): Date | null =>
+      parseDate((b as any).preferredDate) ||
+      parseDate((b as any).startDate) ||
+      parseDate((b as any).date) ||
+      parseDate((b as any).createdAt) ||
+      parseDate((b as any).created_at) ||
+      null;
+
     bookings.forEach((booking) => {
-      const parsed = parseDate(booking.startDate ?? booking.date ?? null);
+      const parsed = getBookingDate(booking);
       if (!parsed) return;
       const time = parsed.getTime();
-
-      if (time >= currentPeriodStart) {
+      if (time >= currentStart) {
         currentTotal += 1;
         if (booking.status === 'completed') currentCompleted += 1;
         if (booking.status === 'cancelled') currentCancelled += 1;
-      } else if (time >= previousPeriodStart && time < currentPeriodStart) {
+      } else if (time >= previousStart && time < currentStart) {
         previousTotal += 1;
         if (booking.status === 'completed') previousCompleted += 1;
         if (booking.status === 'cancelled') previousCancelled += 1;
@@ -204,7 +312,7 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
       currentCancelled,
       previousCancelled,
     };
-  }, [bookings, msInDay]);
+  }, [bookings, activityRange, msInDay]);
 
   // Build trend descriptors
   const buildTrendDescriptor = (
@@ -319,17 +427,21 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
 
   // Get upcoming booking
   const upcomingBooking = useMemo(() => {
+    if (realUpcomingBooking) return realUpcomingBooking;
     const withDate = bookings
       .filter((booking) => !['completed', 'cancelled'].includes(booking.status))
       .map((booking) => ({
         booking,
-        time: Math.min(parseDate(booking.startDate)?.getTime() ?? Infinity, parseDate(booking.date)?.getTime() ?? Infinity),
+        time: Math.min(
+          parseDate(booking.preferredDate ?? booking.startDate)?.getTime() ?? Infinity,
+          parseDate(booking.date)?.getTime() ?? Infinity,
+        ),
       }))
       .filter(({ time }) => Number.isFinite(time))
       .sort((a, b) => a.time - b.time);
 
     return withDate[0]?.booking ?? null;
-  }, [bookings]);
+  }, [bookings, realUpcomingBooking]);
 
   // Get latest reviews
   const latestReviews = useMemo(() => {
@@ -554,7 +666,7 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
     <section
       className={`relative z-10 snap-start grid min-h-[min(78vh,860px)] ${layoutGap} rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-xl xl:grid-cols-[1.2fr,1.6fr,1.1fr]`}
     >
-      <div className={`relative z-10 grid ${clusterGap}`}>
+  <div className={`relative z-10 grid content-start ${clusterGap}`}>
         <CreateListingCard 
           compact={isCompact} 
           onCreateClick={() => setCreateListingModalOpen(true)}
@@ -570,7 +682,7 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
           bookingCurrency={bookingCurrency}
         />
       </div>
-      <div className={`relative z-10 grid ${clusterGap}`}>
+  <div className={`relative z-10 grid content-start ${clusterGap}`}>
         <ActivityOverviewCard
           compact={isCompact}
           activitySeries={activitySeries}
@@ -579,6 +691,8 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
           completedTrend={completedTrend}
           totalTrend={totalTrend}
           cancelledTrend={cancelledTrend}
+          selectedRange={activityRange}
+          onRangeChange={setActivityRange}
         />
         <SavedLeadsCard
           compact={isCompact}
@@ -592,7 +706,7 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
           savedLeadTrend={savedLeadTrend}
         />
       </div>
-      <div className={`relative z-10 grid ${clusterGap}`}>
+  <div className={`relative z-10 grid content-start ${clusterGap}`}>
         <NextBookingCard
           compact={isCompact}
           upcomingBooking={upcomingBooking}
@@ -738,6 +852,7 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
           pipelineTrend={pipelineTrend}
           conversionTrendDescriptor={conversionTrendDescriptor}
           ratingTrend={ratingTrend}
+          activitySeries={activitySeries}
         />
 
         {/* View Toggle & Compact Mode */}

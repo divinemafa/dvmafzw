@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Listing } from '@/app/dashboard/types';
 import {
   CreateListingButton,
@@ -29,6 +30,7 @@ const frameOverlayClasses =
 
 interface ListingsGridProps {
   listings?: Listing[];
+  highlightListingId?: string | number;
 }
 
 /**
@@ -43,7 +45,7 @@ interface ListingsGridProps {
  * - ListingsStatusSnapshot: Simple status breakdown sidebar
  * - ListingsDisplay: Renders listings in grid/list mode with empty state
  */
-export const ListingsGrid = ({ listings = [] }: ListingsGridProps) => {
+export const ListingsGrid = ({ listings = [], highlightListingId }: ListingsGridProps) => {
   // State management
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -57,6 +59,8 @@ export const ListingsGrid = ({ listings = [] }: ListingsGridProps) => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [selectedListingForDelete, setSelectedListingForDelete] = useState<{ id: string; title: string } | null>(null);
+  const [justHighlightedId, setJustHighlightedId] = useState<string | null>(null);
+  const scrolledRef = useRef(false);
 
   // Calculate stats from listings
   const stats = useMemo(() => calculateListingStats(listings), [listings]);
@@ -99,6 +103,25 @@ export const ListingsGrid = ({ listings = [] }: ListingsGridProps) => {
     // Reload the page to refresh listings data
     window.location.reload();
   };
+
+  // Auto-open edit modal if highlightListingId is provided and matches a listing
+  useEffect(() => {
+    if (!highlightListingId) return;
+    const idStr = highlightListingId.toString();
+    const exists = listings.some(l => l.id.toString() === idStr);
+    if (exists) {
+      // Scroll into view and flash highlight, without forcing modal open immediately
+      const el = document.getElementById(`listing-${idStr}`);
+      if (el && !scrolledRef.current) {
+        scrolledRef.current = true;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setJustHighlightedId(idStr);
+        // Clear after a short time
+        const t = setTimeout(() => setJustHighlightedId(null), 1800);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [highlightListingId, listings]);
 
   return (
     <div className={getFrameClasses()}>
@@ -153,12 +176,24 @@ export const ListingsGrid = ({ listings = [] }: ListingsGridProps) => {
             </div>
 
             <ListingsDisplay 
-              listings={filteredListings} 
+              listings={filteredListings.map(l => ({
+                ...l,
+              }))} 
               viewMode={viewMode}
               onEditListing={handleEditListing}
               onDeleteListing={handleDeleteListing}
               onStatusChange={handleRefreshListings}
             />
+            {/* lightweight highlight effect via style injection */}
+            <style>{`
+              [id^="listing-"] {
+                transition: box-shadow 300ms ease, transform 300ms ease, background-color 300ms ease;
+              }
+              #listing-${justHighlightedId} > * {
+                box-shadow: 0 0 0 2px rgba(99,102,241,0.4), 0 0 0 6px rgba(34,211,238,0.25);
+                background-image: linear-gradient(to bottom right, rgba(99,102,241,0.12), rgba(34,211,238,0.08));
+              }
+            `}</style>
           </section>
         </div>
       </div>
