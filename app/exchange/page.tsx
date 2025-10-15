@@ -1,7 +1,10 @@
 "use client";
 
+// Force dynamic rendering (no static generation at build time)
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey, Transaction, VersionedTransaction, TransactionMessage, Keypair, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js';
@@ -21,7 +24,7 @@ import {
 } from '@raydium-io/raydium-sdk';
 
 // Dynamic import for WalletMultiButton to avoid SSR hydration issues
-const WalletMultiButton = dynamic(
+const WalletMultiButton = dynamicImport(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
   { ssr: false }
 );
