@@ -302,7 +302,7 @@ Bitcoin Mascot solves these problems through:
   - Symbol: BMC
   - Total Supply: 850,000,000,000 (850 billion)
   - Blockchain: Solana (SPL token)
-  - Contract: FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
+  - Contract: bitcoin22u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
 
 - **Token Distribution:**
   - Community Rewards: 35% (297.5B BMC)

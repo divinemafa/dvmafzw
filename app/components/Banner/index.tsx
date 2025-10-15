@@ -22,7 +22,7 @@ const Banner = () => {
                             <p className='text-white md:text-lg font-normal mb-10 md:text-start text-center'>A revolutionary Solana token designed to reinvigorate the market and bring Bitcoin&rsquo;s spirit to everyone. Join the movement that&rsquo;s changing the game.</p>
                             <div className='flex align-middle justify-center md:justify-start'>
                                 <button className='text-xl font-semibold text-white py-4 px-6 lg:px-12 navbutton mr-6'>Buy BITCOIN MASCOT</button>
-                                <button onClick={() => window.open('https://dexscreener.com/solana/FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg', '_blank')} className='bg-transparent flex justify-center items-center text-white'><Image src={'/images/Banner/playbutton.svg'} alt="button-image" className='mr-3' width={47} height={47} />View Chart</button>
+                                <button onClick={() => window.open('https://dexscreener.com/solana/bitcoin22u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg', '_blank')} className='bg-transparent flex justify-center items-center text-white'><Image src={'/images/Banner/playbutton.svg'} alt="button-image" className='mr-3' width={47} height={47} />View Chart</button>
                             </div>
                         </div>
 
@@ -34,7 +34,7 @@ const Banner = () => {
                                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75" onClick={() => setOpen(false)}>
                                     <div className="relative w-full max-w-4xl h-96" onClick={(e) => e.stopPropagation()}>
                                         <iframe
-                                            src="https://dexscreener.com/solana/FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg?embed=1&theme=dark"
+                                            src="https://dexscreener.com/solana/bitcoin22u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg?embed=1&theme=dark"
                                             width="100%"
                                             height="100%"
                                             frameBorder="0"

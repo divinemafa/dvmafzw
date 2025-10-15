@@ -171,7 +171,7 @@ Name: Bitcoin Mascot
 Symbol: BMC
 Supply: 850,000,000,000
 Standard: SPL Token (Solana)
-Address: FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
+Address: bitcoin22u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
 ```
 
 ### Contract Architecture

@@ -17,6 +17,7 @@ import type { TrendDescriptor } from './shared/types';
 
 interface StatusCounts {
   total: number;
+  pipeline: number; // Non-completed, non-cancelled bookings
   byStatus: {
     pending: number;
     confirmed: number;
@@ -76,19 +77,16 @@ export const SummaryTiles = ({
     ? activitySeries.map(point => point.completed)
     : [3, 4, 3, 5, 6, 5, 7]; // fallback
   
-  // Pipeline sparkline: total bookings (all statuses combined)
+  // Pipeline sparkline: in-progress bookings (total - completed - cancelled)
   const sparkPipeline = activitySeries.length > 0
-    ? activitySeries.map(point => point.total)
+    ? activitySeries.map(point => point.total - point.completed - point.cancelled)
     : [2, 1, 2, 3, 2, 4, 3]; // fallback
   
-  // Conversion sparkline: percentage of completed bookings per period
+  // Conversion sparkline: show total bookings trend (proxy for conversion activity)
+  // Note: Ideally this would be (bookings/views)*100 per period, but we don't have views per period
   const sparkConversion = activitySeries.length > 0
-    ? activitySeries.map(point => {
-        // Calculate conversion rate per point (completed / total * 100)
-        if (point.total === 0) return 0;
-        return (point.completed / point.total) * 100;
-      })
-    : [20, 30, 25, 40, 35, 50, 45]; // fallback in percentage
+    ? activitySeries.map(point => point.total) // Total bookings represents conversion activity
+    : [2, 3, 2, 4, 3, 5, 4]; // fallback
   
   // Rating sparkline: use a synthetic upward trend based on current rating
   // TODO: Replace with real historical rating data from database
@@ -120,7 +118,7 @@ export const SummaryTiles = ({
         compact={compact}
         icon={TicketIcon}
         label="Bookings Pipeline"
-        value={statusCounts.total.toString()}
+        value={statusCounts.pipeline.toString()}
         hint={`${periodComparison.currentCompleted} completed • ${statusCounts.byStatus.pending} pending`}
         accentClass="bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent"
         trend={pipelineTrend}
@@ -131,7 +129,7 @@ export const SummaryTiles = ({
         icon={ChartPieIcon}
         label="Conversion Rate"
         value={`${conversionRate}%`}
-        hint={`${stats.completedBookings} bookings from ${stats.totalViews.toLocaleString()} visits`}
+        hint={`${statusCounts.total} bookings from ${stats.totalViews.toLocaleString()} visits`}
         accentClass="bg-gradient-to-br from-violet-500/15 via-violet-500/5 to-transparent"
         trend={conversionTrendDescriptor}
         sparkSeries={sparkConversion}
@@ -140,7 +138,7 @@ export const SummaryTiles = ({
         compact={compact}
         icon={StarIcon}
         label="Customer Rating"
-        value={stats.averageRating.toFixed(1)}
+        value={stats.totalReviews > 0 ? stats.averageRating.toFixed(1) : '0.0'}
         hint={`${stats.totalReviews} total reviews${stats.responseRate ? ` • ${stats.responseRate}% response rate` : ''}`}
         accentClass="bg-gradient-to-br from-amber-400/20 via-amber-500/5 to-transparent"
         trend={ratingTrend}

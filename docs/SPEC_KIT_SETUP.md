@@ -301,7 +301,7 @@ specify init <project-name> --ai copilot --script ps
 - Documentation: https://github.com/github/spec-kit/blob/main/spec-driven.md
 
 ### Bitcoin Mascot
-- Contract Address: FHXjd7u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
+- Contract Address: bitcoin22u2TsTcfiiAkxTi3VwDm6wBCcdnw9SBF37GGfEg
 - Blockchain: Solana Mainnet Beta
 - Network: https://api.mainnet-beta.solana.com
 

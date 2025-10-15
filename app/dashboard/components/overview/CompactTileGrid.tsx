@@ -127,10 +127,15 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
           acc.total += 1;
           acc.byStatus[booking.status] = (acc.byStatus[booking.status] ?? 0) + 1;
           acc.revenue += booking.amount ?? 0;
+          // Pipeline = all bookings except completed and cancelled
+          if (booking.status !== 'completed' && booking.status !== 'cancelled') {
+            acc.pipeline += 1;
+          }
           return acc;
         },
         {
           total: 0,
+          pipeline: 0, // NEW: Count of non-completed, non-cancelled bookings
           revenue: 0,
           byStatus: {
             pending: 0,
@@ -145,12 +150,13 @@ export const CompactTileGrid = ({ stats, bookings, reviews, onTabChange, listing
     [bookings],
   );
 
-  // Calculate conversion rate
+  // Calculate conversion rate: (Total Bookings / Total Views) * 100
   const conversionRate = useMemo(() => {
     if (!stats.totalViews) return 0;
-    const ratio = (stats.completedBookings / stats.totalViews) * 100;
+    // Use statusCounts.total (all bookings regardless of status) instead of just completed
+    const ratio = (statusCounts.total / stats.totalViews) * 100;
     return Math.min(100, Math.max(0, Number(ratio.toFixed(1))));
-  }, [stats.completedBookings, stats.totalViews]);
+  }, [statusCounts.total, stats.totalViews]);
 
   // Build activity series for chart (day/week/30d)
   const activitySeries = useMemo(() => {

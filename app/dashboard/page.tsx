@@ -43,7 +43,6 @@ import { SettingsTab, SettingsSidebar } from './components/settings/SettingsTab'
 // Types and Data
 import type { TabType, Listing } from './types';
 import {
-  mockMarketplaceStats,
   mockListings,
   mockBookings,
   mockReviews,
@@ -53,6 +52,7 @@ import {
   mockPremiumFeatures,
   mockClients,
 } from './mockData';
+import { useDashboardStats } from './hooks/useDashboardStats';
 
 type FinanceModuleId = 'overview' | 'payouts' | 'transactions' | 'earn' | 'compliance';
 
@@ -314,6 +314,9 @@ function DashboardPageContent() {
   const { user, session, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [activeFinanceModule, setActiveFinanceModule] = useState<FinanceModuleId>('overview');
+  
+  // Real dashboard stats from API
+  const { stats: realStats, isLoading: statsLoading, error: statsError } = useDashboardStats();
   
   // Real listings state
   const [listings, setListings] = useState<Listing[]>([]);
@@ -593,10 +596,22 @@ function DashboardPageContent() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'overview':
+        // Show loading state while fetching stats
+        if (statsLoading || !realStats) {
+          return (
+            <div className="flex min-h-[600px] items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+              <div className="text-center">
+                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-cyan-400" />
+                <p className="text-sm text-white/70">Loading dashboard stats...</p>
+              </div>
+            </div>
+          );
+        }
+        
         return (
           <CompactTileGrid
-            stats={mockMarketplaceStats}
-            bookings={mockBookings}
+            stats={realStats}
+            bookings={bookings}
             reviews={mockReviews}
             onTabChange={setActiveTabAndUrl}
             listings={listings}

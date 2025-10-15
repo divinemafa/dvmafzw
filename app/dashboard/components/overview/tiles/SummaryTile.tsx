@@ -35,10 +35,10 @@ export const SummaryTile = ({ icon: Icon, label, value, hint, trend, accentClass
 
   const trendClasses = trend
     ? trend.direction === 'up'
-      ? 'bg-emerald-400/15 text-emerald-200'
+      ? 'bg-lime-500/20 text-lime-300 shadow-lime-500/10 shadow-sm'
       : trend.direction === 'down'
-        ? 'bg-rose-400/20 text-rose-100'
-        : 'bg-white/10 text-white/70'
+        ? 'bg-rose-500/20 text-rose-300 shadow-rose-500/10 shadow-sm'
+        : 'bg-slate-500/15 text-slate-300'
     : '';
 
   // Prepare sparkline path with smooth curves
